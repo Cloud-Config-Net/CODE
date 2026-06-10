@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
             
             if (move_uploaded_file($tmpName, $targetPath)) {
-                $shortId =  . substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                $shortId = . substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
                 $db[$shortId] = [
                     'original_name' => $originalName,
                     'real_path' => $targetPath,
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
         </a>
 
         <div class="text-center mb-6 pt-4">
-            <h1 class="text-3xl font-bold tracking-wider text-white">NET-CLOUD<span class="text-emerald-400">CONFIG</span></h1>
+            <h1 class="text-3xl font-bold tracking-wider text-white"> CLOUD <span class="text-emerald-400"> CONFIG </span></h1>
             <p class="text-slate-400 text-xs mt-1">Multi-Upload & Secure Client Tracker</p>
         </div>
 
@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             <div class="relative border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-emerald-400 transition group cursor-pointer bg-slate-800/50">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
                 <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-500 group-hover:text-emerald-400 transition mb-3"></i>
-                <p class="text-sm font-semibold text-slate-300" id="fileName">Drop or paste file</p>
+                <p class="text-sm font-semibold text-slate-300" id="fileName">Drop or paste File</p>
                 <p class="text-xs text-slate-500 mt-2"></p>
             </div>
 
