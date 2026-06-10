@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
             
             if (move_uploaded_file($tmpName, $targetPath)) {
-                $shortId = 'NET-CLOUD-CONFIG-' . substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                $shortId =  . substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
                 $db[$shortId] = [
                     'original_name' => $originalName,
                     'real_path' => $targetPath,
@@ -184,8 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             <div class="relative border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-emerald-400 transition group cursor-pointer bg-slate-800/50">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
                 <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-500 group-hover:text-emerald-400 transition mb-3"></i>
-                <p class="text-sm font-semibold text-slate-300" id="fileName">Drop or paste file(s)</p>
-                <p class="text-xs text-slate-500 mt-2">Support batch file structures (.hc, .ovpn)</p>
+                <p class="text-sm font-semibold text-slate-300" id="fileName">Drop or paste file</p>
+                <p class="text-xs text-slate-500 mt-2"></p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                     <input type="number" name="limit" value="1" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm text-center font-mono">
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 uppercase mb-1 ml-1">Validity (Hours)</label>
+                    <label class="block text-xs text-slate-400 uppercase mb-1 ml-1">Validity Files</label>
                     <input type="number" name="hours" value="24" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm text-center font-mono">
                 </div>
             </div>
