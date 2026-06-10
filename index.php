@@ -103,69 +103,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CLOUD CONFIG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #05080f; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         .glass-panel { 
-            background: #0f1524; 
-            border: 1px solid #1e2738; 
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); 
+            background: #0a0f1c; 
+            border: 1px solid #141c2b; 
         }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #0a0f1c; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 4px; }
         
-        .neon-text-glow { text-shadow: 0 0 10px rgba(81, 192, 192, 0.5); }
-        .btn-glow { box-shadow: 0 0 15px rgba(81, 192, 192, 0.2); }
+        /* تصميم شريط التمرير الجديد ليطابق الصورة */
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 10px; }
+        
+        .neon-text-glow { text-shadow: 0 0 12px rgba(81, 192, 192, 0.4); }
+        .btn-glow { box-shadow: 0 0 15px rgba(81, 192, 192, 0.15); }
     </style>
 </head>
-<body class="bg-[#0a0f1c] min-h-screen text-slate-200 p-4 flex items-center justify-center">
+<body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4">
 
-    <div class="glass-panel w-full max-w-[24rem] rounded-2xl p-6 md:p-8 relative">
+    <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center shadow-2xl">
         
         <div class="absolute top-6 left-6 w-9 h-9 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] rounded-xl shadow-inner">
             <i class="fa-solid fa-microchip text-[#2d4b69]"></i>
         </div>
 
-        <div class="text-center mt-3 mb-8">
-            <h1 class="text-[28px] font-bold tracking-widest text-white">
+        <div class="text-center mt-6 mb-10">
+            <h1 class="text-[28px] sm:text-[32px] font-bold tracking-widest text-white">
                 CLOUD<span class="text-[#51C0C0] neon-text-glow">CONFIG</span>
             </h1>
         </div>
 
         <?php if(!empty($generatedLinks)): ?>
-        <div class="bg-[#0d131f] border border-[#1e2738] rounded-xl p-6 mb-6 max-h-[22rem] overflow-y-auto custom-scroll space-y-6 text-center">
+        <div class="bg-[#0a0f1c] border border-[#141c2b] rounded-2xl p-4 sm:p-6 mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-8">
             <?php foreach($generatedLinks as $idx => $item): ?>
-            <div class="flex flex-col items-center justify-center">
-                <span class="text-[#8a9bb3] text-[13px] mb-2 w-full text-center font-mono"><?= htmlspecialchars($item['original_name']) ?></span>
+            <div class="flex flex-col items-center">
+                <span class="text-[#64748b] text-[13px] mb-3 font-mono"><?= htmlspecialchars($item['original_name']) ?></span>
                 
-                <div class="flex items-center justify-center gap-3 w-full">
-                    <a href="<?= $item['link'] ?>" target="_blank" class="text-slate-300 hover:text-white text-[12px] bg-transparent underline decoration-[#425975] underline-offset-4 w-full text-center font-mono break-all" id="link-<?= $idx ?>">
-                        <?= $item['link'] ?>
-                    </a>
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#0a0f1c] hover:bg-[#1e2738] text-slate-300 p-2.5 rounded-lg border border-[#1e2738] transition flex-shrink-0 flex items-center justify-center">
-                        <i class="fa-regular fa-copy text-sm"></i>
+                <div class="flex items-center w-full gap-3">
+                    <div class="flex-1 text-center">
+                        <a href="<?= $item['link'] ?>" target="_blank" class="text-[#cbd5e1] text-[12px] sm:text-[13px] underline decoration-[#334155] underline-offset-[6px] font-mono leading-[1.8] break-all block px-1" id="link-<?= $idx ?>">
+                            <?= $item['link'] ?>
+                        </a>
+                    </div>
+                    
+                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#0f1524] hover:bg-[#1e2738] text-slate-300 w-11 h-11 rounded-xl border border-[#1e2738] transition flex-shrink-0 flex items-center justify-center shadow-sm">
+                        <i class="fa-regular fa-copy text-[15px]"></i>
                     </button>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
 
-        <div class="flex gap-3">
-            <button onclick="window.location.href='/'" class="flex-1 bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] text-slate-300 font-bold py-3 px-4 rounded-xl transition text-[11px] uppercase tracking-wider">
-                 Back
+        <div class="flex gap-4 mt-auto">
+            <button onclick="window.location.href='/'" class="flex-[1] bg-[#0a0f1c] border border-[#1e2738] hover:bg-[#141c2b] text-white font-bold py-4 rounded-xl transition text-[12px] uppercase tracking-wider">
+                 BACK
             </button>
-            <button onclick="copyAll()" class="flex-[2] bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-3 px-4 rounded-xl transition btn-glow text-[11px] uppercase tracking-wider flex items-center justify-center">
-                 <i class="fa-solid fa-clone mr-2"></i> Copy All Links
+            <button onclick="copyAll()" class="flex-[2] bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition btn-glow text-[12px] uppercase tracking-wider flex items-center justify-center">
+                 <i class="fa-regular fa-copy mr-2 text-[15px]"></i> COPY ALL LINKS
             </button>
         </div>
 
-        <div id="toast" class="fixed bottom-5 right-5 bg-[#51C0C0] text-[#0a0f1c] px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-xs font-bold uppercase tracking-wide border border-[#43a3a3]">
+        <div id="toast" class="fixed bottom-10 right-1/2 translate-x-1/2 sm:right-5 sm:translate-x-0 bg-[#51C0C0] text-[#0a0f1c] px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-xs font-bold uppercase tracking-wide border border-[#43a3a3]">
             Links Copied!
         </div>
 
@@ -179,8 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                 const link = document.getElementById(id).innerText.trim();
                 navigator.clipboard.writeText(link);
                 const icon = btn.querySelector('i');
-                icon.className = 'fa-solid fa-check text-[#51C0C0]';
-                setTimeout(() => icon.className = 'fa-regular fa-copy', 1500);
+                icon.className = 'fa-solid fa-check text-[#51C0C0] text-[15px]';
+                setTimeout(() => icon.className = 'fa-regular fa-copy text-[15px]', 1500);
                 showToast();
             }
             function copyAll() {
@@ -192,50 +196,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
         </script>
 
         <?php else: ?>
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto">
             
-            <div class="relative border-[1.5px] border-dashed border-[#1e2738] rounded-2xl p-8 text-center hover:border-[#51C0C0] transition-colors duration-300 group cursor-pointer bg-gradient-to-b from-[#0d131f] to-[#0a0f1c]">
+            <div class="relative border-[1.5px] border-dashed border-[#1e2738] rounded-2xl p-10 text-center hover:border-[#51C0C0] transition-colors duration-300 group cursor-pointer bg-gradient-to-b from-[#0d131f] to-[#0a0f1c]">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
                 
                 <div class="flex flex-col items-center justify-center">
-                    <div class="w-[60px] h-[60px] rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mb-4 relative group-hover:border-[#51C0C0]/50 transition-colors">
+                    <div class="w-[64px] h-[64px] rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mb-5 relative group-hover:border-[#51C0C0]/50 transition-colors shadow-lg">
                         <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/5"></div>
-                        <i class="fa-solid fa-cloud-arrow-up text-[#51C0C0] text-xl z-10"></i>
+                        <i class="fa-solid fa-cloud-arrow-up text-[#51C0C0] text-2xl z-10"></i>
                     </div>
-                    <p class="text-[13px] font-mono text-[#8a9bb3]" id="fileName">Select or Drop Files Here</p>
+                    <p class="text-[14px] font-mono text-[#8a9bb3] tracking-wide" id="fileName">Select or Drop Files Here</p>
                 </div>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-5 pt-2">
                 <div>
-                    <label class="flex items-center text-[10px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
-                        <i class="fa-solid fa-download mr-2"></i> Limit &nbsp;
+                    <label class="flex items-center text-[11px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
+                        <i class="fa-solid fa-download mr-2 text-[12px]"></i> Limit
                     </label>
-                    <input type="number" name="limit" placeholder="Limit (e.g. 1)" class="w-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
+                    <input type="number" name="limit" placeholder="Limit (e.g. 1)" class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-5 py-4 text-[15px] text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
                 </div>
 
                 <div>
-                    <label class="flex items-center text-[10px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
-                        <i class="fa-regular fa-clock mr-2"></i> Validity Time
+                    <label class="flex items-center text-[11px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
+                        <i class="fa-regular fa-clock mr-2 text-[12px]"></i> Validity Time
                     </label>
                     <div class="grid grid-cols-2 gap-3">
-                        <input type="number" name="duration" placeholder="Duration" value="" min="1" required class="w-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-center text-white focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
+                        <input type="number" name="duration" placeholder="Duration" value="" min="1" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-center text-white focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
                         
                         <div class="relative w-full">
-                            <select name="time_unit" class="w-full h-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-[#51C0C0] font-mono focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer" style="text-align-last: center;">
+                            <select name="time_unit" class="w-full h-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-[#51C0C0] font-mono focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer" style="text-align-last: center;">
                                 <option value="minutes">Minutes</option>
                                 <option value="hours" selected>Hours</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#425975]">
-                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                <i class="fa-solid fa-chevron-down text-[12px]"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 px-4 rounded-xl transition btn-glow text-[12px] flex items-center justify-center uppercase tracking-widest mt-2">
-                <i class="fa-solid fa-microchip mr-2 text-[14px]"></i> Generate Smart Links
+            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition btn-glow text-[13px] flex items-center justify-center uppercase tracking-widest mt-4">
+                <i class="fa-solid fa-microchip mr-2 text-[16px]"></i> Generate Smart Links
             </button>
         </form>
 
