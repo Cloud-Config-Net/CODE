@@ -29,7 +29,8 @@ install_netcloud() {
     PORT=${PORT:-$DEFAULT_PORT}
 
     echo "🔄 1. Updating packages and installing requirements..."
-    apt update && apt install nginx php8.2-fpm php8.2-curl -y
+    # تمت إضافة ufw إلى قائمة التثبيت هنا لتجنب خطأ command not found
+    apt update && apt install nginx php8.2-fpm php8.2-curl ufw -y
 
     echo "📁 2. Setting up directories..."
     mkdir -p $WEB_ROOT/uploads
@@ -77,7 +78,10 @@ EOF
     echo "🔗 5. Enabling site and configuring firewall..."
     ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
+    
+    # إعداد جدار الحماية بعد ضمان تثبيته
     ufw allow $PORT/tcp
+    
     systemctl restart nginx
     systemctl restart php8.2-fpm
 
