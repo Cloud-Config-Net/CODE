@@ -67,7 +67,11 @@ if (isset($_GET['c'])) {
 $generatedLinks = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
     $limit = (int)$_POST['limit']; 
-    $hours = (int)$_POST['hours'];
+    $duration = (int)$_POST['duration'];
+    $timeUnit = $_POST['time_unit'] ?? 'hours';
+    
+    // Calculate expiration based on Minutes or Hours
+    $seconds = ($timeUnit === 'minutes') ? ($duration * 60) : ($duration * 3600);
     $fileCount = count($_FILES['files']['name']);
     
     for ($i = 0; $i < $fileCount; $i++) {
@@ -83,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                     'real_path' => $targetPath,
                     'limit' => $limit,
                     'downloads' => 0,
-                    'expires' => time() + ($hours * 3600),
+                    'expires' => time() + $seconds,
                     'upload_date' => time(),
                     'logs' => []
                 ];
@@ -100,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NETCLOUD | Config Hub</title>
+    <title>CLOUD CONFIG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -116,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
         .custom-scroll::-webkit-scrollbar-track { background: #0a0f1c; border-radius: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 4px; }
         
-        /* Subtle glow effects matching the image */
         .neon-text-glow { text-shadow: 0 0 10px rgba(81, 192, 192, 0.5); }
         .btn-glow { box-shadow: 0 0 15px rgba(81, 192, 192, 0.2); }
     </style>
@@ -131,24 +134,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
 
         <div class="text-center mt-3 mb-8">
             <h1 class="text-[28px] font-bold tracking-widest text-white">
-                NET<span class="text-[#51C0C0] neon-text-glow">CLOUD</span>
+                CLOUD<span class="text-[#51C0C0] neon-text-glow">CONFIG</span>
             </h1>
-            <p class="text-[10px] tracking-[0.2em] text-[#425975] mt-2 font-mono font-semibold uppercase">
-                <i class="fa-solid fa-bolt text-[#facc15] mr-1"></i> AI INJECTION ENGINE
-            </p>
         </div>
 
         <?php if(!empty($generatedLinks)): ?>
-        <div class="bg-[#0d131f] border border-[#1e2738] rounded-xl p-4 mb-6 max-h-64 overflow-y-auto custom-scroll space-y-4 text-center">
+        <div class="bg-[#0d131f] border border-[#1e2738] rounded-xl p-6 mb-6 max-h-[22rem] overflow-y-auto custom-scroll space-y-6 text-center">
             <?php foreach($generatedLinks as $idx => $item): ?>
             <div class="flex flex-col items-center justify-center">
-                <span class="text-[#51C0C0] text-xs mb-2 truncate w-full px-2 text-center font-mono"><?= htmlspecialchars($item['original_name']) ?></span>
-                <div class="flex items-center justify-center gap-2 w-full">
-                    <a href="<?= $item['link'] ?>" target="_blank" class="text-slate-300 hover:text-white text-[11px] truncate bg-[#0a0f1c] px-3 py-3 rounded-lg border border-[#1e2738] w-full text-left font-mono" id="link-<?= $idx ?>">
+                <span class="text-[#8a9bb3] text-[13px] mb-2 w-full text-center font-mono"><?= htmlspecialchars($item['original_name']) ?></span>
+                
+                <div class="flex items-center justify-center gap-3 w-full">
+                    <a href="<?= $item['link'] ?>" target="_blank" class="text-slate-300 hover:text-white text-[12px] bg-transparent underline decoration-[#425975] underline-offset-4 w-full text-center font-mono break-all" id="link-<?= $idx ?>">
                         <?= $item['link'] ?>
                     </a>
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#1e2738] hover:bg-[#2a364d] text-[#51C0C0] p-3 rounded-lg border border-[#1e2738] transition flex-shrink-0">
-                        <i class="fa-solid fa-copy"></i>
+                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#0a0f1c] hover:bg-[#1e2738] text-slate-300 p-2.5 rounded-lg border border-[#1e2738] transition flex-shrink-0 flex items-center justify-center">
+                        <i class="fa-regular fa-copy text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -178,8 +179,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                 const link = document.getElementById(id).innerText.trim();
                 navigator.clipboard.writeText(link);
                 const icon = btn.querySelector('i');
-                icon.className = 'fa-solid fa-check text-white';
-                setTimeout(() => icon.className = 'fa-solid fa-copy', 1500);
+                icon.className = 'fa-solid fa-check text-[#51C0C0]';
+                setTimeout(() => icon.className = 'fa-regular fa-copy', 1500);
                 showToast();
             }
             function copyAll() {
@@ -208,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             <div class="space-y-4">
                 <div>
                     <label class="flex items-center text-[10px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
-                        <i class="fa-solid fa-download mr-2"></i> Max Downloads
+                        <i class="fa-solid fa-download mr-2"></i> Limit &nbsp;
                     </label>
                     <input type="number" name="limit" placeholder="Limit (e.g. 1)" class="w-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
                 </div>
@@ -218,9 +219,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                         <i class="fa-regular fa-clock mr-2"></i> Validity Time
                     </label>
                     <div class="grid grid-cols-2 gap-3">
-                        <input type="number" name="hours" placeholder="Duration" value="1" min="1" class="w-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-center text-white focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
-                        <div class="w-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-[#51C0C0] text-center font-mono cursor-default flex items-center justify-center">
-                            Hours
+                        <input type="number" name="duration" placeholder="Duration" value="" min="1" required class="w-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-center text-white focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
+                        
+                        <div class="relative w-full">
+                            <select name="time_unit" class="w-full h-full bg-[#0a0f1c] border border-[#1e2738] rounded-xl px-4 py-3.5 text-sm text-[#51C0C0] font-mono focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer" style="text-align-last: center;">
+                                <option value="minutes">Minutes</option>
+                                <option value="hours" selected>Hours</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#425975]">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -232,7 +240,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
         </form>
 
         <script>
-            // Script to update the dropzone text dynamically when a file is selected
             document.getElementById('fileInput').addEventListener('change', function(e) {
                 const count = e.target.files.length;
                 const fileNameElem = document.getElementById('fileName');
