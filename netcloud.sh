@@ -11,8 +11,8 @@ DEFAULT_DOMAIN="cloud.maxssh.site"
 DEFAULT_PORT=8880
 
 # Place your GitHub Raw file links here:
-LINK_INDEX="https://raw.githubusercontent.com/USER/REPO/main/index.php"
-LINK_ADMIN="https://raw.githubusercontent.com/USER/REPO/main/admin.php"
+LINK_INDEX="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/index.php"
+LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.php"
 
 # ==========================================
 # Install Function
