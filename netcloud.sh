@@ -49,17 +49,17 @@ server {
     index index.php index.html;
 
     location / {
-        try_files $uri $uri/ /index.php?$query_string;
+        try_files \$uri \$uri/ /index.php?\$query_string;
     }
 
     # جدار الحماية المطور لروابط التحميل
-    location ~* ^/([a-zA-Z0-9_-]+)\.hc$ {
+    location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
         # Block social media bots from accessing the link and ruining the 1-download limit
-        if ($http_user_agent ~* (WhatsApp|TelegramBot|facebookexternalhit|Twitterbot|Slackbot)) {
+        if (\$http_user_agent ~* (WhatsApp|TelegramBot|facebookexternalhit|Twitterbot|Slackbot)) {
             return 200 "NetCloud Preview Blocked Safely";
         }
         
-        rewrite ^/([a-zA-Z0-9_-]+)\.hc$ /index.php?c=$1 last;
+        rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
     }
     
     location ~ \.php\$ {
