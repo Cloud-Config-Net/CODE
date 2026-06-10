@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==========================================
-# 🚀 NET-CLOUD All-In-One Manager
+# 🚀 NET-CLOUD AI-Core Manager
 # ==========================================
 
 # --- Default Paths & Settings ---
@@ -14,34 +14,42 @@ DEFAULT_PORT=8880
 LINK_INDEX="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/index.php"
 LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.php"
 
+# Colors for aesthetic terminal
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
 # ==========================================
 # Install Function
 # ==========================================
 install_netcloud() {
-    echo "-------------------------------------"
-    echo "🚀 Starting NET-CLOUD professional installation..."
+    clear
+    echo -e "${CYAN}==========================================${NC}"
+    echo -e "${CYAN}🚀 Initializing NET-CLOUD AI-Core...${NC}"
+    echo -e "${CYAN}==========================================${NC}"
     
     # Prompt user for Domain and Port with default fallback
-    read -p "🌐 Enter Domain (Press Enter for default $DEFAULT_DOMAIN): " DOMAIN
+    read -p "🌐 Target Domain [Default: $DEFAULT_DOMAIN]: " DOMAIN
     DOMAIN=${DOMAIN:-$DEFAULT_DOMAIN}
 
-    read -p "🔌 Enter Port (Press Enter for default $DEFAULT_PORT): " PORT
+    read -p "🔌 Listening Port [Default: $DEFAULT_PORT]: " PORT
     PORT=${PORT:-$DEFAULT_PORT}
 
-    echo "🔄 1. Updating packages and installing requirements..."
-    # تمت إضافة ufw إلى قائمة التثبيت هنا لتجنب خطأ command not found
+    echo -e "\n${YELLOW}[1/5] Updating packages & installing dependencies...${NC}"
     apt update && apt install nginx php8.2-fpm php8.2-curl ufw -y
 
-    echo "📁 2. Setting up directories..."
+    echo -e "${YELLOW}[2/5] Creating secured directories...${NC}"
     mkdir -p $WEB_ROOT/uploads
     chown -R www-data:www-data $WEB_ROOT
 
-    echo "⬇️ 3. Fetching files from GitHub..."
-    wget $LINK_INDEX -O $WEB_ROOT/index.php
-    wget $LINK_ADMIN -O $WEB_ROOT/admin.php
+    echo -e "${YELLOW}[3/5] Injecting core payloads from GitHub...${NC}"
+    wget -q --show-progress $LINK_INDEX -O $WEB_ROOT/index.php
+    wget -q --show-progress $LINK_ADMIN -O $WEB_ROOT/admin.php
     chown www-data:www-data $WEB_ROOT/index.php $WEB_ROOT/admin.php
 
-    echo "⚙️ 4. Creating and configuring Nginx file..."
+    echo -e "${YELLOW}[4/5] Configuring Nginx Security Protocol...${NC}"
     cat <<EOF > $NGINX_CONF
 server {
     listen $PORT;
@@ -53,13 +61,11 @@ server {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
 
-    # جدار الحماية المطور لروابط التحميل
+    # Enhanced Download Firewall (AI Sniffer)
     location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
-        # Block social media bots from accessing the link and ruining the 1-download limit
         if (\$http_user_agent ~* (WhatsApp|TelegramBot|facebookexternalhit|Twitterbot|Slackbot)) {
-            return 200 "NetCloud Preview Blocked Safely";
+            return 200 "NetCloud System: Direct Access Only";
         }
-        
         rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
     }
     
@@ -75,21 +81,21 @@ server {
 }
 EOF
 
-    echo "🔗 5. Enabling site and configuring firewall..."
+    echo -e "${YELLOW}[5/5] Activating Network Ports & Firewall...${NC}"
     ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
     
-    # إعداد جدار الحماية بعد ضمان تثبيته
-    ufw allow $PORT/tcp
+    ufw allow $PORT/tcp > /dev/null 2>&1
     
     systemctl restart nginx
     systemctl restart php8.2-fpm
 
-    echo "✅ Installation completed successfully! Your site is now running on:"
-    echo "Domain: $DOMAIN"
-    echo "Port: $PORT"
-    echo "-------------------------------------"
-    read -p "Press Enter to return to the menu..."
+    echo -e "\n${GREEN}✅ DEPLOYMENT SUCCESSFUL!${NC}"
+    echo -e "-------------------------------------"
+    echo -e "📡 URL : ${CYAN}http://$DOMAIN:$PORT${NC}"
+    echo -e "🛡️ Admin: ${CYAN}http://$DOMAIN:$PORT/admin.php${NC}"
+    echo -e "-------------------------------------"
+    read -p "Press Enter to return to command center..."
 }
 
 # ==========================================
@@ -97,118 +103,90 @@ EOF
 # ==========================================
 show_menu() {
     clear
-    # Check Nginx status
     if systemctl is-active --quiet nginx; then
-        STATUS="✅ Active (Running)"
+        STATUS="${GREEN}ONLINE${NC}"
     else
-        STATUS="🛑 Inactive (Stopped)"
+        STATUS="${RED}OFFLINE${NC}"
     fi
     
-    echo "-------------------------------------"
-    echo "🚀 NET-CLOUD CONTROL PANEL"
-    echo "📊 Status: $STATUS"
-    echo "-------------------------------------"
-    echo "1. Install NET - CLOUD"
-    echo "2. Set Domain"
-    echo "3. Set Port"
-    echo "4. Start Service"
-    echo "5. Stop Service"
-    echo "6. Restart Service Nginx & PHP"
-    echo "7. Uninstall & Remove Data"
-    echo "8. Settings Edit Project Files"
-    echo "0. Exit"
-    echo "-------------------------------------"
+    echo -e "${CYAN}==========================================${NC}"
+    echo -e "  ${CYAN}NET-CLOUD COMMAND CENTER${NC}"
+    echo -e "  Status: $STATUS"
+    echo -e "${CYAN}==========================================${NC}"
+    echo " 1) Deploy Core System"
+    echo " 2) Modify Domain"
+    echo " 3) Modify Port"
+    echo " 4) Start Engines (Nginx)"
+    echo " 5) Stop Engines"
+    echo " 6) Reboot Services (Nginx & PHP)"
+    echo " 7) Wipe Data (Uninstall)"
+    echo " 8) Edit Source Files"
+    echo " 0) Exit Terminal"
+    echo -e "${CYAN}------------------------------------------${NC}"
 }
 
 # ==========================================
 # Read Choice Function
 # ==========================================
 read_choice() {
-    read -p "Select an option: " choice
+    read -p "Select Target Module: " choice
     case $choice in
-        1) 
-            install_netcloud 
-            ;;
+        1) install_netcloud ;;
         2) 
-            read -p "Enter New Domain: " NEW_DOMAIN
+            read -p "Enter Target Domain: " NEW_DOMAIN
             if [ -f "$NGINX_CONF" ]; then
                 sed -i "s/server_name .*/server_name $NEW_DOMAIN;/" $NGINX_CONF
                 systemctl restart nginx
-                echo "✅ Domain updated successfully."
+                echo -e "${GREEN}✅ Domain synchronized.${NC}"
             else
-                echo "❌ System is not installed! Please install first."
+                echo -e "${RED}❌ System not deployed yet.${NC}"
             fi
             read -p "Press Enter to continue..."
             ;;
         3) 
-            read -p "Enter New Port: " NEW_PORT
+            read -p "Enter Target Port: " NEW_PORT
             if [ -f "$NGINX_CONF" ]; then
                 sed -i "s/listen .*/listen $NEW_PORT;/" $NGINX_CONF
-                ufw allow $NEW_PORT/tcp
+                ufw allow $NEW_PORT/tcp > /dev/null 2>&1
                 systemctl restart nginx
-                echo "✅ Port updated successfully."
+                echo -e "${GREEN}✅ Port synchronized & unlocked.${NC}"
             else
-                echo "❌ System is not installed! Please install first."
+                echo -e "${RED}❌ System not deployed yet.${NC}"
             fi
             read -p "Press Enter to continue..."
             ;;
-        4) 
-            systemctl start nginx
-            echo "✅ Service started."
-            read -p "Press Enter to continue..."
-            ;;
-        5) 
-            systemctl stop nginx
-            echo "🛑 Service stopped."
-            read -p "Press Enter to continue..."
-            ;;
-        6) 
-            systemctl restart nginx
-            systemctl restart php8.2-fpm
-            echo "🔄 Services restarted."
-            read -p "Press Enter to continue..."
-            ;;
+        4) systemctl start nginx; echo -e "${GREEN}✅ Engines running.${NC}"; read -p "..." ;;
+        5) systemctl stop nginx; echo -e "${RED}🛑 Engines stopped.${NC}"; read -p "..." ;;
+        6) systemctl restart nginx; systemctl restart php8.2-fpm; echo -e "${GREEN}🔄 Reboot complete.${NC}"; read -p "..." ;;
         7) 
-            read -p "⚠️ Are you sure you want to completely remove the system? (y/n): " confirm
+            read -p "⚠️ WIPE ALL DATA? (y/n): " confirm
             if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
                 rm -rf $WEB_ROOT
-                rm -f $NGINX_CONF
-                rm -f /etc/nginx/sites-enabled/netcloud
+                rm -f $NGINX_CONF /etc/nginx/sites-enabled/netcloud
                 systemctl restart nginx
-                echo "🗑️ Successfully uninstalled & removed data."
+                echo -e "${GREEN}🗑️ Core wiped successfully.${NC}"
             else
-                echo "Cancelled."
+                echo "Abort."
             fi
-            read -p "Press Enter to continue..."
+            read -p "Press Enter..."
             ;;
         8) 
             if [ -d "$WEB_ROOT" ]; then
-                nano $WEB_ROOT/admin.php
                 nano $WEB_ROOT/index.php
+                nano $WEB_ROOT/admin.php
                 nano $NGINX_CONF
             else
-                echo "❌ Project not found or not installed yet."
-                read -p "Press Enter to continue..."
+                echo -e "${RED}❌ Core not found.${NC}"; read -p "..."
             fi
             ;;
-        0) 
-            echo "👋 Goodbye!"
-            exit 0 
-            ;;
-        *) 
-            echo "❌ Invalid option!"
-            sleep 1
-            ;;
+        0) echo -e "${CYAN}Connection Terminated.${NC}"; exit 0 ;;
+        *) echo -e "${RED}Invalid directive.${NC}"; sleep 1 ;;
     esac
 }
 
-# ==========================================
-# Main Script Execution
-# ==========================================
-
 # Ensure script is run as Root
 if [ "$EUID" -ne 0 ]; then 
-    echo "❌ Please run the script with root privileges (use sudo)."
+    echo -e "${RED}❌ ROOT privileges required. Use sudo.${NC}"
     exit 1
 fi
 
