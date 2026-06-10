@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
             
             if (move_uploaded_file($tmpName, $targetPath)) {
-                $shortId = . substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
                 $db[$shortId] = [
                     'original_name' => $originalName,
                     'real_path' => $targetPath,
