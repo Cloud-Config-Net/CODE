@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Main Upload & Client Sniffer (English)
+ * NET-CLOUD-CONFIG - AI Cyberpunk Edition (Upload & Client Sniffer)
  * File Name: index.php
  */
 
@@ -37,7 +37,8 @@ if (isset($_GET['c'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel . ' (Expired)', 'time' => time(), 'status' => 'Failed'];
             file_put_contents($dbFile, json_encode($db));
             @unlink($entry['real_path']); unset($db[$id]); file_put_contents($dbFile, json_encode($db)); 
-            header("HTTP/1.1 410 Gone"); die("This link has expired or reached its download limit.");
+            header("HTTP/1.1 410 Gone"); 
+            die('<!DOCTYPE html><html><body style="background:#020617; color:#ef4444; text-align:center; padding-top:20%; font-family:monospace;"><h1>[ ERROR 410 ]</h1><p>LINK EXPIRED OR LIMIT REACHED</p></body></html>');
         }
         
         // Block Browser attempts
@@ -45,7 +46,7 @@ if (isset($_GET['c'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Blocked'];
             file_put_contents($dbFile, json_encode($db));
             header("HTTP/1.1 403 Forbidden"); 
-            die('<!DOCTYPE html><html><body style="background:#0f172a; color:#ef4444; text-align:center; padding-top:20%; font-family:sans-serif;"><h1>🛑 403 Access Denied</h1><p>This config file must be imported inside the HTTP Custom app directly.</p></body></html>');
+            die('<!DOCTYPE html><html><body style="background:#020617; color:#ef4444; text-align:center; padding-top:20%; font-family:monospace; border: 2px solid #ef4444; margin: 20px;"><h1>🛑 403 ACCESS DENIED</h1><p>SYSTEM BLOCK: This config file must be imported inside the HTTP Custom app directly.</p></body></html>');
         }
 
         // Success Download (HTTP Custom)
@@ -66,8 +67,12 @@ if (isset($_GET['c'])) {
 // ==========================================
 $generatedLinks = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
-    $limit = (int)$_POST['limit']; 
-    $hours = (int)$_POST['hours'];
+    $limit = isset($_POST['limit']) ? (int)$_POST['limit'] : 1; 
+    $time_value = (int)$_POST['time_value'];
+    $time_unit = $_POST['time_unit'];
+    
+    // Calculate seconds based on user choice
+    $seconds_to_add = ($time_unit === 'minutes') ? ($time_value * 60) : ($time_value * 3600);
     $fileCount = count($_FILES['files']['name']);
     
     for ($i = 0; $i < $fileCount; $i++) {
@@ -83,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                     'real_path' => $targetPath,
                     'limit' => $limit,
                     'downloads' => 0,
-                    'expires' => time() + ($hours * 3600),
+                    'expires' => time() + $seconds_to_add,
                     'upload_date' => time(),
                     'logs' => []
                 ];
@@ -100,44 +105,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NET-CLOUD | Config Hub</title>
+    <title>NET-CLOUD | AI Config Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        body { background-color: #020617; background-image: radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 70%); }
+        .glass-panel { 
+            background: rgba(15, 23, 42, 0.6); 
+            backdrop-filter: blur(16px); 
+            border: 1px solid rgba(6, 182, 212, 0.2); 
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.05);
+        }
+        .glow-input:focus { border-color: #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); outline: none; }
+        .neon-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #020617; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 4px; }
+        .link-box { word-break: break-all; }
     </style>
 </head>
-<body class="bg-slate-900 min-h-screen text-slate-200 font-sans bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black p-4 flex items-center justify-center">
+<body class="min-h-screen text-slate-200 font-sans p-4 flex items-center justify-center">
 
-    <div class="glass-panel w-full max-w-lg rounded-2xl shadow-2xl p-6 md:p-8 relative">
-        
-        <a href="admin.php" class="absolute top-6 left-6 text-slate-400 hover:text-white transition p-2 bg-slate-800/80 rounded-lg border border-slate-700/60" title="Analytics Dashboard">
-            <div class="w-5 h-4 flex flex-col justify-between items-center cursor-pointer">
-                <span class="w-full h-[2px] bg-current rounded"></span>
-                <span class="w-full h-[2px] bg-current rounded"></span>
-                <span class="w-full h-[2px] bg-current rounded"></span>
-            </div>
+    <div class="glass-panel w-full max-w-lg rounded-2xl p-6 md:p-8 relative overflow-hidden group">
+        <div class="absolute -top-20 -right-20 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition duration-700"></div>
+
+        <a href="admin.php" class="absolute top-6 left-6 text-cyan-500/50 hover:text-cyan-400 transition p-2 bg-slate-900/80 rounded-lg border border-cyan-500/20 hover:border-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.1)]" title="System Radar">
+            <i class="fa-solid fa-microchip"></i>
         </a>
 
-        <div class="text-center mb-6 pt-4">
-            <h1 class="text-3xl font-bold tracking-wider text-white"> CLOUD <span class="text-emerald-400"> CONFIG </span></h1>
-            <p class="text-slate-400 text-xs mt-1">Multi-Upload & Secure Client Tracker</p>
+        <div class="text-center mb-8 pt-4">
+            <h1 class="text-3xl font-black tracking-widest text-white mb-2">
+                NET<span class="text-cyan-400 neon-text">CLOUD</span>
+            </h1>
+            <p class="text-cyan-500/70 text-xs font-mono tracking-widest uppercase"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> AI Injection Engine</p>
         </div>
 
         <?php if(!empty($generatedLinks)): ?>
-        <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-700 mb-6 max-h-80 overflow-y-auto custom-scroll space-y-5 text-center">
+        <div class="bg-slate-950/80 rounded-xl p-5 border border-cyan-500/30 mb-6 max-h-[400px] overflow-y-auto custom-scroll space-y-5">
             <?php foreach($generatedLinks as $idx => $item): ?>
-            <div class="flex flex-col items-center justify-center">
-                <span class="text-slate-400 text-xs mb-1 truncate w-full px-4 text-left font-mono"><?= htmlspecialchars($item['original_name']) ?></span>
-                <div class="flex items-center justify-center gap-2 w-full max-w-sm">
-                    <a href="<?= $item['link'] ?>" target="_blank" class="text-emerald-400 hover:text-emerald-300 hover:underline text-xs truncate bg-slate-800 px-3 py-2 rounded border border-slate-700 w-full text-left font-mono" id="link-<?= $idx ?>">
+            <div class="flex flex-col w-full relative">
+                <span class="text-cyan-400 text-xs mb-2 font-mono border-b border-slate-800 pb-1">
+                    <i class="fa-regular fa-file-code mr-1"></i> <?= htmlspecialchars($item['original_name']) ?>
+                </span>
+                <div class="flex items-stretch justify-center gap-2 w-full">
+                    <div class="link-box bg-slate-900 text-slate-300 hover:text-white text-sm p-3 rounded-lg border border-slate-700 flex-1 font-mono leading-relaxed select-all" id="link-<?= $idx ?>">
                         <?= $item['link'] ?>
-                    </a>
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded border border-slate-600 transition flex-shrink-0">
-                        <i class="fa-solid fa-copy"></i>
+                    </div>
+                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-cyan-600/20 hover:bg-cyan-500 text-cyan-400 hover:text-white px-4 rounded-lg border border-cyan-500/50 transition flex-shrink-0 flex items-center justify-center">
+                        <i class="fa-solid fa-clone text-lg"></i>
                     </button>
                 </div>
             </div>
@@ -145,30 +160,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
         </div>
 
         <div class="flex gap-3">
-            <button onclick="window.location.href='/'" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition text-xs">
-                 Back to Upload
+            <button onclick="window.location.href='/'" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-mono uppercase tracking-wider py-3 px-4 rounded-xl border border-slate-600 transition text-xs">
+                 <i class="fa-solid fa-rotate-left mr-1"></i> Restart
             </button>
-            <button onclick="copyAll()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-emerald-500/20 text-xs">
-                 Copy All Links
+            <button onclick="copyAll()" class="flex-[2] bg-cyan-600 hover:bg-cyan-500 text-white font-mono uppercase tracking-wider py-3 px-4 rounded-xl transition shadow-[0_0_15px_rgba(6,182,212,0.4)] text-xs font-bold">
+                 <i class="fa-solid fa-copy mr-1"></i> Copy All Payloads
             </button>
         </div>
 
-        <div id="toast" class="fixed bottom-5 right-5 bg-emerald-500 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-xs font-semibold">
-            Links copied to clipboard!
+        <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-cyan-500 text-slate-900 px-6 py-3 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.6)] transform -translate-y-20 opacity-0 transition-all duration-300 z-50 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+            <i class="fa-solid fa-circle-check"></i> Copied to Clipboard
         </div>
 
         <script>
             function showToast() {
                 const toast = document.getElementById('toast');
-                toast.classList.remove('translate-y-20', 'opacity-0');
-                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
+                toast.classList.remove('-translate-y-20', 'opacity-0');
+                setTimeout(() => toast.classList.add('-translate-y-20', 'opacity-0'), 2500);
             }
             function copySingle(id, btn) {
                 const link = document.getElementById(id).innerText.trim();
                 navigator.clipboard.writeText(link);
                 const icon = btn.querySelector('i');
-                icon.className = 'fa-solid fa-check text-emerald-400';
-                setTimeout(() => icon.className = 'fa-solid fa-copy', 1500);
+                icon.className = 'fa-solid fa-check text-white';
+                setTimeout(() => icon.className = 'fa-solid fa-clone text-lg', 1500);
                 showToast();
             }
             function copyAll() {
@@ -180,35 +195,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
         </script>
 
         <?php else: ?>
-        <form method="POST" enctype="multipart/form-data" class="space-y-5">
-            <div class="relative border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-emerald-400 transition group cursor-pointer bg-slate-800/50">
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <div class="relative border-2 border-dashed border-cyan-500/40 rounded-xl p-10 text-center hover:border-cyan-400 hover:bg-cyan-500/5 transition duration-300 group cursor-pointer bg-slate-900/50">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
-                <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-500 group-hover:text-emerald-400 transition mb-3"></i>
-                <p class="text-sm font-semibold text-slate-300" id="fileName">Drop or paste File</p>
-                <p class="text-xs text-slate-500 mt-2"></p>
+                <div class="w-16 h-16 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-4 border border-cyan-500/30 group-hover:scale-110 transition shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-cyan-400"></i>
+                </div>
+                <p class="text-sm font-mono text-slate-300" id="fileName">Select or Drop Files Here</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-xs text-slate-400 uppercase mb-1 ml-1">Max Downloads</label>
-                    <input type="number" name="limit" value="1" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm text-center font-mono">
+                    <label class="block text-[10px] text-cyan-500/80 font-mono uppercase tracking-widest mb-2 ml-1"><i class="fa-solid fa-download mr-1"></i> Max Downloads</label>
+                    <input type="number" name="limit" placeholder="Limit (e.g. 1)" required min="1" class="glow-input w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-cyan-500 text-sm text-center font-mono placeholder-slate-600 transition">
                 </div>
+                
                 <div>
-                    <label class="block text-xs text-slate-400 uppercase mb-1 ml-1">Validity Files</label>
-                    <input type="number" name="hours" value="24" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-sm text-center font-mono">
+                    <label class="block text-[10px] text-cyan-500/80 font-mono uppercase tracking-widest mb-2 ml-1"><i class="fa-regular fa-clock mr-1"></i> Validity Time</label>
+                    <div class="flex gap-2">
+                        <input type="number" name="time_value" placeholder="Duration" required min="1" class="glow-input w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-3 text-white text-sm text-center font-mono placeholder-slate-600 transition">
+                        <select name="time_unit" class="w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-3 text-cyan-400 focus:border-cyan-500 text-xs font-mono outline-none appearance-none text-center cursor-pointer">
+                            <option value="minutes">Minutes</option>
+                            <option value="hours" selected>Hours</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-emerald-500/20 text-sm">
-                Generate Links
+            <button type="submit" class="w-full relative overflow-hidden bg-cyan-600 hover:bg-cyan-500 text-slate-900 font-black tracking-widest uppercase py-4 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] text-sm group">
+                <span class="relative z-10"><i class="fa-solid fa-microchip mr-2"></i> Generate Smart Links</span>
+                <div class="absolute inset-0 h-full w-0 bg-white/20 group-hover:w-full transition-all duration-300 ease-out"></div>
             </button>
         </form>
 
         <script>
             document.getElementById('fileInput').addEventListener('change', function(e) {
                 const count = e.target.files.length;
-                if(count === 1) { document.getElementById('fileName').innerHTML = '<span class="text-emerald-400">' + e.target.files[0].name + '</span>'; }
-                else if(count > 1) { document.getElementById('fileName').innerHTML = '<span class="text-emerald-400">' + count + ' files selected</span>'; }
+                if(count === 1) { document.getElementById('fileName').innerHTML = '<span class="text-cyan-400 font-bold">' + e.target.files[0].name + '</span>'; }
+                else if(count > 1) { document.getElementById('fileName').innerHTML = '<span class="text-cyan-400 font-bold">[' + count + '] Files Loaded Ready</span>'; }
             });
         </script>
         <?php endif; ?>
