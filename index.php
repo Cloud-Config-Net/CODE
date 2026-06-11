@@ -106,15 +106,13 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
             if (move_uploaded_file($tmpName, $targetPath)) {
                 $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
                 
-                $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https://" : "http://";
+                // === الحيلة البرمجية لإجبار التطبيق على قبول الرابط ===
                 $host = $_SERVER['HTTP_HOST'];
-                $port = $_SERVER['SERVER_PORT'];
-                
-                if (strpos($host, ':') === false && $port != 80 && $port != 443) {
-                    $host .= ':' . $port;
-                }
-                
-                $link = $protocol . $host . '/' . $shortId . '.hc';
+                // إزالة أي بورت من الرابط الناتج (مثل :8880)
+                $host = preg_replace('/:\d+$/', '', $host); 
+                // إجبار الرابط أن يكون https
+                $link = "https://" . $host . '/' . $shortId . '.hc';
+                // ======================================================
                 
                 $db[$shortId] = [
                     'original_name' => $originalName,
