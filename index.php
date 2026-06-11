@@ -5,7 +5,7 @@
  */
 
 session_start();
-date_default_timezone_set('Africa/Tunis'); // تم إضافة التوقيت هنا
+date_default_timezone_set('Africa/Tunis');
 
 $uploadDir = __DIR__ . '/uploads/';
 $dbFile = __DIR__ . '/db.json';
@@ -35,7 +35,6 @@ if (isset($_GET['c'])) {
     if (isset($db[$id])) {
         $entry = $db[$id];
         
-        // Expiration or Limits check
         if (time() > $entry['expires'] || ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel . ' (Expired)', 'time' => time(), 'status' => 'Failed'];
             file_put_contents($dbFile, json_encode($db));
@@ -43,7 +42,6 @@ if (isset($_GET['c'])) {
             header("HTTP/1.1 410 Gone"); die("This link has expired or reached its download limit.");
         }
         
-        // Block Browser attempts
         if ($isBrowser) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Blocked'];
             file_put_contents($dbFile, json_encode($db));
@@ -51,7 +49,6 @@ if (isset($_GET['c'])) {
             die('<!DOCTYPE html><html><body style="background:#0f172a; color:#ef4444; text-align:center; padding-top:20%; font-family:sans-serif;"><h1>🛑 403 Access Denied</h1><p>This config file must be imported inside the HTTP Custom app directly.</p></body></html>');
         }
 
-        // Success Download (HTTP Custom)
         $db[$id]['downloads']++;
         $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Success'];
         file_put_contents($dbFile, json_encode($db));
@@ -65,20 +62,18 @@ if (isset($_GET['c'])) {
 }
 
 // ==========================================
-// UI Login System Authentication
+// UNIFIED UI Login System
 // ==========================================
 $adminUser = 'Admin';
 $adminPass = '38sPcd6Ysr04NGVk'; 
 
 $loginError = false;
 
-// تسجيل الخروج
 if (isset($_GET['logout'])) {
     unset($_SESSION['main_logged']);
     header("Location: /"); exit;
 }
 
-// معالجة تسجيل الدخول
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
     if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
         $_SESSION['main_logged'] = true;
@@ -99,7 +94,6 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
     $duration = (int)$_POST['duration'];
     $timeUnit = $_POST['time_unit'] ?? 'hours';
     
-    // Calculate expiration based on Minutes or Hours
     $seconds = ($timeUnit === 'minutes') ? ($duration * 60) : ($duration * 3600);
     $fileCount = count($_FILES['files']['name']);
     
@@ -112,7 +106,6 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
             if (move_uploaded_file($tmpName, $targetPath)) {
                 $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
                 
-                // --- إصلاح البورت في الرابط هنا ---
                 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https://" : "http://";
                 $host = $_SERVER['HTTP_HOST'];
                 $port = $_SERVER['SERVER_PORT'];
@@ -122,8 +115,7 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                 }
                 
                 $link = $protocol . $host . '/' . $shortId . '.hc';
-                // ------------------------------------
-
+                
                 $db[$shortId] = [
                     'original_name' => $originalName,
                     'real_path' => $targetPath,
@@ -145,47 +137,23 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CLOUD CONFIG</title>
+    <title>SYSTEM LOGIN | CLOUD CONFIG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #05080f; overflow-x: hidden; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
-        .glass-panel { 
-            background: rgba(10, 15, 28, 0.85); 
-            backdrop-filter: blur(12px);
-            border: 1px solid #1e2738; 
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05);
-        }
-        
+        .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 10px; }
-        
-        /* تأثيرات النيون */
         .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
         .btn-glow { box-shadow: 0 0 20px rgba(81, 192, 192, 0.25); transition: all 0.3s ease; }
         .btn-glow:hover { box-shadow: 0 0 30px rgba(81, 192, 192, 0.4); transform: translateY(-2px); }
-
-        /* الأيقونات والايموجي المتحركة في الخلفية */
-        .bg-animations {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: -1; overflow: hidden;
-        }
-        .floating-element {
-            position: absolute;
-            animation: float-up linear infinite;
-            opacity: 0.15;
-            filter: drop-shadow(0 0 10px rgba(81,192,192,0.5));
-        }
-        @keyframes float-up {
-            0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
-            10% { opacity: 0.2; }
-            90% { opacity: 0.2; }
-            100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
-        }
+        .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
+        .floating-element { position: absolute; animation: float-up linear infinite; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(81,192,192,0.5)); }
+        @keyframes float-up { 0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 0.2; } 90% { opacity: 0.2; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; } }
     </style>
 </head>
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4 relative">
@@ -201,45 +169,28 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
 
     <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10">
         
-        <?php if($isLogged): ?>
-        <a href="admin.php" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition-all hover:shadow-[0_0_10px_rgba(81,192,192,0.2)] z-20" title="Radar Analytics">
-            <i class="fa-solid fa-chart-line text-[15px]"></i>
-        </a>
-
-        <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
-            <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
-        </a>
-        <?php else: ?>
-        <div class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] rounded-xl shadow-inner z-20">
-            <i class="fa-solid fa-microchip text-[#51C0C0] opacity-80"></i>
-        </div>
-        <?php endif; ?>
-
-        <div class="text-center mt-16 mb-10 w-full flex flex-col items-center relative z-10">
-            <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
-                CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
-            </h1>
-            <div class="h-[2px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
-        </div>
-
         <?php if(!$isLogged): ?>
-        <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 rounded-2xl border border-[#1e2738]">
+        <div class="text-center mt-6 mb-8 w-full flex flex-col items-center relative z-10">
+            <div class="w-16 h-16 rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mx-auto mb-5 relative group shadow-[0_0_15px_rgba(81,192,192,0.2)]">
+                <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/5 animate-pulse"></div>
+                <i class="fa-solid fa-user-shield text-[#51C0C0] text-2xl z-10"></i>
+            </div>
+            <h2 class="text-[28px] font-extrabold tracking-widest text-white drop-shadow-lg">SYSTEM <span class="text-[#51C0C0] neon-text-glow">LOGIN</span></h2>
+            <div class="h-[2px] w-12 bg-[#51C0C0] mt-3 mx-auto rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+        </div>
+
+        <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 sm:p-8 rounded-[2rem] border border-[#1e2738] shadow-[0_0_20px_rgba(0,0,0,0.3)]">
             <input type="hidden" name="ui_login" value="1">
             
-            <div class="text-center mb-6">
-                <i class="fa-solid fa-lock text-3xl text-[#425975] mb-2"></i>
-                <p class="text-[11px] tracking-[0.1em] text-[#8a9bb3] font-mono uppercase">Secure Access Required</p>
-            </div>
-
             <?php if($loginError): ?>
-                <div class="bg-[#1a0f14] border border-red-900/50 text-red-400 text-xs p-3 rounded-xl text-center font-mono animate-pulse">
+                <div class="bg-[#1a0f14] border border-red-900/50 text-red-400 text-xs p-3 rounded-xl text-center font-mono animate-pulse uppercase tracking-wide">
                     <i class="fa-solid fa-triangle-exclamation mr-1"></i> <?= $loginError ?>
                 </div>
             <?php endif; ?>
 
             <div>
                 <label class="flex items-center text-[10px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2 ml-1">
-                    <i class="fa-solid fa-user mr-2"></i> Username
+                    <i class="fa-solid fa-user-astronaut mr-2"></i> Username
                 </label>
                 <input type="text" name="username" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-sm text-white font-mono focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="Enter Admin">
             </div>
@@ -248,15 +199,30 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                 <label class="flex items-center text-[10px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2 ml-1">
                     <i class="fa-solid fa-key mr-2"></i> Password
                 </label>
-                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-sm text-white font-mono focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••">
+                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-sm text-white font-mono focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••••••">
             </div>
             
             <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition btn-glow text-[13px] flex items-center justify-center uppercase tracking-widest mt-6">
-                <i class="fa-solid fa-right-to-bracket mr-2 text-[15px]"></i> Login
+                Access System <i class="fa-solid fa-arrow-right-to-bracket ml-2 text-[15px]"></i>
             </button>
         </form>
 
         <?php else: ?>
+        <a href="admin.php" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition-all hover:shadow-[0_0_10px_rgba(81,192,192,0.2)] z-20" title="Radar Analytics">
+            <i class="fa-solid fa-chart-line text-[15px]"></i>
+        </a>
+
+        <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
+            <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
+        </a>
+
+        <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
+            <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
+                CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
+            </h1>
+            <div class="h-[2px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+        </div>
+
         <?php if(!empty($generatedLinks)): ?>
         <div class="bg-[#0a0f1c] border border-[#141c2b] rounded-2xl p-4 sm:p-6 mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-8 relative z-20">
             <?php foreach($generatedLinks as $idx => $item): ?>
@@ -298,7 +264,6 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                 setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
             }
 
-            // --- كود النسخ الاحتياطي يعمل على HTTP ---
             function copyToClipboardFallback(text) {
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text);
