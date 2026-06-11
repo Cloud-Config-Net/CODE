@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Secure Admin Panel & Log Radar (URL Edition)
+ * NET-CLOUD-CONFIG - Secure Admin Panel & Log Radar (Cyberpunk UI)
  * File Name: admin.php
  */
 
@@ -26,14 +26,18 @@ if (isset($_GET['logout'])) {
 if (isset($_GET['delete'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['delete']);
     if (isset($db[$id])) { 
+        @unlink($db[$id]['real_path']); 
         unset($db[$id]); 
         file_put_contents($dbFile, json_encode($db)); 
     }
     header("Location: admin.php"); exit;
 }
 
-// Delete ALL items action
+// Delete ALL items action (NEW)
 if (isset($_GET['delete_all'])) {
+    foreach ($db as $id => $d) {
+        @unlink($d['real_path']); 
+    }
     $db = []; 
     file_put_contents($dbFile, json_encode($db)); 
     header("Location: admin.php"); exit;
@@ -88,7 +92,7 @@ if (isset($_GET['delete_all'])) {
             
             <div class="flex flex-wrap gap-3 z-10 justify-center md:justify-end mt-4 md:mt-0">
                 <a href="index.php" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(81,192,192,0.1)]">
-                    <i class="fa-solid fa-link mr-2"></i> Shorten URL
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload
                 </a>
                 
                 <a href="?delete_all=1" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(220,38,38,0.1)]">
@@ -111,20 +115,18 @@ if (isset($_GET['delete_all'])) {
             ?>
             <div class="glass-panel rounded-[1.5rem] p-5 relative overflow-hidden group hover:border-[#51C0C0]/50 transition-colors duration-300">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#1e2738] pb-5 mb-5">
-                    <div class="flex items-center gap-4 max-w-full">
-                        <div class="w-12 h-12 rounded-xl bg-[#0d131f] border border-[#1e2738] flex-shrink-0 flex items-center justify-center text-[#51C0C0]">
-                            <i class="fa-solid fa-link text-xl"></i>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-[#0d131f] border border-[#1e2738] flex items-center justify-center text-[#51C0C0]">
+                            <i class="fa-regular fa-file-code text-xl"></i>
                         </div>
-                        <div class="overflow-hidden">
-                            <span class="text-[10px] uppercase tracking-widest text-[#425975] block mb-1 font-mono truncate max-w-[200px] md:max-w-xs" title="<?= htmlspecialchars($d['target_url'] ?? $d['original_name'] ?? 'Unknown') ?>">
-                                Target: <?= htmlspecialchars($d['target_url'] ?? $d['original_name'] ?? 'Unknown') ?>
-                            </span>
+                        <div>
+                            <span class="text-[10px] uppercase tracking-widest text-[#425975] block mb-1 font-mono">Original: <?= htmlspecialchars($d['original_name']) ?></span>
                             <span class="font-mono text-[#51C0C0] font-bold text-lg neon-text-glow"><?= $id ?>.hc</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
                         <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738]">
-                            <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Fetches</span>
+                            <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Downloads</span>
                             <span class="text-white font-bold text-sm"><?= $d['downloads'] ?> <span class="text-[#425975] mx-1">/</span> <span class="<?= $d['limit'] > 0 ? 'text-[#51C0C0]' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
                         </div>
                         <div><?= $statusHtml ?></div>
@@ -156,7 +158,7 @@ if (isset($_GET['delete_all'])) {
                                         </td>
                                         <td class="px-5 py-3.5 text-right">
                                             <span class="px-2.5 py-1.5 rounded-lg font-mono uppercase tracking-widest border text-[9px] <?= $badge ?> inline-flex items-center">
-                                                <?= $icon ?> <?= $log['status'] === 'Success' ? 'Redirected' : 'Blocked' ?>
+                                                <?= $icon ?> <?= $log['status'] === 'Success' ? 'Fetched' : 'Blocked' ?>
                                             </span>
                                         </td>
                                     </tr>
@@ -181,7 +183,7 @@ if (isset($_GET['delete_all'])) {
                     <div class="w-20 h-20 bg-[#0d131f] border border-[#1e2738] rounded-full flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <i class="fa-solid fa-satellite text-3xl text-[#1e2738]"></i>
                     </div>
-                    <p class="text-[#425975] font-mono text-[12px] uppercase tracking-widest">Radar is empty. No short links active.</p>
+                    <p class="text-[#425975] font-mono text-[12px] uppercase tracking-widest">Radar is empty. No configurations active.</p>
                 </div>
             <?php endif; ?>
         </div>
