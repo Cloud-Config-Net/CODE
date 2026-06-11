@@ -320,7 +320,7 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                     <label class="flex items-center text-[11px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
                         <i class="fa-solid fa-download mr-2 text-[12px]"></i> Limit
                     </label>
-                    <input type="number" name="limit" placeholder="Limit (e.g. 1)" class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-5 py-4 text-[15px] text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] focus:shadow-[0_0_10px_rgba(81,192,192,0.1)] transition font-mono placeholder-[#2e3c50]">
+                    <input type="number" name="limit" placeholder="Limit" class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-5 py-4 text-[15px] text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] focus:shadow-[0_0_10px_rgba(81,192,192,0.1)] transition font-mono placeholder-[#2e3c50]">
                 </div>
 
                 <div>
@@ -344,7 +344,7 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
             </div>
 
             <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition btn-glow text-[13px] flex items-center justify-center uppercase tracking-widest mt-4">
-                <i class="fa-solid fa-gear fa-spin-pulse mr-2 text-[16px]"></i> Generate Smart Links
+                <i class="fa-solid fa-gear fa-spin-pulse mr-2 text-[16px]"></i> Generate Link
             </button>
         </form>
 
