@@ -16,7 +16,7 @@ if (!file_exists($dbFile)) { file_put_contents($dbFile, json_encode([])); }
 $db = json_decode(file_get_contents($dbFile), true) ?: [];
 
 // ==========================================
-// Smart Download & Client Sniffer Radar (UNTOUCHED CORE LOGIC)
+// Smart Download & Client Sniffer Radar
 // ==========================================
 if (isset($_GET['c'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['c']);
@@ -38,7 +38,8 @@ if (isset($_GET['c'])) {
         if (time() > $entry['expires'] || ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel . ' (Expired)', 'time' => time(), 'status' => 'Failed'];
             file_put_contents($dbFile, json_encode($db));
-            @unlink($entry['real_path']); unset($db[$id]); file_put_contents($dbFile, json_encode($db)); 
+            @unlink($entry['real_path']); // مسح الملف الفعلي فقط لتوفير مساحة السيرفر
+            // تم إلغاء أمر مسح السجل من قاعدة البيانات ليبقى ظاهراً في الرادار كأرشيف
             header("HTTP/1.1 410 Gone"); die("This link has expired or reached its download limit.");
         }
         
@@ -53,10 +54,18 @@ if (isset($_GET['c'])) {
         $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Success'];
         file_put_contents($dbFile, json_encode($db));
         
-        header('Content-Type: application/octet-stream');
+        if (ob_get_length()) { ob_end_clean(); } 
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream'); 
         header('Content-Disposition: attachment; filename="' . basename($entry['original_name']) . '"');
+        header('Content-Transfer-Encoding: binary'); 
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate'); 
+        header('Pragma: public');
         header('Content-Length: ' . filesize($entry['real_path']));
-        readfile($entry['real_path']); exit;
+        
+        readfile($entry['real_path']); 
+        exit;
     }
     header("HTTP/1.1 404 Not Found"); die("File Not Found.");
 }
@@ -106,13 +115,9 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
             if (move_uploaded_file($tmpName, $targetPath)) {
                 $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
                 
-                // === الحيلة البرمجية لإجبار التطبيق على قبول الرابط ===
                 $host = $_SERVER['HTTP_HOST'];
-                // إزالة أي بورت من الرابط الناتج (مثل :8880)
                 $host = preg_replace('/:\d+$/', '', $host); 
-                // إجبار الرابط أن يكون https
                 $link = "https://" . $host . '/' . $shortId . '.hc';
-                // ======================================================
                 
                 $db[$shortId] = [
                     'original_name' => $originalName,
