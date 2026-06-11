@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==========================================
-# NET-CLOUD MANAGER (SECURE URL SHORTENER)
+# NET-CLOUD MANAGER (SECURE)
 # ==========================================
 
 # --- Colors & Styling ---
@@ -50,7 +50,7 @@ install_netcloud() {
     apt update && apt install nginx php8.2-fpm php8.2-curl ufw -y > /dev/null 2>&1
 
     echo -e "  ${LIGHT_CYAN}[2/6]${NC} 📁 Setting up system directories & permissions..."
-    mkdir -p $WEB_ROOT
+    mkdir -p $WEB_ROOT/uploads
     chown -R www-data:www-data $WEB_ROOT
 
     echo -e "  ${LIGHT_CYAN}[3/6]${NC} ⬇️ Fetching core engine files from GitHub..."
@@ -76,7 +76,7 @@ server {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
 
-    # Smart Redirect Firewall
+    # Smart Download Firewall
     location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
         if (\$http_user_agent ~* (WhatsApp|TelegramBot|facebookexternalhit|Twitterbot|Slackbot)) {
             return 200 "NetCloud Preview Blocked Safely";
@@ -92,6 +92,7 @@ server {
     }
 
     location /db.json { deny all; return 404; }
+    location /uploads/ { deny all; return 404; }
 }
 EOF
 
