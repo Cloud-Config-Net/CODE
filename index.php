@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Main Upload & Client Sniffer (English/Arabic UI)
+ * NET-CLOUD-CONFIG - Main Upload & Client Sniffer 
  * File Name: index.php
  */
 
@@ -67,7 +67,7 @@ if (isset($_GET['c'])) {
 // UI Login System Authentication
 // ==========================================
 $adminUser = 'Admin';
-$adminPass = 'admin123'; // يمكنك تغيير الباسورد من هنا
+$adminPass = '38sPcd6Ysr04NGVk'; 
 
 $loginError = false;
 
@@ -189,16 +189,20 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
     <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10">
         
         <?php if($isLogged): ?>
-        <a href="?logout=1" class="absolute top-6 right-6 w-9 h-9 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition">
-            <i class="fa-solid fa-right-from-bracket text-[14px]"></i>
+        <a href="admin.php" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition-all hover:shadow-[0_0_10px_rgba(81,192,192,0.2)] z-20" title="Radar Analytics">
+            <i class="fa-solid fa-chart-line text-[15px]"></i>
         </a>
-        <?php endif; ?>
 
-        <div class="absolute top-6 left-6 w-9 h-9 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] rounded-xl shadow-inner">
+        <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
+            <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
+        </a>
+        <?php else: ?>
+        <div class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] rounded-xl shadow-inner z-20">
             <i class="fa-solid fa-microchip text-[#51C0C0] opacity-80"></i>
         </div>
+        <?php endif; ?>
 
-        <div class="text-center mt-8 mb-10 w-full flex flex-col items-center">
+        <div class="text-center mt-16 mb-10 w-full flex flex-col items-center relative z-10">
             <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
                 CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
             </h1>
