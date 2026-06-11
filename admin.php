@@ -9,7 +9,7 @@ session_start();
 $dbFile = __DIR__ . '/db.json';
 $db = json_decode(file_exists($dbFile) ? file_get_contents($dbFile) : '[]', true) ?: [];
 
-// SECURE CREDENTIALS SETUP (يمكنك تغييرها من هنا)
+// SECURE CREDENTIALS SETUP (تم توحيد كلمة المرور هنا أيضاً)
 $adminUser = 'Admin';
 $adminPass = '38sPcd6Ysr04NGVk'; 
 
@@ -92,7 +92,6 @@ if (isset($_GET['delete']) && isset($_SESSION['admin_logged'])) {
 </head>
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-4 relative">
 
-    <!-- خلفية الايموجي المتحركة -->
     <div class="bg-animations">
         <div class="floating-element text-3xl" style="left: 15%; animation-duration: 18s; animation-delay: 2s;">📡</div>
         <div class="floating-element text-4xl text-[#51C0C0]" style="left: 45%; animation-duration: 22s; animation-delay: 5s;"><i class="fa-solid fa-shield-halved"></i></div>
@@ -102,7 +101,6 @@ if (isset($_GET['delete']) && isset($_SESSION['admin_logged'])) {
     </div>
 
     <?php if (!isset($_SESSION['admin_logged'])): ?>
-        <!-- واجهة تسجيل الدخول للإدارة -->
         <div class="glass-panel w-full max-w-[26rem] rounded-[2rem] p-8 relative z-10">
             <div class="text-center mt-3 mb-8">
                 <div class="w-16 h-16 rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mx-auto mb-5 relative group shadow-[0_0_15px_rgba(81,192,192,0.2)]">
@@ -139,7 +137,6 @@ if (isset($_GET['delete']) && isset($_SESSION['admin_logged'])) {
             </form>
         </div>
     <?php else: ?>
-        <!-- لوحة التحكم / الرادار -->
         <div class="w-full max-w-5xl my-auto py-8 z-10 relative">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 glass-panel p-6 rounded-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-64 h-64 bg-[#51C0C0] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
