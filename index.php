@@ -5,6 +5,7 @@
  */
 
 session_start();
+date_default_timezone_set('Africa/Tunis'); // تم إضافة التوقيت هنا
 
 $uploadDir = __DIR__ . '/uploads/';
 $dbFile = __DIR__ . '/db.json';
@@ -110,6 +111,19 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
             
             if (move_uploaded_file($tmpName, $targetPath)) {
                 $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                
+                // --- إصلاح البورت في الرابط هنا ---
+                $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https://" : "http://";
+                $host = $_SERVER['HTTP_HOST'];
+                $port = $_SERVER['SERVER_PORT'];
+                
+                if (strpos($host, ':') === false && $port != 80 && $port != 443) {
+                    $host .= ':' . $port;
+                }
+                
+                $link = $protocol . $host . '/' . $shortId . '.hc';
+                // ------------------------------------
+
                 $db[$shortId] = [
                     'original_name' => $originalName,
                     'real_path' => $targetPath,
@@ -119,7 +133,6 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                     'upload_date' => time(),
                     'logs' => []
                 ];
-                $link = (isset($_SERVER['HTTPS']) ? "https://" : "http://") . $_SERVER['HTTP_HOST'] . '/' . $shortId . '.hc';
                 $generatedLinks[] = ['original_name' => $originalName, 'link' => $link];
             }
         }
@@ -284,18 +297,37 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                 toast.classList.remove('translate-y-20', 'opacity-0');
                 setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
             }
+
+            // --- كود النسخ الاحتياطي يعمل على HTTP ---
+            function copyToClipboardFallback(text) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text);
+                } else {
+                    let textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.opacity = "0";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try { document.execCommand('copy'); } catch (err) {}
+                    document.body.removeChild(textArea);
+                }
+            }
+
             function copySingle(id, btn) {
                 const link = document.getElementById(id).innerText.trim();
-                navigator.clipboard.writeText(link);
+                copyToClipboardFallback(link);
                 const icon = btn.querySelector('i');
                 icon.className = 'fa-solid fa-check text-[#51C0C0] text-[15px]';
                 setTimeout(() => icon.className = 'fa-regular fa-copy text-[15px]', 1500);
                 showToast();
             }
+
             function copyAll() {
                 let allLinks = [];
                 <?php foreach($generatedLinks as $idx => $item): ?> allLinks.push("<?= $item['link'] ?>"); <?php endforeach; ?>
-                navigator.clipboard.writeText(allLinks.join("\n"));
+                copyToClipboardFallback(allLinks.join("\n"));
                 showToast();
             }
         </script>
@@ -320,7 +352,7 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                     <label class="flex items-center text-[11px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
                         <i class="fa-solid fa-download mr-2 text-[12px]"></i> Limit
                     </label>
-                    <input type="number" name="limit" placeholder="Limit" class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-5 py-4 text-[15px] text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] focus:shadow-[0_0_10px_rgba(81,192,192,0.1)] transition font-mono placeholder-[#2e3c50]">
+                    <input type="number" name="limit" placeholder="Limit (e.g. 1)" class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-5 py-4 text-[15px] text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] focus:shadow-[0_0_10px_rgba(81,192,192,0.1)] transition font-mono placeholder-[#2e3c50]">
                 </div>
 
                 <div>
