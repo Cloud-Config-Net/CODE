@@ -9,7 +9,7 @@ date_default_timezone_set('Africa/Tunis');
 
 // === UNIFIED SECURITY CHECK ===
 if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
-    header("Location: index.php"); // طرد المستخدم الغير مسجل للرئيسية
+    header("Location: index.php"); 
     exit;
 }
 
@@ -22,7 +22,7 @@ if (isset($_GET['logout'])) {
     header("Location: index.php"); exit;
 }
 
-// Delete item action
+// Delete SINGLE item action
 if (isset($_GET['delete'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['delete']);
     if (isset($db[$id])) { 
@@ -30,6 +30,16 @@ if (isset($_GET['delete'])) {
         unset($db[$id]); 
         file_put_contents($dbFile, json_encode($db)); 
     }
+    header("Location: admin.php"); exit;
+}
+
+// Delete ALL items action (NEW)
+if (isset($_GET['delete_all'])) {
+    foreach ($db as $id => $d) {
+        @unlink($d['real_path']); 
+    }
+    $db = []; 
+    file_put_contents($dbFile, json_encode($db)); 
     header("Location: admin.php"); exit;
 }
 ?>
@@ -79,11 +89,17 @@ if (isset($_GET['delete'])) {
                     <i class="fa-solid fa-satellite-dish animate-pulse text-[#51C0C0] mr-1"></i> Live Sniffer & Traffic Inspection
                 </p>
             </div>
-            <div class="flex gap-3 z-10">
-                <a href="index.php" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] px-5 py-3 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.2)]">
-                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload Panel
+            
+            <div class="flex flex-wrap gap-3 z-10 justify-center md:justify-end mt-4 md:mt-0">
+                <a href="index.php" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(81,192,192,0.1)]">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload
                 </a>
-                <a href="?logout=1" class="bg-[#1a0f14] hover:bg-[#2a1215] border border-red-900/50 hover:border-red-500/50 text-red-400 px-5 py-3 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center">
+                
+                <a href="?delete_all=1" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(220,38,38,0.1)]">
+                    <i class="fa-solid fa-dumpster-fire mr-2"></i> Delete All
+                </a>
+
+                <a href="?logout=1" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(220,38,38,0.1)]">
                     <i class="fa-solid fa-power-off mr-2"></i> Logout
                 </a>
             </div>
