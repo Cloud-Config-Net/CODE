@@ -1,8 +1,10 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Main Upload & Client Sniffer (English)
+ * NET-CLOUD-CONFIG - Main Upload & Client Sniffer (English/Arabic UI)
  * File Name: index.php
  */
+
+session_start();
 
 $uploadDir = __DIR__ . '/uploads/';
 $dbFile = __DIR__ . '/db.json';
@@ -13,7 +15,7 @@ if (!file_exists($dbFile)) { file_put_contents($dbFile, json_encode([])); }
 $db = json_decode(file_get_contents($dbFile), true) ?: [];
 
 // ==========================================
-// Smart Download & Client Sniffer Radar
+// Smart Download & Client Sniffer Radar (UNTOUCHED CORE LOGIC)
 // ==========================================
 if (isset($_GET['c'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['c']);
@@ -62,10 +64,36 @@ if (isset($_GET['c'])) {
 }
 
 // ==========================================
+// UI Login System Authentication
+// ==========================================
+$adminUser = 'Admin';
+$adminPass = 'admin123'; // يمكنك تغيير الباسورد من هنا
+
+$loginError = false;
+
+// تسجيل الخروج
+if (isset($_GET['logout'])) {
+    unset($_SESSION['main_logged']);
+    header("Location: /"); exit;
+}
+
+// معالجة تسجيل الدخول
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
+    if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
+        $_SESSION['main_logged'] = true;
+        header("Location: /"); exit;
+    } else {
+        $loginError = "بيانات الدخول غير صحيحة!";
+    }
+}
+
+$isLogged = isset($_SESSION['main_logged']) && $_SESSION['main_logged'] === true;
+
+// ==========================================
 // Multi-Upload Handling Logic
 // ==========================================
 $generatedLinks = [];
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
+if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
     $limit = (int)$_POST['limit']; 
     $duration = (int)$_POST['duration'];
     $timeUnit = $_POST['time_unit'] ?? 'hours';
@@ -109,50 +137,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #05080f; }
+        body { font-family: 'Inter', sans-serif; background-color: #05080f; overflow-x: hidden; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
         .glass-panel { 
-            background: #0a0f1c; 
-            border: 1px solid #141c2b; 
+            background: rgba(10, 15, 28, 0.85); 
+            backdrop-filter: blur(12px);
+            border: 1px solid #1e2738; 
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05);
         }
         
-        /* تصميم شريط التمرير الجديد ليطابق الصورة */
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 10px; }
         
-        .neon-text-glow { text-shadow: 0 0 12px rgba(81, 192, 192, 0.4); }
-        .btn-glow { box-shadow: 0 0 15px rgba(81, 192, 192, 0.15); }
+        /* تأثيرات النيون */
+        .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
+        .btn-glow { box-shadow: 0 0 20px rgba(81, 192, 192, 0.25); transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 0 30px rgba(81, 192, 192, 0.4); transform: translateY(-2px); }
+
+        /* الأيقونات والايموجي المتحركة في الخلفية */
+        .bg-animations {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: -1; overflow: hidden;
+        }
+        .floating-element {
+            position: absolute;
+            animation: float-up linear infinite;
+            opacity: 0.15;
+            filter: drop-shadow(0 0 10px rgba(81,192,192,0.5));
+        }
+        @keyframes float-up {
+            0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
+            10% { opacity: 0.2; }
+            90% { opacity: 0.2; }
+            100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
+        }
     </style>
 </head>
-<body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4">
+<body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4 relative">
 
-    <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center shadow-2xl">
+    <div class="bg-animations">
+        <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s; animation-delay: 0s;">☁️</div>
+        <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s; animation-delay: 5s;">🚀</div>
+        <div class="floating-element text-5xl text-[#51C0C0]" style="left: 70%; animation-duration: 18s; animation-delay: 2s;"><i class="fa-solid fa-microchip"></i></div>
+        <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s; animation-delay: 8s;">⚡</div>
+        <div class="floating-element text-4xl text-[#51C0C0]" style="left: 50%; animation-duration: 22s; animation-delay: 12s;"><i class="fa-solid fa-satellite-dish"></i></div>
+        <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;">🔒</div>
+    </div>
+
+    <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10">
         
+        <?php if($isLogged): ?>
+        <a href="?logout=1" class="absolute top-6 right-6 w-9 h-9 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition">
+            <i class="fa-solid fa-right-from-bracket text-[14px]"></i>
+        </a>
+        <?php endif; ?>
+
         <div class="absolute top-6 left-6 w-9 h-9 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] rounded-xl shadow-inner">
-            <i class="fa-solid fa-microchip text-[#2d4b69]"></i>
+            <i class="fa-solid fa-microchip text-[#51C0C0] opacity-80"></i>
         </div>
 
-        <div class="text-center mt-6 mb-10">
-            <h1 class="text-[28px] sm:text-[32px] font-bold tracking-widest text-white">
-                CLOUD<span class="text-[#51C0C0] neon-text-glow">CONFIG</span>
+        <div class="text-center mt-8 mb-10 w-full flex flex-col items-center">
+            <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
+                CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
             </h1>
+            <div class="h-[2px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
+        <?php if(!$isLogged): ?>
+        <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 rounded-2xl border border-[#1e2738]">
+            <input type="hidden" name="ui_login" value="1">
+            
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-lock text-3xl text-[#425975] mb-2"></i>
+                <p class="text-[11px] tracking-[0.1em] text-[#8a9bb3] font-mono uppercase">Secure Access Required</p>
+            </div>
+
+            <?php if($loginError): ?>
+                <div class="bg-[#1a0f14] border border-red-900/50 text-red-400 text-xs p-3 rounded-xl text-center font-mono animate-pulse">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <?= $loginError ?>
+                </div>
+            <?php endif; ?>
+
+            <div>
+                <label class="flex items-center text-[10px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2 ml-1">
+                    <i class="fa-solid fa-user mr-2"></i> Username
+                </label>
+                <input type="text" name="username" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-sm text-white font-mono focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="Enter Admin">
+            </div>
+            
+            <div>
+                <label class="flex items-center text-[10px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2 ml-1">
+                    <i class="fa-solid fa-key mr-2"></i> Password
+                </label>
+                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-sm text-white font-mono focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••">
+            </div>
+            
+            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition btn-glow text-[13px] flex items-center justify-center uppercase tracking-widest mt-6">
+                <i class="fa-solid fa-right-to-bracket mr-2 text-[15px]"></i> Login
+            </button>
+        </form>
+
+        <?php else: ?>
         <?php if(!empty($generatedLinks)): ?>
-        <div class="bg-[#0a0f1c] border border-[#141c2b] rounded-2xl p-4 sm:p-6 mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-8">
+        <div class="bg-[#0a0f1c] border border-[#141c2b] rounded-2xl p-4 sm:p-6 mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-8 relative z-20">
             <?php foreach($generatedLinks as $idx => $item): ?>
             <div class="flex flex-col items-center">
                 <span class="text-[#64748b] text-[13px] mb-3 font-mono"><?= htmlspecialchars($item['original_name']) ?></span>
                 
                 <div class="flex items-center w-full gap-3">
                     <div class="flex-1 text-center">
-                        <a href="<?= $item['link'] ?>" target="_blank" class="text-[#cbd5e1] text-[12px] sm:text-[13px] underline decoration-[#334155] underline-offset-[6px] font-mono leading-[1.8] break-all block px-1" id="link-<?= $idx ?>">
+                        <a href="<?= $item['link'] ?>" target="_blank" class="text-[#cbd5e1] text-[12px] sm:text-[13px] underline decoration-[#334155] hover:text-[#51C0C0] underline-offset-[6px] font-mono leading-[1.8] break-all block px-1 transition-colors" id="link-<?= $idx ?>">
                             <?= $item['link'] ?>
                         </a>
                     </div>
                     
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#0f1524] hover:bg-[#1e2738] text-slate-300 w-11 h-11 rounded-xl border border-[#1e2738] transition flex-shrink-0 flex items-center justify-center shadow-sm">
+                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#0f1524] hover:bg-[#1e2738] text-slate-300 w-11 h-11 rounded-xl border border-[#1e2738] hover:border-[#51C0C0] transition-all flex-shrink-0 flex items-center justify-center shadow-sm">
                         <i class="fa-regular fa-copy text-[15px]"></i>
                     </button>
                 </div>
@@ -165,12 +266,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                  BACK
             </button>
             <button onclick="copyAll()" class="flex-[2] bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition btn-glow text-[12px] uppercase tracking-wider flex items-center justify-center">
-                 <i class="fa-regular fa-copy mr-2 text-[15px]"></i> COPY ALL LINKS
+                 <i class="fa-solid fa-clone mr-2 text-[15px]"></i> COPY ALL LINKS
             </button>
         </div>
 
-        <div id="toast" class="fixed bottom-10 right-1/2 translate-x-1/2 sm:right-5 sm:translate-x-0 bg-[#51C0C0] text-[#0a0f1c] px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-xs font-bold uppercase tracking-wide border border-[#43a3a3]">
-            Links Copied!
+        <div id="toast" class="fixed bottom-10 right-1/2 translate-x-1/2 sm:right-5 sm:translate-x-0 bg-[#51C0C0] text-[#0a0f1c] px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(81,192,192,0.4)] transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-xs font-bold uppercase tracking-wide border border-[#43a3a3]">
+            <i class="fa-solid fa-check-circle mr-1"></i> Links Copied!
         </div>
 
         <script>
@@ -196,15 +297,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
         </script>
 
         <?php else: ?>
-        <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto">
+        <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto relative z-20">
             
-            <div class="relative border-[1.5px] border-dashed border-[#1e2738] rounded-2xl p-10 text-center hover:border-[#51C0C0] transition-colors duration-300 group cursor-pointer bg-gradient-to-b from-[#0d131f] to-[#0a0f1c]">
+            <div class="relative border-[1.5px] border-dashed border-[#1e2738] rounded-2xl p-10 text-center hover:border-[#51C0C0] transition-all duration-300 group cursor-pointer bg-gradient-to-b from-[#0d131f] to-[#0a0f1c] hover:shadow-[0_0_20px_rgba(81,192,192,0.1)]">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
                 
                 <div class="flex flex-col items-center justify-center">
-                    <div class="w-[64px] h-[64px] rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mb-5 relative group-hover:border-[#51C0C0]/50 transition-colors shadow-lg">
-                        <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/5"></div>
-                        <i class="fa-solid fa-cloud-arrow-up text-[#51C0C0] text-2xl z-10"></i>
+                    <div class="w-[64px] h-[64px] rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mb-5 relative group-hover:border-[#51C0C0] transition-colors shadow-lg group-hover:shadow-[0_0_15px_rgba(81,192,192,0.3)]">
+                        <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/10 animate-pulse"></div>
+                        <i class="fa-solid fa-cloud-arrow-up text-[#51C0C0] text-2xl z-10 group-hover:scale-110 transition-transform"></i>
                     </div>
                     <p class="text-[14px] font-mono text-[#8a9bb3] tracking-wide" id="fileName">Select or Drop Files Here</p>
                 </div>
@@ -215,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                     <label class="flex items-center text-[11px] text-[#51C0C0] uppercase tracking-widest font-mono mb-2">
                         <i class="fa-solid fa-download mr-2 text-[12px]"></i> Limit
                     </label>
-                    <input type="number" name="limit" placeholder="Limit (e.g. 1)" class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-5 py-4 text-[15px] text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] transition font-mono placeholder-[#2e3c50]">
+                    <input type="number" name="limit" placeholder="Limit (e.g. 1)" class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-5 py-4 text-[15px] text-[#8a9bb3] focus:outline-none focus:border-[#51C0C0] focus:shadow-[0_0_10px_rgba(81,192,192,0.1)] transition font-mono placeholder-[#2e3c50]">
                 </div>
 
                 <div>
@@ -239,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             </div>
 
             <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition btn-glow text-[13px] flex items-center justify-center uppercase tracking-widest mt-4">
-                <i class="fa-solid fa-microchip mr-2 text-[16px]"></i> Generate Smart Links
+                <i class="fa-solid fa-gear fa-spin-pulse mr-2 text-[16px]"></i> Generate Smart Links
             </button>
         </form>
 
@@ -248,15 +349,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
                 const count = e.target.files.length;
                 const fileNameElem = document.getElementById('fileName');
                 if(count === 1) { 
-                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + e.target.files[0].name + '</span>'; 
+                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold drop-shadow-[0_0_5px_rgba(81,192,192,0.5)]">' + e.target.files[0].name + '</span>'; 
                 }
                 else if(count > 1) { 
-                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + count + ' Files Selected</span>'; 
+                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold drop-shadow-[0_0_5px_rgba(81,192,192,0.5)]">' + count + ' Files Selected</span>'; 
                 } else {
                     fileNameElem.innerHTML = 'Select or Drop Files Here';
                 }
             });
         </script>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 </body>
