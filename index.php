@@ -98,6 +98,7 @@ $isLogged = isset($_SESSION['main_logged']) && $_SESSION['main_logged'] === true
 // Multi-Upload Handling Logic
 // ==========================================
 $generatedLinks = [];
+
 if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
     $limit = (int)$_POST['limit']; 
     $duration = (int)$_POST['duration'];
@@ -132,8 +133,22 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
             }
         }
     }
-    if (!empty($generatedLinks)) { file_put_contents($dbFile, json_encode($db)); }
+    
+    // الحل لمنع خطأ ERR_CACHE_MISS
+    if (!empty($generatedLinks)) { 
+        file_put_contents($dbFile, json_encode($db)); 
+        $_SESSION['temp_generated_links'] = $generatedLinks; // حفظ الروابط مؤقتاً
+        header("Location: index.php"); // إعادة توجيه للصفحة كـ GET بدلاً من POST
+        exit;
+    }
 }
+
+// استرجاع الروابط من الجلسة لعرضها بعد التوجيه
+if (isset($_SESSION['temp_generated_links'])) {
+    $generatedLinks = $_SESSION['temp_generated_links'];
+    unset($_SESSION['temp_generated_links']); // مسحها فوراً حتى لا تظهر مرة أخرى عند تحديث الصفحة
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
