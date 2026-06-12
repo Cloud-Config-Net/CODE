@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Secure Admin Panel & Log Radar (Cyberpunk UI)
+ * NET-CLOUD-CONFIG - Secure Admin Panel & Log Radar (Cyberpunk )
  * File Name: admin.php
  */
 
