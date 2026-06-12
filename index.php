@@ -46,7 +46,8 @@ if (isset($_GET['c'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Blocked'];
             file_put_contents($dbFile, json_encode($db));
             header("HTTP/1.1 403 Forbidden"); 
-            die('<!DOCTYPE html><html><body style="background:#0f172a; color:#ef4444; text-align:center; padding-top:20%; font-family:sans-serif;"><h1>🛑 403 Access Denied</h1><p>This config file must be imported inside the HTTP Custom app directly.</p></body></html>');
+            // تم وضع رابط صورتك هنا بنجاح!
+            die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Access Denied</title><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Inter",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box;}img{max-width:100%;height:auto;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.5);margin-bottom:20px;max-height:60vh;border:1px solid #1e2738;}h1{margin:0 0 10px 0;font-size:22px;letter-spacing:1px;font-weight:900;}p{margin:0;color:#8a9bb3;font-size:13px;line-height:1.6;max-width:400px;}</style></head><body><img src="https://i.postimg.cc/TYfpcBy3/IMG-20260612-024446-049.jpg" alt="Tutorial"><h1>🛑 Access Denied</h1><p>This config link cannot be opened in a web browser.<br>Please copy the link and import it directly inside the <b>HTTP Custom</b> app as shown above.</p></body></html>');
         }
 
         $db[$id]['downloads']++;
