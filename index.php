@@ -129,7 +129,14 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                     'upload_date' => time(),
                     'logs' => []
                 ];
-                $generatedLinks[] = ['original_name' => $originalName, 'link' => $link];
+                // تم إضافة بيانات الحد الأقصى والوقت ليتم عرضها في صفحة الرابط
+                $generatedLinks[] = [
+                    'original_name' => $originalName, 
+                    'link' => $link,
+                    'limit' => $limit,
+                    'duration' => $duration,
+                    'time_unit' => $timeUnit
+                ];
             }
         }
     }
@@ -137,8 +144,8 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
     // الحل لمنع خطأ ERR_CACHE_MISS
     if (!empty($generatedLinks)) { 
         file_put_contents($dbFile, json_encode($db)); 
-        $_SESSION['temp_generated_links'] = $generatedLinks; // حفظ الروابط مؤقتاً
-        header("Location: index.php"); // إعادة توجيه للصفحة كـ GET بدلاً من POST
+        $_SESSION['temp_generated_links'] = $generatedLinks; 
+        header("Location: index.php"); 
         exit;
     }
 }
@@ -146,7 +153,7 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
 // استرجاع الروابط من الجلسة لعرضها بعد التوجيه
 if (isset($_SESSION['temp_generated_links'])) {
     $generatedLinks = $_SESSION['temp_generated_links'];
-    unset($_SESSION['temp_generated_links']); // مسحها فوراً حتى لا تظهر مرة أخرى عند تحديث الصفحة
+    unset($_SESSION['temp_generated_links']); 
 }
 
 ?>
@@ -234,30 +241,51 @@ if (isset($_SESSION['temp_generated_links'])) {
             <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
         </a>
 
+        <?php if(!empty($generatedLinks)): ?>
         <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
             <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
-                CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
+                LINK<span class="text-[#51C0C0] neon-text-glow ml-1">CODE</span>
             </h1>
             <div class="h-[2px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
-        <?php if(!empty($generatedLinks)): ?>
-        <div class="bg-[#0a0f1c] border border-[#141c2b] rounded-2xl p-4 sm:p-6 mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-8 relative z-20">
+        <div class="bg-transparent mb-8 max-h-[60vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-5 relative z-20 px-1">
             <?php foreach($generatedLinks as $idx => $item): ?>
-            <div class="flex flex-col items-center">
-                <span class="text-[#64748b] text-[13px] mb-3 font-mono"><?= htmlspecialchars($item['original_name']) ?></span>
+            <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-2xl p-5 hover:border-[#51C0C0]/50 transition-colors shadow-lg">
+                
+                <div class="flex justify-between items-center bg-[#0d131f] rounded-xl py-3 px-2 mb-4 border border-[#141c2b]">
+                    <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Original File">
+                        <i class="fa-regular fa-file-code text-[#51C0C0] text-[15px] mb-1.5"></i>
+                        <span class="text-[#8a9bb3] text-[9px] font-mono truncate w-[90%] text-center">
+                            <?= htmlspecialchars($item['original_name']) ?>
+                        </span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Limit">
+                        <i class="fa-solid fa-download text-[#51C0C0] text-[15px] mb-1.5"></i>
+                        <span class="text-[#8a9bb3] text-[10px] font-mono font-bold">
+                            <?= $item['limit'] > 0 ? $item['limit'] : '∞' ?>
+                        </span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center w-1/3" title="Validity Time">
+                        <i class="fa-regular fa-clock text-[#51C0C0] text-[15px] mb-1.5"></i>
+                        <span class="text-[#8a9bb3] text-[10px] font-mono font-bold uppercase">
+                            <?= $item['duration'] ?> <?= $item['time_unit'] === 'minutes' ? 'Min' : 'Hr' ?>
+                        </span>
+                    </div>
+                </div>
                 
                 <div class="flex items-center w-full gap-3">
-                    <div class="flex-1 text-center">
-                        <a href="<?= $item['link'] ?>" target="_blank" class="text-[#cbd5e1] text-[12px] sm:text-[13px] underline decoration-[#334155] hover:text-[#51C0C0] underline-offset-[6px] font-mono leading-[1.8] break-all block px-1 transition-colors" id="link-<?= $idx ?>">
+                    <div class="flex-1 text-center bg-[#0d131f] border border-[#1e2738] py-2.5 px-2 rounded-xl overflow-hidden shadow-inner">
+                        <a href="<?= $item['link'] ?>" target="_blank" class="text-[#cbd5e1] text-[11px] sm:text-[12px] underline decoration-[#334155] hover:text-[#51C0C0] underline-offset-[4px] font-mono leading-[1.8] break-all block px-1 transition-colors" id="link-<?= $idx ?>">
                             <?= $item['link'] ?>
                         </a>
                     </div>
                     
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#0f1524] hover:bg-[#1e2738] text-slate-300 w-11 h-11 rounded-xl border border-[#1e2738] hover:border-[#51C0C0] transition-all flex-shrink-0 flex items-center justify-center shadow-sm">
-                        <i class="fa-regular fa-copy text-[15px]"></i>
+                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="bg-[#0f1524] hover:bg-[#1e2738] text-[#51C0C0] w-12 h-12 rounded-xl border border-[#1e2738] hover:border-[#51C0C0] transition-all flex-shrink-0 flex items-center justify-center shadow-[0_0_10px_rgba(81,192,192,0.1)]">
+                        <i class="fa-regular fa-copy text-[16px]"></i>
                     </button>
                 </div>
+
             </div>
             <?php endforeach; ?>
         </div>
@@ -302,8 +330,8 @@ if (isset($_SESSION['temp_generated_links'])) {
                 const link = document.getElementById(id).innerText.trim();
                 copyToClipboardFallback(link);
                 const icon = btn.querySelector('i');
-                icon.className = 'fa-solid fa-check text-[#51C0C0] text-[15px]';
-                setTimeout(() => icon.className = 'fa-regular fa-copy text-[15px]', 1500);
+                icon.className = 'fa-solid fa-check text-[#51C0C0] text-[16px]';
+                setTimeout(() => icon.className = 'fa-regular fa-copy text-[16px]', 1500);
                 showToast();
             }
 
@@ -316,6 +344,13 @@ if (isset($_SESSION['temp_generated_links'])) {
         </script>
 
         <?php else: ?>
+        <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
+            <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
+                CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
+            </h1>
+            <div class="h-[2px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+        </div>
+
         <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto relative z-20">
             
             <div class="relative border-[1.5px] border-dashed border-[#1e2738] rounded-2xl p-10 text-center hover:border-[#51C0C0] transition-all duration-300 group cursor-pointer bg-gradient-to-b from-[#0d131f] to-[#0a0f1c] hover:shadow-[0_0_20px_rgba(81,192,192,0.1)]">
