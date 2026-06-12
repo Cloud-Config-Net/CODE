@@ -86,7 +86,7 @@ if (isset($_GET['delete_all'])) {
                     <span class="text-[#51C0C0] neon-text-glow">Radar Link Pro</span>
                 </h1>
                 <p class="text-[11px] tracking-[0.1em] text-[#8a9bb3] mt-2 font-mono uppercase bg-[#0d131f] border border-[#1e2738] px-3 py-1 rounded-full">
-                    <i class="fa-solid fa-satellite-dish animate-pulse text-[#51C0C0] mr-1"></i> Links Monitoring & Traffic Analytics
+                    <i class="fa-solid fa-satellite-dish animate-pulse text-[#51C0C0] mr-1"></i> Links & Traffic
                 </p>
             </div>
             
