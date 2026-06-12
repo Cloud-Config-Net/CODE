@@ -38,8 +38,7 @@ if (isset($_GET['c'])) {
         if (time() > $entry['expires'] || ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel . ' (Expired)', 'time' => time(), 'status' => 'Failed'];
             file_put_contents($dbFile, json_encode($db));
-            @unlink($entry['real_path']); // مسح الملف الفعلي فقط لتوفير مساحة السيرفر
-            // تم إلغاء أمر مسح السجل من قاعدة البيانات ليبقى ظاهراً في الرادار كأرشيف
+            @unlink($entry['real_path']);
             header("HTTP/1.1 410 Gone"); die("This link has expired or reached its download limit.");
         }
         
@@ -129,7 +128,6 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
                     'upload_date' => time(),
                     'logs' => []
                 ];
-                // تم إضافة بيانات الحد الأقصى والوقت ليتم عرضها في صفحة الرابط
                 $generatedLinks[] = [
                     'original_name' => $originalName, 
                     'link' => $link,
@@ -141,7 +139,6 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
         }
     }
     
-    // الحل لمنع خطأ ERR_CACHE_MISS
     if (!empty($generatedLinks)) { 
         file_put_contents($dbFile, json_encode($db)); 
         $_SESSION['temp_generated_links'] = $generatedLinks; 
@@ -150,7 +147,6 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
     }
 }
 
-// استرجاع الروابط من الجلسة لعرضها بعد التوجيه
 if (isset($_SESSION['temp_generated_links'])) {
     $generatedLinks = $_SESSION['temp_generated_links'];
     unset($_SESSION['temp_generated_links']); 
@@ -165,12 +161,12 @@ if (isset($_SESSION['temp_generated_links'])) {
     <title>SYSTEM LOGIN | CLOUD CONFIG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #05080f; overflow-x: hidden; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 10px; }
         .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
@@ -200,8 +196,8 @@ if (isset($_SESSION['temp_generated_links'])) {
                 <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/5 animate-pulse"></div>
                 <i class="fa-solid fa-user-shield text-[#51C0C0] text-2xl z-10"></i>
             </div>
-            <h2 class="text-[28px] font-extrabold tracking-widest text-white drop-shadow-lg">SYSTEM <span class="text-[#51C0C0] neon-text-glow">LOGIN</span></h2>
-            <div class="h-[2px] w-12 bg-[#51C0C0] mt-3 mx-auto rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+            <h2 class="text-[28px] font-black tracking-widest text-white drop-shadow-lg">SYSTEM <span class="text-[#51C0C0] neon-text-glow">LOGIN</span></h2>
+            <div class="h-[3px] w-12 bg-[#51C0C0] mt-3 mx-auto rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
         <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 sm:p-8 rounded-[2rem] border border-[#1e2738] shadow-[0_0_20px_rgba(0,0,0,0.3)]">
@@ -243,15 +239,15 @@ if (isset($_SESSION['temp_generated_links'])) {
 
         <?php if(!empty($generatedLinks)): ?>
         <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
-            <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
+            <h1 class="text-[32px] sm:text-[36px] font-black tracking-widest text-white drop-shadow-lg">
                 LINK<span class="text-[#51C0C0] neon-text-glow ml-1">CODE</span>
             </h1>
-            <div class="h-[2px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+            <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
-        <div class="bg-transparent mb-8 max-h-[60vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-5 relative z-20 px-1">
+        <div class="bg-transparent mb-8 max-h-[60vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-5 relative z-20 px-1 pb-2">
             <?php foreach($generatedLinks as $idx => $item): ?>
-            <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-2xl p-5 hover:border-[#51C0C0]/50 transition-colors shadow-lg">
+            <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-2xl p-5 hover:border-[#51C0C0]/50 transition-colors shadow-lg w-full overflow-hidden">
                 
                 <div class="flex justify-between items-center bg-[#0d131f] rounded-xl py-3 px-2 mb-4 border border-[#141c2b]">
                     <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Original File">
@@ -275,8 +271,8 @@ if (isset($_SESSION['temp_generated_links'])) {
                 </div>
                 
                 <div class="flex items-center w-full gap-3">
-                    <div class="flex-1 text-center bg-[#0d131f] border border-[#1e2738] py-2.5 px-2 rounded-xl overflow-hidden shadow-inner">
-                        <a href="<?= $item['link'] ?>" target="_blank" class="text-[#cbd5e1] text-[11px] sm:text-[12px] underline decoration-[#334155] hover:text-[#51C0C0] underline-offset-[4px] font-mono leading-[1.8] break-all block px-1 transition-colors" id="link-<?= $idx ?>">
+                    <div class="flex-1 bg-[#0d131f] border border-[#1e2738] py-3 px-3 rounded-xl shadow-inner flex items-center overflow-x-auto custom-scroll" style="max-width: calc(100% - 3.5rem);">
+                        <a href="<?= $item['link'] ?>" target="_blank" class="text-[#cbd5e1] text-[12px] underline decoration-[#334155] hover:text-[#51C0C0] underline-offset-[4px] font-mono whitespace-nowrap transition-colors" id="link-<?= $idx ?>">
                             <?= $item['link'] ?>
                         </a>
                     </div>
@@ -345,10 +341,10 @@ if (isset($_SESSION['temp_generated_links'])) {
 
         <?php else: ?>
         <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
-            <h1 class="text-[32px] sm:text-[36px] font-extrabold tracking-widest text-white drop-shadow-lg">
+            <h1 class="text-[32px] sm:text-[36px] font-black tracking-widest text-white drop-shadow-lg">
                 CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
             </h1>
-            <div class="h-[2px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+            <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto relative z-20">
