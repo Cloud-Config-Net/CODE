@@ -176,7 +176,7 @@ if (isset($_GET['delete_all'])) {
                     <div class="w-20 h-20 bg-[#0d131f] border border-[#1e2738] rounded-full flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <i class="fa-solid fa-satellite text-3xl text-[#1e2738]"></i>
                     </div>
-                    <p class="text-[#425975] font-mono text-[12px] uppercase tracking-widest">Radar is empty. No configurations active.</p>
+                    <p class="text-[#425975] font-mono text-[12px] uppercase tracking-widest"></p>
                 </div>
             <?php endif; ?>
         </div>
