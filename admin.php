@@ -80,6 +80,10 @@ if (isset($_GET['delete_all'])) {
             </div>
             
             <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0">
+                <a href="index.php" title="Back" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)]">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
+                </a>
+
                 <a href="index.php" title="Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)]">
                     <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                 </a>
