@@ -70,10 +70,10 @@ if (isset($_GET['delete_all'])) {
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-4 relative">
 
     <div class="bg-animations">
-        <div class="floating-element text-3xl" style="left: 15%; animation-duration: 18s; animation-delay: 2s;">📡</div>
+        <div class="floating-element text-3xl" style="left: 15%; animation-duration: 18s; animation-delay: 2s;"></div>
         <div class="floating-element text-4xl text-[#51C0C0]" style="left: 45%; animation-duration: 22s; animation-delay: 5s;"><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="floating-element text-3xl" style="left: 80%; animation-duration: 20s; animation-delay: 0s;">⚡</div>
-        <div class="floating-element text-5xl" style="left: 65%; animation-duration: 25s; animation-delay: 10s;">🌐</div>
+        <div class="floating-element text-3xl" style="left: 80%; animation-duration: 20s; animation-delay: 0s;"></div>
+        <div class="floating-element text-5xl" style="left: 65%; animation-duration: 25s; animation-delay: 10s;"></div>
         <div class="floating-element text-4xl text-[#51C0C0]" style="left: 25%; animation-duration: 19s; animation-delay: 12s;"><i class="fa-solid fa-network-wired"></i></div>
     </div>
 
@@ -83,10 +83,10 @@ if (isset($_GET['delete_all'])) {
 
             <div class="text-center md:text-left z-10 flex flex-col md:items-start items-center">
                 <h1 class="text-3xl font-extrabold tracking-widest text-white flex flex-col md:flex-row items-center gap-2 drop-shadow-lg">
-                    RADAR<span class="text-[#51C0C0] neon-text-glow">ANALYTICS</span>
+                    <span class="text-[#51C0C0] neon-text-glow">Radar Link Pro</span>
                 </h1>
                 <p class="text-[11px] tracking-[0.1em] text-[#8a9bb3] mt-2 font-mono uppercase bg-[#0d131f] border border-[#1e2738] px-3 py-1 rounded-full">
-                    <i class="fa-solid fa-satellite-dish animate-pulse text-[#51C0C0] mr-1"></i> Live Sniffer & Traffic Inspection
+                    <i class="fa-solid fa-satellite-dish animate-pulse text-[#51C0C0] mr-1"></i> Links Monitoring & Traffic Analytics
                 </p>
             </div>
             
