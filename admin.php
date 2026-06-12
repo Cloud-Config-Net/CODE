@@ -62,20 +62,9 @@ if (isset($_GET['delete_all'])) {
         .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
         .btn-glow { box-shadow: 0 0 20px rgba(81, 192, 192, 0.25); transition: all 0.3s ease; }
         .btn-glow:hover { box-shadow: 0 0 30px rgba(81, 192, 192, 0.4); transform: translateY(-2px); }
-        .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
-        .floating-element { position: absolute; animation: float-up linear infinite; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(81,192,192,0.5)); }
-        @keyframes float-up { 0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 0.2; } 90% { opacity: 0.2; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; } }
     </style>
 </head>
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-4 relative">
-
-    <div class="bg-animations">
-        <div class="floating-element text-3xl" style="left: 15%; animation-duration: 18s; animation-delay: 2s;"></div>
-        <div class="floating-element text-4xl text-[#51C0C0]" style="left: 45%; animation-duration: 22s; animation-delay: 5s;"><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="floating-element text-3xl" style="left: 80%; animation-duration: 20s; animation-delay: 0s;"></div>
-        <div class="floating-element text-5xl" style="left: 65%; animation-duration: 25s; animation-delay: 10s;"></div>
-        <div class="floating-element text-4xl text-[#51C0C0]" style="left: 25%; animation-duration: 19s; animation-delay: 12s;"><i class="fa-solid fa-network-wired"></i></div>
-    </div>
 
     <div class="w-full max-w-5xl my-auto py-8 z-10 relative">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 glass-panel p-6 rounded-2xl relative overflow-hidden">
@@ -86,21 +75,21 @@ if (isset($_GET['delete_all'])) {
                     <span class="text-[#51C0C0] neon-text-glow">Radar Link Pro</span>
                 </h1>
                 <p class="text-[11px] tracking-[0.1em] text-[#8a9bb3] mt-2 font-mono uppercase bg-[#0d131f] border border-[#1e2738] px-3 py-1 rounded-full">
-                    <i class="fa-solid fa-satellite-dish animate-pulse text-[#51C0C0] mr-1"></i> Links & Traffic
+                    <i class="fa-solid fa-satellite-dish text-[#51C0C0] mr-1"></i> Links & Traffic
                 </p>
             </div>
             
-            <div class="flex flex-wrap gap-3 z-10 justify-center md:justify-end mt-4 md:mt-0">
-                <a href="index.php" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(81,192,192,0.1)]">
-                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload
+            <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0">
+                <a href="index.php" title="Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)]">
+                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                 </a>
                 
-                <a href="?delete_all=1" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(220,38,38,0.1)]">
-                    <i class="fa-solid fa-dumpster-fire mr-2"></i> Delete All
+                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] hover:shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                    <i class="fa-solid fa-dumpster-fire text-xl"></i>
                 </a>
 
-                <a href="?logout=1" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 px-4 py-2.5 rounded-xl transition-all duration-300 text-[11px] font-bold uppercase tracking-wider flex items-center shadow-[0_0_10px_rgba(220,38,38,0.1)]">
-                    <i class="fa-solid fa-power-off mr-2"></i> Logout
+                <a href="?logout=1" title="Logout" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] hover:shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                    <i class="fa-solid fa-power-off text-xl"></i>
                 </a>
             </div>
         </div>
@@ -138,7 +127,7 @@ if (isset($_GET['delete_all'])) {
 
                 <div>
                     <h4 class="text-[11px] font-mono uppercase tracking-widest text-[#8a9bb3] mb-4 flex items-center bg-[#0d131f] inline-block px-3 py-1.5 rounded-lg border border-[#1e2738]">
-                        <i class="fa-solid fa-terminal mr-2 text-[#51C0C0] animate-pulse"></i> Live Request Feed
+                        <i class="fa-solid fa-terminal mr-2 text-[#51C0C0]"></i> Live Request Feed
                     </h4>
                     <div class="bg-[#05080f] rounded-xl overflow-hidden border border-[#1e2738] overflow-x-auto custom-scroll shadow-inner">
                         <table class="w-full text-left whitespace-nowrap">
