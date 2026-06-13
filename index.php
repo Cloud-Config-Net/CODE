@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Enhanced Version (V6)
+ * NET-CLOUD-CONFIG - Enhanced Version (V2)
  * Main Upload & Client Sniffer with Advanced Effects
  * File Name: index.php
  */
