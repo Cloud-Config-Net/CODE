@@ -73,57 +73,25 @@ foreach ($db as $d) {
     <title>NETCLOUD | Radar Space</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; }
-        /* Modern Clean System Font as requested */
+        * { -webkit-tap-highlight-color: transparent; } /* كود إخفاء الدائرة الرمادية */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif; background-color: #05080f; overflow-x: hidden; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Modern Apple-like Bold Headings */
         .modern-heading { font-weight: 700; letter-spacing: -0.04em; }
-        
         .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 10px; }
         .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
-        .btn-glow { box-shadow: 0 0 20px rgba(81, 192, 192, 0.25); transition: all 0.3s ease; }
-        .btn-glow:hover { box-shadow: 0 0 30px rgba(81, 192, 192, 0.4); transform: translateY(-2px); }
-        
-        /* Enhanced Animations */
         .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .glow-hover { transition: all 0.3s ease; }
         .glow-hover:hover { filter: drop-shadow(0 0 15px rgba(81, 192, 192, 0.4)); }
-        .ripple { position: relative; overflow: hidden; }
-        .ripple::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255, 255, 255, 0.5); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-        .ripple:active::after { animation: ripple-effect 0.6s ease-out; }
-        @keyframes ripple-effect { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 300px; height: 300px; opacity: 0; } }
-        
-        /* Stat Card Animation */
-        .stat-card { animation: stat-slide-in 0.5s ease-out; }
-        @keyframes stat-slide-in { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-        
-        /* Pulse Animation */
-        .pulse-animation { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        /* Table Row Hover */
         tbody tr { transition: all 0.2s ease; }
         tbody tr:hover { background-color: rgba(81, 192, 192, 0.05); }
-        
-        /* Status Badge Animation */
-        .status-badge { animation: status-fade-in 0.4s ease; }
-        @keyframes status-fade-in { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
-        
-        /* Floating Background Elements */
         .floating-bg { position: fixed; pointer-events: none; z-index: -1; }
         .glow-circle { animation: glow-pulse 4s ease-in-out infinite; }
         @keyframes glow-pulse { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.3; } }
-        
-        /* Scroll Animation */
-        .scroll-indicator { animation: scroll-bounce 2s infinite; }
-        @keyframes scroll-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
     </style>
 </head>
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-4 relative">
@@ -146,15 +114,15 @@ foreach ($db as $d) {
             </div>
             
             <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0 flex-wrap items-center">
-                <a href="index.php" title="Back to Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)] ripple smooth-transition glow-hover">
+                <a href="index.php" title="Back to Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)] smooth-transition glow-hover">
                     <i class="fa-solid fa-arrow-left text-xl"></i>
                 </a>
 
-                <a href="index.php" title="Upload Files" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)] ripple smooth-transition glow-hover">
+                <a href="index.php" title="Upload Files" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)] smooth-transition glow-hover">
                     <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                 </a>
                 
-                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] ripple smooth-transition">
+                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] smooth-transition">
                     <i class="fa-solid fa-dumpster-fire text-xl"></i>
                 </a>
 
@@ -166,7 +134,7 @@ foreach ($db as $d) {
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <div class="glass-panel rounded-xl p-4 stat-card smooth-transition glow-hover">
+            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[#8a9bb3] text-xs font-mono uppercase">Total Links</p>
@@ -176,7 +144,7 @@ foreach ($db as $d) {
                 </div>
             </div>
 
-            <div class="glass-panel rounded-xl p-4 stat-card smooth-transition glow-hover" style="animation-delay: 0.1s;">
+            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[#8a9bb3] text-xs font-mono uppercase">Downloads</p>
@@ -186,7 +154,7 @@ foreach ($db as $d) {
                 </div>
             </div>
 
-            <div class="glass-panel rounded-xl p-4 stat-card smooth-transition glow-hover" style="animation-delay: 0.2s;">
+            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[#8a9bb3] text-xs font-mono uppercase">Requests</p>
@@ -196,7 +164,7 @@ foreach ($db as $d) {
                 </div>
             </div>
 
-            <div class="glass-panel rounded-xl p-4 stat-card smooth-transition glow-hover" style="animation-delay: 0.3s;">
+            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[#8a9bb3] text-xs font-mono uppercase">Success</p>
@@ -206,7 +174,7 @@ foreach ($db as $d) {
                 </div>
             </div>
 
-            <div class="glass-panel rounded-xl p-4 stat-card smooth-transition glow-hover" style="animation-delay: 0.4s;">
+            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[#8a9bb3] text-xs font-mono uppercase">Blocked</p>
@@ -251,7 +219,7 @@ foreach ($db as $d) {
                                 <span class="text-white font-bold text-sm"><?= $expiresInHours ?>h <?= $expiresInMins ?>m</span>
                             </div>
                             <div><?= $statusHtml ?></div>
-                            <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] ripple smooth-transition">
+                            <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] smooth-transition">
                                 <i class="fa-solid fa-trash text-sm"></i>
                             </a>
                         </div>
@@ -332,8 +300,6 @@ foreach ($db as $d) {
             });
         }
 
-        // Auto-refresh statistics every 30 seconds
-        // Modified to not refresh if user is currently searching/typing
         setInterval(() => {
             let searchVal = document.getElementById('searchInput');
             if (searchVal && searchVal.value.trim() === '') {
@@ -341,7 +307,6 @@ foreach ($db as $d) {
             }
         }, 30000);
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'r') {
                 e.preventDefault();
@@ -351,14 +316,12 @@ foreach ($db as $d) {
                 e.preventDefault();
                 window.location.href = 'index.php';
             }
-            // Auto focus search on CTRL+F
             if (e.ctrlKey && e.key === 'f') {
                 e.preventDefault();
                 document.getElementById('searchInput').focus();
             }
         });
 
-        // Add smooth scroll behavior
         document.documentElement.style.scrollBehavior = 'smooth';
     </script>
 </body>
