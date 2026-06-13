@@ -76,8 +76,13 @@ foreach ($db as $d) {
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: #05080f; overflow-x: hidden; }
+        /* Modern Clean System Font as requested */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif; background-color: #05080f; overflow-x: hidden; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Modern Apple-like Bold Headings */
+        .modern-heading { font-weight: 700; letter-spacing: -0.04em; }
+        
         .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -132,7 +137,7 @@ foreach ($db as $d) {
             <div class="absolute top-0 right-0 w-64 h-64 bg-[#51C0C0] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
 
             <div class="text-center md:text-left z-10 flex flex-col md:items-start items-center">
-                <h1 class="text-3xl font-extrabold tracking-widest text-white flex flex-col md:flex-row items-center gap-2 drop-shadow-lg smooth-transition">
+                <h1 class="text-3xl modern-heading text-white flex flex-col md:flex-row items-center gap-2 drop-shadow-lg smooth-transition">
                     <span class="text-[#51C0C0] neon-text-glow">Radar Link Pro</span>
                 </h1>
                 <p class="text-[11px] tracking-[0.1em] text-[#8a9bb3] mt-2 font-mono uppercase bg-[#0d131f] border border-[#1e2738] px-3 py-1 rounded-full smooth-transition">
