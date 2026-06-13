@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Enhanced Admin Panel (V6)
+ * CLOUD-CONFIG
  * Secure Admin Panel & Log Radar with Advanced Effects
  * File Name: admin.php
  */
@@ -75,8 +75,9 @@ foreach ($db as $d) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { -webkit-tap-highlight-color: transparent; font-family: 'Oswald', sans-serif !important; letter-spacing: 0.5px; text-transform: uppercase; } 
-        body { background-color: #05080f; overflow-x: hidden; }
+        * { -webkit-tap-highlight-color: transparent; } 
+        body { background-color: #05080f; overflow-x: hidden; font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; color: #cbd5e1; }
+        input, button, select, textarea { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
         .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -92,7 +93,7 @@ foreach ($db as $d) {
         @keyframes glow-pulse { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.3; } }
     </style>
 </head>
-<body class="min-h-screen text-slate-200 flex items-center justify-center p-4 relative">
+<body class="min-h-screen flex items-center justify-center p-4 relative">
 
     <div class="floating-bg top-10 right-10 w-96 h-96 bg-[#51C0C0] rounded-full blur-[150px] opacity-10 glow-circle"></div>
     <div class="floating-bg bottom-20 left-10 w-80 h-80 bg-[#51C0C0] rounded-full blur-[120px] opacity-5 glow-circle" style="animation-delay: 2s;"></div>
