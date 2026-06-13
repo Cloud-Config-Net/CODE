@@ -1,11 +1,10 @@
 #!/bin/bash
 
 # ========================================================
-#   NET-CLOUD MANAGER (ENHANCED V3.0)
-#   RADAR LINK PRO - SYSTEM INSTALLER
+#   CLOUD CONFIG MANAGER PRO - SYSTEM INSTALLER
 # ========================================================
 
-# --- Modern Colors & Styling ---
+# --- MODERN COLORS & STYLING ---
 CYAN='\033[0;36m'
 LIGHT_CYAN='\033[1;36m'
 GREEN='\033[0;32m'
@@ -14,22 +13,22 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 WHITE='\033[1;37m'
 DARK_GRAY='\033[1;30m'
-NC='\033[0m' # No Color
+NC='\033[0m' # NO COLOR
 BOLD='\033[1m'
 
-# --- Default Paths & Settings ---
+# --- DEFAULT PATHS & SETTINGS ---
 WEB_ROOT="/var/www/netcloud"
 NGINX_CONF="/etc/nginx/sites-available/netcloud"
 DEFAULT_DOMAIN="cloud.maxssh.site"
 DEFAULT_PORT=80
 DEFAULT_TZ="Africa/Tunis"
 
-# Place your GitHub Raw file links here:
+# GITHUB RAW FILE LINKS:
 LINK_INDEX="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/index.php"
 LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.php"
 
 # ==========================================
-# Helper: Check & Auto-Select Port (Safe Version)
+# HELPER: CHECK & AUTO-SELECT PORT
 # ==========================================
 check_port() {
     local port=$1
@@ -44,7 +43,7 @@ check_port() {
 
         if [ "$port_busy" = true ]; then
             if [ "$port" == "$1" ]; then
-                echo -e "  ${YELLOW}⚠️  Warning: Port $port is busy. ${DARK_GRAY}Scanning for alternative...${NC}"
+                echo -e "  ${YELLOW}WARNING: PORT $port IS BUSY. ${DARK_GRAY}SCANNING FOR ALTERNATIVE...${NC}"
             fi
             port=$((port+1))
         else
@@ -53,52 +52,52 @@ check_port() {
     done
     
     if [ "$port" != "$1" ]; then
-        echo -e "  ${GREEN}✅ Smart-Assigned Port: ${WHITE}$port${NC}"
+        echo -e "  ${GREEN}SMART-ASSIGNED PORT: ${WHITE}$port${NC}"
     fi
     echo $port
 }
 
 # ==========================================
-# Install Function
+# INSTALL FUNCTION
 # ==========================================
 install_netcloud() {
     clear
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${WHITE}${BOLD}🚀 INITIATING NET-CLOUD CORE DEPLOYMENT...${NC}"
+    echo -e "  ${WHITE}${BOLD}INITIATING CLOUD CONFIG CORE DEPLOYMENT...${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${NC}"
     
-    echo -ne "  ${CYAN}[?]${NC} 🌐 Enter Domain (Default: ${WHITE}${DEFAULT_DOMAIN}${NC}): "
+    echo -ne "  ${CYAN}[?]${NC} ENTER DOMAIN (DEFAULT: ${WHITE}${DEFAULT_DOMAIN}${NC}): "
     read DOMAIN
     DOMAIN=${DOMAIN:-$DEFAULT_DOMAIN}
 
-    echo -ne "  ${CYAN}[?]${NC} 🔌 Enter Port (Default: ${WHITE}${DEFAULT_PORT}${NC}): "
+    echo -ne "  ${CYAN}[?]${NC} ENTER PORT (DEFAULT: ${WHITE}${DEFAULT_PORT}${NC}): "
     read PORT_INPUT
     PORT_INPUT=${PORT_INPUT:-$DEFAULT_PORT}
     PORT=$(check_port $PORT_INPUT)
 
-    echo -ne "  ${CYAN}[?]${NC} 🌍 Enter Timezone (Default: ${WHITE}${DEFAULT_TZ}${NC}): "
+    echo -ne "  ${CYAN}[?]${NC} ENTER TIMEZONE (DEFAULT: ${WHITE}${DEFAULT_TZ}${NC}): "
     read TZ_INPUT
     TZ_INPUT=${TZ_INPUT:-$DEFAULT_TZ}
 
-    echo -e "\n  ${DARK_GRAY}[1/6]${NC} ${CYAN}🔄 Updating packages & dependencies...${NC}"
+    echo -e "\n  ${DARK_GRAY}[1/6]${NC} ${CYAN}UPDATING PACKAGES & DEPENDENCIES...${NC}"
     apt update && apt install nginx php8.2-fpm php8.2-curl ufw iproute2 -y > /dev/null 2>&1
 
-    echo -e "  ${DARK_GRAY}[2/6]${NC} ${CYAN}📁 Building system directories...${NC}"
+    echo -e "  ${DARK_GRAY}[2/6]${NC} ${CYAN}BUILDING SYSTEM DIRECTORIES...${NC}"
     mkdir -p $WEB_ROOT/uploads
     chown -R www-data:www-data $WEB_ROOT
 
-    echo -e "  ${DARK_GRAY}[3/6]${NC} ${CYAN}⬇️ Fetching core engine from repository...${NC}"
+    echo -e "  ${DARK_GRAY}[3/6]${NC} ${CYAN}FETCHING CORE ENGINE FROM REPOSITORY...${NC}"
     wget -q --show-progress $LINK_INDEX -O $WEB_ROOT/index.php
     wget -q --show-progress $LINK_ADMIN -O $WEB_ROOT/admin.php
 
-    echo -e "  ${DARK_GRAY}[4/6]${NC} ${CYAN}⏱️ Injecting Timezone (${WHITE}$TZ_INPUT${CYAN}) into core...${NC}"
+    echo -e "  ${DARK_GRAY}[4/6]${NC} ${CYAN}INJECTING TIMEZONE (${WHITE}$TZ_INPUT${CYAN}) INTO CORE...${NC}"
     sed -i "/date_default_timezone_set/d" $WEB_ROOT/index.php
     sed -i "/date_default_timezone_set/d" $WEB_ROOT/admin.php
     sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/index.php
     sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/admin.php
     chown www-data:www-data $WEB_ROOT/index.php $WEB_ROOT/admin.php
 
-    echo -e "  ${DARK_GRAY}[5/6]${NC} ${CYAN}⚙️ Compiling Nginx Smart-Firewall config...${NC}"
+    echo -e "  ${DARK_GRAY}[5/6]${NC} ${CYAN}COMPILING NGINX SMART-FIREWALL CONFIG...${NC}"
     cat <<EOF > $NGINX_CONF
 server {
     listen $PORT;
@@ -130,7 +129,7 @@ server {
 }
 EOF
 
-    echo -e "  ${DARK_GRAY}[6/6]${NC} ${CYAN}🔗 Applying rules & restarting services...${NC}"
+    echo -e "  ${DARK_GRAY}[6/6]${NC} ${CYAN}APPLYING RULES & RESTARTING SERVICES...${NC}"
     ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
     
@@ -140,41 +139,41 @@ EOF
     systemctl restart php8.2-fpm
 
     echo -e "\n${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${LIGHT_GREEN}✔️ SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
+    echo -e "  ${LIGHT_GREEN}SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  🌐 Target Domain : ${WHITE}${DOMAIN}${NC}"
-    echo -e "  🔌 Active Port   : ${WHITE}${PORT}${NC}"
-    echo -e "  ⏱️ Timezone      : ${WHITE}${TZ_INPUT}${NC}"
+    echo -e "  TARGET DOMAIN : ${WHITE}${DOMAIN}${NC}"
+    echo -e "  ACTIVE PORT   : ${WHITE}${PORT}${NC}"
+    echo -e "  TIMEZONE      : ${WHITE}${TZ_INPUT}${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -ne "\n  ${DARK_GRAY}Press [ENTER] to return to the menu...${NC}"
+    echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO RETURN TO THE MENU...${NC}"
     read
 }
 
 # ==========================================
-# Display Menu Function
+# DISPLAY MENU FUNCTION
 # ==========================================
 show_menu() {
     clear
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "             ${WHITE}${BOLD}NET-CLOUD MANAGER ${LIGHT_CYAN}PRO${NC}"
+    echo -e "                      ${WHITE}${BOLD}CLOUD CONFIG MANAGER PRO${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     
-    echo -e "  ${DARK_GRAY}[${WHITE}01${DARK_GRAY}]${NC} ${CYAN}🚀 INSTALL NET-CLOUD SETUP${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}02${DARK_GRAY}]${NC} ${CYAN}🌐 RE-CONFIGURE DOMAIN${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}03${DARK_GRAY}]${NC} ${CYAN}🔌 RE-CONFIGURE PORT (AUTO-CHECK)${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}04${DARK_GRAY}]${NC} ${CYAN}▶️  START NGINX SERVICE${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}05${DARK_GRAY}]${NC} ${CYAN}🛑 STOP NGINX SERVICE${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}06${DARK_GRAY}]${NC} ${CYAN}🔄 RESTART NGINX & PHP${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}07${DARK_GRAY}]${NC} ${CYAN}📝 EDIT FILES SITE${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}08${DARK_GRAY}]${NC} ${CYAN}🌍 SET/UPDATE TIMEZONE${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${RED}⚠️  TERMINATE & WIPE DATA${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}🚪 EXIT\n${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}01${DARK_GRAY}]${NC} ${CYAN}INSTALL SYSTEM CORE${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}02${DARK_GRAY}]${NC} ${CYAN}RECONFIGURE DOMAIN NAME${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}03${DARK_GRAY}]${NC} ${CYAN}RECONFIGURE PORT (AUTO-CHECK)${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}04${DARK_GRAY}]${NC} ${CYAN}START WEB SERVICE${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}05${DARK_GRAY}]${NC} ${CYAN}STOP WEB SERVICE${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}06${DARK_GRAY}]${NC} ${CYAN}RESTART ALL SERVICES${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}07${DARK_GRAY}]${NC} ${CYAN}EDIT CONFIGURATION FILES${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}08${DARK_GRAY}]${NC} ${CYAN}UPDATE SYSTEM TIMEZONE${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${RED}WIPE AND DESTROY SYSTEM${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}EXIT MANAGER\n${NC}"
     
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
 
 # ==========================================
-# Read Choice Function
+# READ CHOICE FUNCTION
 # ==========================================
 read_choice() {
     echo -ne "\n  ${CYAN}SELECT MODULE [00-09] >${NC} ${WHITE}"
@@ -183,39 +182,39 @@ read_choice() {
     case $choice in
         1|01) install_netcloud ;;
         2|02) 
-            echo -ne "  ${CYAN}[?]${NC} Enter New Domain: ${WHITE}"
+            echo -ne "  ${CYAN}[?]${NC} ENTER NEW DOMAIN: ${WHITE}"
             read NEW_DOMAIN
             if [ -f "$NGINX_CONF" ]; then
                 sed -i "s/server_name .*/server_name $NEW_DOMAIN;/" $NGINX_CONF
                 systemctl restart nginx
-                echo -e "  ${GREEN}✔️ Domain updated to: ${WHITE}${NEW_DOMAIN}${NC}"
+                echo -e "  ${GREEN}DOMAIN UPDATED TO: ${WHITE}${NEW_DOMAIN}${NC}"
             else
-                echo -e "  ${RED}❌ System is not installed!${NC}"
+                echo -e "  ${RED}SYSTEM IS NOT INSTALLED!${NC}"
             fi
-            echo -ne "\n  ${DARK_GRAY}Press [ENTER] to continue...${NC}"; read
+            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
             ;;
         3|03) 
-            echo -ne "  ${CYAN}[?]${NC} Enter New Port: ${WHITE}"
+            echo -ne "  ${CYAN}[?]${NC} ENTER NEW PORT: ${WHITE}"
             read NEW_PORT_INPUT
             NEW_PORT=$(check_port $NEW_PORT_INPUT)
             if [ -f "$NGINX_CONF" ]; then
                 sed -i -E "s/listen [0-9]+;/listen $NEW_PORT;/" $NGINX_CONF
                 ufw allow $NEW_PORT/tcp > /dev/null 2>&1
                 systemctl restart nginx
-                echo -e "  ${GREEN}✔️ Port updated to: ${WHITE}${NEW_PORT}${NC}"
+                echo -e "  ${GREEN}PORT UPDATED TO: ${WHITE}${NEW_PORT}${NC}"
             else
-                echo -e "  ${RED}❌ System is not installed!${NC}"
+                echo -e "  ${RED}SYSTEM IS NOT INSTALLED!${NC}"
             fi
-            echo -ne "\n  ${DARK_GRAY}Press [ENTER] to continue...${NC}"; read
+            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
             ;;
-        4|04) systemctl start nginx; echo -e "  ${GREEN}▶️  Nginx Started.${NC}"; echo -ne "\n  ${DARK_GRAY}Press [ENTER]...${NC}"; read ;;
-        5|05) systemctl stop nginx; echo -e "  ${YELLOW}🛑 Nginx Stopped.${NC}"; echo -ne "\n  ${DARK_GRAY}Press [ENTER]...${NC}"; read ;;
-        6|06) systemctl restart nginx; systemctl restart php8.2-fpm; echo -e "  ${CYAN}🔄 Services Restarted.${NC}"; echo -ne "\n  ${DARK_GRAY}Press [ENTER]...${NC}"; read ;;
+        4|04) systemctl start nginx; echo -e "  ${GREEN}NGINX STARTED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
+        5|05) systemctl stop nginx; echo -e "  ${YELLOW}NGINX STOPPED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
+        6|06) systemctl restart nginx; systemctl restart php8.2-fpm; echo -e "  ${CYAN}SERVICES RESTARTED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
         7|07) 
             if [ -d "$WEB_ROOT" ]; then nano $WEB_ROOT/admin.php; nano $WEB_ROOT/index.php; nano $NGINX_CONF; 
-            else echo -e "  ${RED}❌ Not installed.${NC}"; echo -ne "\n  ${DARK_GRAY}Press [ENTER]...${NC}"; read; fi ;;
+            else echo -e "  ${RED}SYSTEM IS NOT INSTALLED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read; fi ;;
         8|08)
-            echo -ne "  ${CYAN}[?]${NC} Enter Timezone (e.g., Africa/Tunis): ${WHITE}"
+            echo -ne "  ${CYAN}[?]${NC} ENTER TIMEZONE (E.G., AFRICA/TUNIS): ${WHITE}"
             read TZ_INPUT
             TZ_INPUT=${TZ_INPUT:-Africa/Tunis}
             if [ -f "$WEB_ROOT/index.php" ]; then
@@ -224,30 +223,30 @@ read_choice() {
                 sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/index.php
                 sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/admin.php
                 systemctl restart php8.2-fpm
-                echo -e "  ${GREEN}✔️ Timezone updated to ${WHITE}${TZ_INPUT}${NC}"
+                echo -e "  ${GREEN}TIMEZONE UPDATED TO ${WHITE}${TZ_INPUT}${NC}"
             else
-                echo -e "  ${RED}❌ Not installed.${NC}"
+                echo -e "  ${RED}SYSTEM IS NOT INSTALLED.${NC}"
             fi
-            echo -ne "\n  ${DARK_GRAY}Press [ENTER] to continue...${NC}"; read
+            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
             ;;
         9|09) 
-            echo -ne "  ${RED}⚠️  WIPE ENTIRE SYSTEM? (y/n): ${WHITE}"
+            echo -ne "  ${RED}WIPE ENTIRE SYSTEM? (Y/N): ${WHITE}"
             read confirm
             if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
                 rm -rf $WEB_ROOT; rm -f $NGINX_CONF; rm -f /etc/nginx/sites-enabled/netcloud; systemctl restart nginx
-                echo -e "  ${GREEN}🗑️  System completely removed.${NC}"
+                echo -e "  ${GREEN}SYSTEM COMPLETELY REMOVED.${NC}"
             fi
-            echo -ne "\n  ${DARK_GRAY}Press [ENTER]...${NC}"; read ;;
-        0|00) echo -e "  ${CYAN}👋 Terminating session. Goodbye!${NC}\n"; exit 0 ;;
-        *) echo -e "  ${RED}❌ Invalid selection!${NC}"; sleep 1 ;;
+            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
+        0|00) echo -e "  ${CYAN}TERMINATING SESSION. GOODBYE!${NC}\n"; exit 0 ;;
+        *) echo -e "  ${RED}INVALID SELECTION!${NC}"; sleep 1 ;;
     esac
 }
 
 # ==========================================
-# Main Script Execution
+# MAIN SCRIPT EXECUTION
 # ==========================================
 if [ "$EUID" -ne 0 ]; then 
-    echo -e "  ${RED}${BOLD}❌ Root privileges required! Please run with sudo.${NC}"
+    echo -e "  ${RED}${BOLD}ROOT PRIVILEGES REQUIRED! PLEASE RUN WITH SUDO.${NC}"
     exit 1
 fi
 
