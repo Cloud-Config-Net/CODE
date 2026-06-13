@@ -1,6 +1,6 @@
 <?php
 /**
- * CLOUD-CONFIG
+ * CLOUD-CONFIG 
  * Secure Admin Panel & Log Radar with Advanced Effects
  * File Name: admin.php
  */
@@ -167,9 +167,9 @@ foreach ($db as $d) {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[#8a9bb3] text-[13px] font-bold">SUCCESS</p>
-                        <p class="text-green-400 text-3xl font-bold mt-1"><?= $successfulRequests ?></p>
+                        <p class="text-[#22c55e] text-3xl font-bold mt-1"><?= $successfulRequests ?></p>
                     </div>
-                    <i class="fa-solid fa-check-circle text-green-400 text-3xl opacity-30"></i>
+                    <i class="fa-solid fa-check-circle text-[#22c55e] text-3xl opacity-30"></i>
                 </div>
             </div>
 
@@ -190,8 +190,8 @@ foreach ($db as $d) {
                     $isExpired = time() > $d['expires'];
                     $isLimited = $d['limit'] > 0 && $d['downloads'] >= $d['limit'];
                     $statusHtml = ($isExpired || $isLimited) 
-                        ? '<span class="bg-[#1a0f14] text-red-400 px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-red-900/50 shadow-[0_0_10px_rgba(220,38,38,0.1)] status-badge"><i class="fa-solid fa-ban mr-1"></i> EXPIRED</span>' 
-                        : '<span class="bg-[#51C0C0]/10 text-[#51C0C0] px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-[#51C0C0]/30 shadow-[0_0_10px_rgba(81,192,192,0.1)] status-badge"><i class="fa-solid fa-circle-check mr-1"></i> ACTIVE</span>';
+                        ? '<span class="bg-[#1a0f14] text-red-400 px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-red-900/50 shadow-[0_0_10px_rgba(220,38,38,0.1)] status-badge inline-flex items-center gap-1.5"><i class="fa-solid fa-ban"></i> EXPIRED</span>' 
+                        : '<span class="bg-[#51C0C0]/10 text-[#51C0C0] px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-[#51C0C0]/30 shadow-[0_0_10px_rgba(81,192,192,0.1)] status-badge inline-flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> ACTIVE</span>';
                     
                     $expiresIn = $d['expires'] - time();
                     $expiresInHours = floor($expiresIn / 3600);
@@ -233,21 +233,34 @@ foreach ($db as $d) {
                                 <tbody class="divide-y divide-[#1e2738]/50">
                                     <?php if(!empty($d['logs'])): ?>
                                         <?php foreach(array_reverse($d['logs']) as $log): 
-                                            $badge = ($log['status'] === 'Success') ? 'bg-[#51C0C0]/10 text-[#51C0C0] border-[#51C0C0]/30' : 'bg-[#1a0f14] text-red-400 border-red-900/50';
+                                            // تغيير اللون الأخضر وتعديل الكلمة إلى OPEN
+                                            $badge = ($log['status'] === 'Success') ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30' : 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/30';
                                             $clientClass = (strpos($log['client'], 'HTTP Custom') !== false) ? 'text-[#51C0C0] font-bold' : 'text-slate-400';
-                                            $icon = ($log['status'] === 'Success') ? '<i class="fa-solid fa-check text-[12px] mr-1"></i>' : '<i class="fa-solid fa-xmark text-[12px] mr-1"></i>';
+                                            $icon = ($log['status'] === 'Success') ? '<i class="fa-solid fa-check text-[14px]"></i>' : '<i class="fa-solid fa-xmark text-[14px]"></i>';
+                                            $statusText = ($log['status'] === 'Success') ? 'OPEN' : 'BLOCKED';
                                         ?>
                                         <tr class="hover:bg-[#0d131f] transition duration-200 smooth-transition">
-                                            <td class="px-5 py-4 text-[#425975] text-[13px] font-bold"><i class="fa-regular fa-clock mr-1 opacity-50"></i> <?= date('Y-M-D H:i', $log['time']) ?></td>
-                                            <td class="px-5 py-4 text-white text-[14px] font-bold"><i class="fa-solid fa-location-dot mr-1 text-[#425975]"></i> <?= htmlspecialchars($log['ip']) ?></td>
-                                            <td class="px-5 py-4 text-[14px] font-bold <?= $clientClass ?>">
-                                                <?= htmlspecialchars($log['client']) ?>
-                                                <span class="text-[11px] text-[#425975] block truncate max-w-xs mt-1 bg-[#0a0f1c] px-2 py-0.5 rounded font-bold"><?= htmlspecialchars($log['ua']) ?></span>
+                                            <td class="px-5 py-4 align-middle">
+                                                <div class="flex items-center gap-2 text-[#425975] text-[13px] font-bold">
+                                                    <i class="fa-regular fa-clock opacity-50"></i>
+                                                    <span><?= date('Y-M-D H:i', $log['time']) ?></span>
+                                                </div>
                                             </td>
-                                            <td class="px-5 py-4 text-right">
-                                                <span class="px-3 py-1.5 rounded-lg font-bold tracking-widest border text-[11px] <?= $badge ?> inline-flex items-center status-badge">
-                                                    <?= $icon ?> <?= $log['status'] === 'Success' ? 'FETCHED' : 'BLOCKED' ?>
-                                                </span>
+                                            <td class="px-5 py-4 align-middle">
+                                                <div class="flex items-center gap-2 text-white text-[14px] font-bold">
+                                                    <i class="fa-solid fa-location-dot text-[#425975]"></i>
+                                                    <span><?= htmlspecialchars($log['ip']) ?></span>
+                                                </div>
+                                            </td>
+                                            <td class="px-5 py-4 text-[14px] font-bold <?= $clientClass ?> align-middle">
+                                                <?= htmlspecialchars($log['client']) ?>
+                                                <span class="text-[11px] text-[#425975] block truncate max-w-xs mt-1 bg-[#0a0f1c] px-2 py-0.5 rounded font-bold w-fit"><?= htmlspecialchars($log['ua']) ?></span>
+                                            </td>
+                                            <td class="px-5 py-4 text-right align-middle">
+                                                <div class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tracking-widest border text-[12px] <?= $badge ?> w-[100px] status-badge">
+                                                    <?= $icon ?>
+                                                    <span><?= $statusText ?></span>
+                                                </div>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>
