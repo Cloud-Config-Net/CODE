@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Enhanced Admin Panel (V2)
+ * NET-CLOUD-CONFIG - Enhanced Admin Panel (V6)
  * Secure Admin Panel & Log Radar with Advanced Effects
  * File Name: admin.php
  */
@@ -123,13 +123,11 @@ foreach ($db as $d) {
 </head>
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-4 relative">
 
-    <!-- Floating Background Elements -->
     <div class="floating-bg top-10 right-10 w-96 h-96 bg-[#51C0C0] rounded-full blur-[150px] opacity-10 glow-circle"></div>
     <div class="floating-bg bottom-20 left-10 w-80 h-80 bg-[#51C0C0] rounded-full blur-[120px] opacity-5 glow-circle" style="animation-delay: 2s;"></div>
 
     <div class="w-full max-w-6xl my-auto py-8 z-10 relative">
         
-        <!-- Header Section -->
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 glass-panel p-6 rounded-2xl relative overflow-hidden">
             <div class="absolute top-0 right-0 w-64 h-64 bg-[#51C0C0] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
 
@@ -142,7 +140,7 @@ foreach ($db as $d) {
                 </p>
             </div>
             
-            <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0 flex-wrap">
+            <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0 flex-wrap items-center">
                 <a href="index.php" title="Back to Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)] ripple smooth-transition glow-hover">
                     <i class="fa-solid fa-arrow-left text-xl"></i>
                 </a>
@@ -155,13 +153,13 @@ foreach ($db as $d) {
                     <i class="fa-solid fa-dumpster-fire text-xl"></i>
                 </a>
 
-                <a href="?logout=1" title="Logout" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] ripple smooth-transition">
-                    <i class="fa-solid fa-power-off text-xl"></i>
-                </a>
+                <div class="relative group">
+                    <input type="text" id="searchInput" oninput="searchLinks()" placeholder="Paste link or ID..." class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] focus:border-[#51C0C0] text-[#51C0C0] h-12 px-4 pr-10 rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] focus:shadow-[0_0_15px_rgba(81,192,192,0.3)] font-mono text-xs outline-none w-48 md:w-64 placeholder-[#425975]">
+                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-[#51C0C0] text-lg pointer-events-none"></i>
+                </div>
             </div>
         </div>
 
-        <!-- Statistics Section -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <div class="glass-panel rounded-xl p-4 stat-card smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
@@ -214,8 +212,7 @@ foreach ($db as $d) {
             </div>
         </div>
 
-        <!-- Links List -->
-        <div class="space-y-6">
+        <div class="space-y-6" id="linksContainer">
             <?php if(!empty($db)): ?>
                 <?php foreach(array_reverse($db, true) as $id => $d): 
                     $isExpired = time() > $d['expires'];
@@ -228,7 +225,7 @@ foreach ($db as $d) {
                     $expiresInHours = floor($expiresIn / 3600);
                     $expiresInMins = floor(($expiresIn % 3600) / 60);
                 ?>
-                <div class="glass-panel rounded-[1.5rem] p-5 relative overflow-hidden group hover:border-[#51C0C0]/50 transition-colors duration-300 smooth-transition">
+                <div class="glass-panel rounded-[1.5rem] p-5 relative overflow-hidden group hover:border-[#51C0C0]/50 transition-colors duration-300 smooth-transition config-card" data-link-id="<?= htmlspecialchars($id) ?>" data-original-name="<?= strtolower(htmlspecialchars($d['original_name'])) ?>">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#1e2738] pb-5 mb-5">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 rounded-xl bg-[#0d131f] border border-[#1e2738] flex items-center justify-center text-[#51C0C0] glow-hover">
@@ -236,34 +233,22 @@ foreach ($db as $d) {
                             </div>
                             <div>
                                 <span class="text-[10px] uppercase tracking-widest text-[#425975] block mb-1 font-mono">Original: <?= htmlspecialchars($d['original_name']) ?></span>
-                                <span class="font-mono text-[#51C0C0] font-bold text-lg neon-text-glow"><?= $id ?>.hc</span>
+                                <span class="font-mono text-[#51C0C0] font-bold text-lg neon-text-glow"><?= htmlspecialchars($id) ?>.hc</span>
                             </div>
                         </div>
-                        <!-- <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap"> -->
-                        <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end flex-wrap md:flex-nowrap">
-                            <!-- <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover"> -->
-                            <div class="flex-1 md:flex-none text-center md:text-right font-mono bg-[#0d131f] px-3 py-2 rounded-xl border border-[#1e2738] smooth-transition glow-hover min-w-[100px]">
+                        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap">
+                            <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
                                 <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Downloads</span>
                                 <span class="text-white font-bold text-sm"><?= $d['downloads'] ?> <span class="text-[#425975] mx-1">/</span> <span class="<?= $d['limit'] > 0 ? 'text-[#51C0C0]' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
                             </div>
-                            <!-- <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover"> -->
-                            <div class="flex-1 md:flex-none text-center md:text-right font-mono bg-[#0d131f] px-3 py-2 rounded-xl border border-[#1e2738] smooth-transition glow-hover min-w-[100px]">
+                            <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
                                 <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Expires In</span>
                                 <span class="text-white font-bold text-sm"><?= $expiresInHours ?>h <?= $expiresInMins ?>m</span>
                             </div>
-                            <!-- <div><?= $statusHtml ?></div> -->
-                            <div class="w-full md:w-auto flex justify-center md:block"><?= $statusHtml ?></div>
-                            
-                            <div class="flex items-center gap-2 mt-2 md:mt-0">
-                                <!-- <RADAR-LINK-PRO-NEW-CODE> -->
-                                <button onclick="viewLinkDetails('<?= $id ?>', '<?= htmlspecialchars($d['original_name']) ?>')" class="bg-[#0d131f] hover:bg-[#51C0C0]/20 border border-[#51C0C0]/30 text-[#51C0C0] w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] ripple smooth-transition" title="Search/View Details">
-                                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                                </button>
-                                
-                                <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] ripple smooth-transition" title="Delete Link">
-                                    <i class="fa-solid fa-trash text-sm"></i>
-                                </a>
-                            </div>
+                            <div><?= $statusHtml ?></div>
+                            <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] ripple smooth-transition">
+                                <i class="fa-solid fa-trash text-sm"></i>
+                            </a>
                         </div>
                     </div>
 
@@ -320,15 +305,35 @@ foreach ($db as $d) {
     </div>
 
     <script>
-        /* <RADAR-LINK-PRO-NEW-CODE> */
-        function viewLinkDetails(id, name) {
-            console.log("Viewing details for Link ID: " + id + " (File: " + name + ")");
-            alert("Radar Link Pro - Link Details\n\nID: " + id + "\nFile: " + name + "\n\n(Logic to be expanded later)");
+        // Smart Search Function
+        function searchLinks() {
+            let input = document.getElementById('searchInput').value.trim();
+            
+            // Extract ID if a full link is pasted
+            let match = input.match(/\/([a-zA-Z0-9_-]+)\.hc/);
+            let searchTerm = match ? match[1] : input.replace('.hc', '');
+            searchTerm = searchTerm.toLowerCase();
+
+            let cards = document.querySelectorAll('.config-card');
+            cards.forEach(card => {
+                let id = card.getAttribute('data-link-id').toLowerCase();
+                let originalName = card.getAttribute('data-original-name');
+                
+                if (id.includes(searchTerm) || originalName.includes(searchTerm) || searchTerm === '') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
 
         // Auto-refresh statistics every 30 seconds
+        // Modified to not refresh if user is currently searching/typing
         setInterval(() => {
-            location.reload();
+            let searchVal = document.getElementById('searchInput');
+            if (searchVal && searchVal.value.trim() === '') {
+                location.reload();
+            }
         }, 30000);
 
         // Keyboard shortcuts
@@ -340,6 +345,11 @@ foreach ($db as $d) {
             if (e.ctrlKey && e.key === 'h') {
                 e.preventDefault();
                 window.location.href = 'index.php';
+            }
+            // Auto focus search on CTRL+F
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
             }
         });
 
