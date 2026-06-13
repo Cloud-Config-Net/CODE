@@ -73,12 +73,10 @@ foreach ($db as $d) {
     <title>NETCLOUD | Radar Space</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { -webkit-tap-highlight-color: transparent; } /* كود إخفاء الدائرة الرمادية */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif; background-color: #05080f; overflow-x: hidden; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .modern-heading { font-weight: 700; letter-spacing: -0.04em; }
+        * { -webkit-tap-highlight-color: transparent; font-family: 'Oswald', sans-serif !important; letter-spacing: 0.5px; text-transform: uppercase; } 
+        body { background-color: #05080f; overflow-x: hidden; }
         .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -105,29 +103,29 @@ foreach ($db as $d) {
             <div class="absolute top-0 right-0 w-64 h-64 bg-[#51C0C0] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
 
             <div class="text-center md:text-left z-10 flex flex-col md:items-start items-center">
-                <h1 class="text-3xl modern-heading text-white flex flex-col md:flex-row items-center gap-2 drop-shadow-lg smooth-transition">
-                    <span class="text-[#51C0C0] neon-text-glow">Radar Link Pro</span>
+                <h1 class="text-4xl font-bold text-white flex flex-col md:flex-row items-center gap-2 drop-shadow-lg smooth-transition">
+                    <span class="text-[#51C0C0] neon-text-glow">RADAR LINK PRO</span>
                 </h1>
-                <p class="text-[11px] tracking-[0.1em] text-[#8a9bb3] mt-2 font-mono uppercase bg-[#0d131f] border border-[#1e2738] px-3 py-1 rounded-full smooth-transition">
-                    <i class="fa-solid fa-satellite-dish text-[#51C0C0] mr-1"></i> Links & Traffic Analytics
+                <p class="text-[13px] tracking-widest text-[#8a9bb3] mt-2 bg-[#0d131f] border border-[#1e2738] px-3 py-1 rounded-full smooth-transition font-bold">
+                    <i class="fa-solid fa-satellite-dish text-[#51C0C0] mr-1"></i> LINKS & TRAFFIC ANALYTICS
                 </p>
             </div>
             
             <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0 flex-wrap items-center">
-                <a href="index.php" title="Back to Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)] smooth-transition glow-hover">
+                <a href="index.php" title="Back to Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] smooth-transition glow-hover">
                     <i class="fa-solid fa-arrow-left text-xl"></i>
                 </a>
 
-                <a href="index.php" title="Upload Files" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] hover:shadow-[0_0_15px_rgba(81,192,192,0.3)] smooth-transition glow-hover">
+                <a href="index.php" title="Upload Files" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] smooth-transition glow-hover">
                     <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                 </a>
                 
-                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] smooth-transition">
+                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] smooth-transition">
                     <i class="fa-solid fa-dumpster-fire text-xl"></i>
                 </a>
 
                 <div class="relative group">
-                    <input type="text" id="searchInput" oninput="searchLinks()" placeholder="Paste link or ID..." class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] focus:border-[#51C0C0] text-[#51C0C0] h-12 px-4 pr-10 rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] focus:shadow-[0_0_15px_rgba(81,192,192,0.3)] font-mono text-xs outline-none w-48 md:w-64 placeholder-[#425975]">
+                    <input type="text" id="searchInput" oninput="searchLinks()" placeholder="PASTE LINK OR ID..." class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] focus:border-[#51C0C0] text-[#51C0C0] h-12 px-4 pr-10 rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] focus:shadow-[0_0_15px_rgba(81,192,192,0.3)] text-[14px] font-bold outline-none w-48 md:w-64 placeholder-[#425975]">
                     <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-[#51C0C0] text-lg pointer-events-none"></i>
                 </div>
             </div>
@@ -137,8 +135,8 @@ foreach ($db as $d) {
             <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[#8a9bb3] text-xs font-mono uppercase">Total Links</p>
-                        <p class="text-[#51C0C0] text-2xl font-bold mt-1"><?= $totalLinks ?></p>
+                        <p class="text-[#8a9bb3] text-[13px] font-bold">TOTAL LINKS</p>
+                        <p class="text-[#51C0C0] text-3xl font-bold mt-1"><?= $totalLinks ?></p>
                     </div>
                     <i class="fa-solid fa-link text-[#51C0C0] text-3xl opacity-30"></i>
                 </div>
@@ -147,8 +145,8 @@ foreach ($db as $d) {
             <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[#8a9bb3] text-xs font-mono uppercase">Downloads</p>
-                        <p class="text-[#51C0C0] text-2xl font-bold mt-1"><?= $totalDownloads ?></p>
+                        <p class="text-[#8a9bb3] text-[13px] font-bold">DOWNLOADS</p>
+                        <p class="text-[#51C0C0] text-3xl font-bold mt-1"><?= $totalDownloads ?></p>
                     </div>
                     <i class="fa-solid fa-download text-[#51C0C0] text-3xl opacity-30"></i>
                 </div>
@@ -157,8 +155,8 @@ foreach ($db as $d) {
             <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[#8a9bb3] text-xs font-mono uppercase">Requests</p>
-                        <p class="text-[#51C0C0] text-2xl font-bold mt-1"><?= $totalRequests ?></p>
+                        <p class="text-[#8a9bb3] text-[13px] font-bold">REQUESTS</p>
+                        <p class="text-[#51C0C0] text-3xl font-bold mt-1"><?= $totalRequests ?></p>
                     </div>
                     <i class="fa-solid fa-radar text-[#51C0C0] text-3xl opacity-30"></i>
                 </div>
@@ -167,8 +165,8 @@ foreach ($db as $d) {
             <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[#8a9bb3] text-xs font-mono uppercase">Success</p>
-                        <p class="text-green-400 text-2xl font-bold mt-1"><?= $successfulRequests ?></p>
+                        <p class="text-[#8a9bb3] text-[13px] font-bold">SUCCESS</p>
+                        <p class="text-green-400 text-3xl font-bold mt-1"><?= $successfulRequests ?></p>
                     </div>
                     <i class="fa-solid fa-check-circle text-green-400 text-3xl opacity-30"></i>
                 </div>
@@ -177,8 +175,8 @@ foreach ($db as $d) {
             <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[#8a9bb3] text-xs font-mono uppercase">Blocked</p>
-                        <p class="text-red-400 text-2xl font-bold mt-1"><?= $blockedRequests ?></p>
+                        <p class="text-[#8a9bb3] text-[13px] font-bold">BLOCKED</p>
+                        <p class="text-red-400 text-3xl font-bold mt-1"><?= $blockedRequests ?></p>
                     </div>
                     <i class="fa-solid fa-ban text-red-400 text-3xl opacity-30"></i>
                 </div>
@@ -191,8 +189,8 @@ foreach ($db as $d) {
                     $isExpired = time() > $d['expires'];
                     $isLimited = $d['limit'] > 0 && $d['downloads'] >= $d['limit'];
                     $statusHtml = ($isExpired || $isLimited) 
-                        ? '<span class="bg-[#1a0f14] text-red-400 px-3 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-widest border border-red-900/50 shadow-[0_0_10px_rgba(220,38,38,0.1)] status-badge"><i class="fa-solid fa-ban mr-1"></i> Expired</span>' 
-                        : '<span class="bg-[#51C0C0]/10 text-[#51C0C0] px-3 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-widest border border-[#51C0C0]/30 shadow-[0_0_10px_rgba(81,192,192,0.1)] status-badge"><i class="fa-solid fa-circle-check mr-1"></i> Active</span>';
+                        ? '<span class="bg-[#1a0f14] text-red-400 px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-red-900/50 shadow-[0_0_10px_rgba(220,38,38,0.1)] status-badge"><i class="fa-solid fa-ban mr-1"></i> EXPIRED</span>' 
+                        : '<span class="bg-[#51C0C0]/10 text-[#51C0C0] px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-[#51C0C0]/30 shadow-[0_0_10px_rgba(81,192,192,0.1)] status-badge"><i class="fa-solid fa-circle-check mr-1"></i> ACTIVE</span>';
                     
                     $expiresIn = $d['expires'] - time();
                     $expiresInHours = floor($expiresIn / 3600);
@@ -201,33 +199,33 @@ foreach ($db as $d) {
                 <div class="glass-panel rounded-[1.5rem] p-5 relative overflow-hidden group hover:border-[#51C0C0]/50 transition-colors duration-300 smooth-transition config-card" data-link-id="<?= htmlspecialchars($id) ?>" data-original-name="<?= strtolower(htmlspecialchars($d['original_name'])) ?>">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#1e2738] pb-5 mb-5">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-[#0d131f] border border-[#1e2738] flex items-center justify-center text-[#51C0C0] glow-hover">
-                                <i class="fa-regular fa-file-code text-xl"></i>
+                            <div class="w-14 h-14 rounded-xl bg-[#0d131f] border border-[#1e2738] flex items-center justify-center text-[#51C0C0] glow-hover">
+                                <i class="fa-regular fa-file-code text-2xl"></i>
                             </div>
                             <div>
-                                <span class="text-[10px] uppercase tracking-widest text-[#425975] block mb-1 font-mono">Original: <?= htmlspecialchars($d['original_name']) ?></span>
-                                <span class="font-mono text-[#51C0C0] font-bold text-lg neon-text-glow"><?= htmlspecialchars($id) ?>.hc</span>
+                                <span class="text-[12px] font-bold tracking-widest text-[#425975] block mb-1">ORIGINAL: <?= htmlspecialchars($d['original_name']) ?></span>
+                                <span class="font-bold text-[#51C0C0] text-xl neon-text-glow"><?= htmlspecialchars($id) ?>.HC</span>
                             </div>
                         </div>
                         <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap">
-                            <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
-                                <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Downloads</span>
-                                <span class="text-white font-bold text-sm"><?= $d['downloads'] ?> <span class="text-[#425975] mx-1">/</span> <span class="<?= $d['limit'] > 0 ? 'text-[#51C0C0]' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
+                            <div class="text-right bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
+                                <span class="text-[11px] font-bold tracking-widest text-[#425975] block mb-0.5">DOWNLOADS</span>
+                                <span class="text-white font-bold text-[16px]"><?= $d['downloads'] ?> <span class="text-[#425975] mx-1">/</span> <span class="<?= $d['limit'] > 0 ? 'text-[#51C0C0]' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
                             </div>
-                            <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
-                                <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Expires In</span>
-                                <span class="text-white font-bold text-sm"><?= $expiresInHours ?>h <?= $expiresInMins ?>m</span>
+                            <div class="text-right bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
+                                <span class="text-[11px] font-bold tracking-widest text-[#425975] block mb-0.5">EXPIRES IN</span>
+                                <span class="text-white font-bold text-[16px]"><?= $expiresInHours ?>H <?= $expiresInMins ?>M</span>
                             </div>
                             <div><?= $statusHtml ?></div>
-                            <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] smooth-transition">
-                                <i class="fa-solid fa-trash text-sm"></i>
+                            <a href="?delete=<?= $id ?>" onclick="return confirm('DELETE THIS LINK PERMANENTLY?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] smooth-transition">
+                                <i class="fa-solid fa-trash text-[16px]"></i>
                             </a>
                         </div>
                     </div>
 
                     <div>
-                        <h4 class="text-[11px] font-mono uppercase tracking-widest text-[#8a9bb3] mb-4 flex items-center bg-[#0d131f] inline-block px-3 py-1.5 rounded-lg border border-[#1e2738]">
-                            <i class="fa-solid fa-terminal mr-2 text-[#51C0C0]"></i> Live Request Feed
+                        <h4 class="text-[13px] font-bold tracking-widest text-[#8a9bb3] mb-4 flex items-center bg-[#0d131f] inline-block px-4 py-2 rounded-lg border border-[#1e2738]">
+                            <i class="fa-solid fa-terminal mr-2 text-[#51C0C0]"></i> LIVE REQUEST FEED
                         </h4>
                         <div class="bg-[#05080f] rounded-xl overflow-hidden border border-[#1e2738] overflow-x-auto custom-scroll shadow-inner">
                             <table class="w-full text-left whitespace-nowrap">
@@ -236,27 +234,27 @@ foreach ($db as $d) {
                                         <?php foreach(array_reverse($d['logs']) as $log): 
                                             $badge = ($log['status'] === 'Success') ? 'bg-[#51C0C0]/10 text-[#51C0C0] border-[#51C0C0]/30' : 'bg-[#1a0f14] text-red-400 border-red-900/50';
                                             $clientClass = (strpos($log['client'], 'HTTP Custom') !== false) ? 'text-[#51C0C0] font-bold' : 'text-slate-400';
-                                            $icon = ($log['status'] === 'Success') ? '<i class="fa-solid fa-check text-[10px] mr-1"></i>' : '<i class="fa-solid fa-xmark text-[10px] mr-1"></i>';
+                                            $icon = ($log['status'] === 'Success') ? '<i class="fa-solid fa-check text-[12px] mr-1"></i>' : '<i class="fa-solid fa-xmark text-[12px] mr-1"></i>';
                                         ?>
                                         <tr class="hover:bg-[#0d131f] transition duration-200 smooth-transition">
-                                            <td class="px-5 py-3.5 text-[#425975] font-mono text-[10px]"><i class="fa-regular fa-clock mr-1 opacity-50"></i> <?= date('Y-m-d H:i', $log['time']) ?></td>
-                                            <td class="px-5 py-3.5 font-mono text-white text-[11px]"><i class="fa-solid fa-location-dot mr-1 text-[#425975]"></i> <?= htmlspecialchars($log['ip']) ?></td>
-                                            <td class="px-5 py-3.5 text-[11px] <?= $clientClass ?>">
+                                            <td class="px-5 py-4 text-[#425975] text-[13px] font-bold"><i class="fa-regular fa-clock mr-1 opacity-50"></i> <?= date('Y-M-D H:i', $log['time']) ?></td>
+                                            <td class="px-5 py-4 text-white text-[14px] font-bold"><i class="fa-solid fa-location-dot mr-1 text-[#425975]"></i> <?= htmlspecialchars($log['ip']) ?></td>
+                                            <td class="px-5 py-4 text-[14px] font-bold <?= $clientClass ?>">
                                                 <?= htmlspecialchars($log['client']) ?>
-                                                <span class="text-[9px] text-[#425975] block truncate max-w-xs mt-1 font-mono bg-[#0a0f1c] px-2 py-0.5 rounded"><?= htmlspecialchars($log['ua']) ?></span>
+                                                <span class="text-[11px] text-[#425975] block truncate max-w-xs mt-1 bg-[#0a0f1c] px-2 py-0.5 rounded font-bold"><?= htmlspecialchars($log['ua']) ?></span>
                                             </td>
-                                            <td class="px-5 py-3.5 text-right">
-                                                <span class="px-2.5 py-1.5 rounded-lg font-mono uppercase tracking-widest border text-[9px] <?= $badge ?> inline-flex items-center status-badge">
-                                                    <?= $icon ?> <?= $log['status'] === 'Success' ? 'Fetched' : 'Blocked' ?>
+                                            <td class="px-5 py-4 text-right">
+                                                <span class="px-3 py-1.5 rounded-lg font-bold tracking-widest border text-[11px] <?= $badge ?> inline-flex items-center status-badge">
+                                                    <?= $icon ?> <?= $log['status'] === 'Success' ? 'FETCHED' : 'BLOCKED' ?>
                                                 </span>
                                             </td>
                                         </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
-                                            <td class="px-4 py-8 text-center text-[#425975] font-mono text-[11px] uppercase tracking-widest">
-                                                <i class="fa-solid fa-ghost text-2xl block mb-2 opacity-30"></i>
-                                                No request activity tracked yet.
+                                            <td class="px-4 py-8 text-center text-[#425975] font-bold text-[13px] tracking-widest">
+                                                <i class="fa-solid fa-ghost text-3xl block mb-2 opacity-30"></i>
+                                                NO REQUEST ACTIVITY TRACKED YET.
                                             </td>
                                         </tr>
                                     <?php endif; ?>
@@ -269,20 +267,17 @@ foreach ($db as $d) {
             <?php else: ?>
                 <div class="text-center py-20 border-2 border-dashed border-[#1e2738] rounded-[2rem] bg-gradient-to-b from-[#0d131f]/50 to-[#05080f] smooth-transition">
                     <div class="w-20 h-20 bg-[#0d131f] border border-[#1e2738] rounded-full flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <i class="fa-solid fa-satellite text-3xl text-[#1e2738]"></i>
+                        <i class="fa-solid fa-satellite text-4xl text-[#1e2738]"></i>
                     </div>
-                    <p class="text-[#425975] font-mono text-[12px] uppercase tracking-widest">No links created yet. Start by uploading files!</p>
+                    <p class="text-[#425975] text-[15px] font-bold tracking-widest">NO LINKS CREATED YET. START BY UPLOADING FILES!</p>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 
     <script>
-        // Smart Search Function
         function searchLinks() {
             let input = document.getElementById('searchInput').value.trim();
-            
-            // Extract ID if a full link is pasted
             let match = input.match(/\/([a-zA-Z0-9_-]+)\.hc/);
             let searchTerm = match ? match[1] : input.replace('.hc', '');
             searchTerm = searchTerm.toLowerCase();
@@ -290,7 +285,7 @@ foreach ($db as $d) {
             let cards = document.querySelectorAll('.config-card');
             cards.forEach(card => {
                 let id = card.getAttribute('data-link-id').toLowerCase();
-                let originalName = card.getAttribute('data-original-name');
+                let originalName = card.getAttribute('data-original-name').toLowerCase();
                 
                 if (id.includes(searchTerm) || originalName.includes(searchTerm) || searchTerm === '') {
                     card.style.display = 'block';
