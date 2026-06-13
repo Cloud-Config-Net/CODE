@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ==========================================
-# NET-CLOUD MANAGER (ENHANCED V2.1)
-# <RADAR-LINK-PRO-NEW-CODE> - Fixed lsof & Port Check
+# NET-CLOUD MANAGER (ENHANCED V2.2)
+# <RADAR-LINK-PRO-NEW-CODE> - FINAL FIX (NO LSOF)
 # ==========================================
 
 # --- Colors & Styling ---
@@ -27,18 +27,29 @@ LINK_INDEX="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/index.p
 LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.php"
 
 # ==========================================
-# Helper: Check & Auto-Select Port
+# Helper: Check & Auto-Select Port (NO LSOF VERSION)
 # ==========================================
 check_port() {
     local port=$1
-    # <RADAR-LINK-PRO-NEW-CODE> - Using 'ss' or 'netstat' as alternatives to 'lsof'
-    # This prevents the "lsof: command not found" error
-    while (ss -tuln | grep -q ":$port ") || (netstat -tuln | grep -q ":$port ") 2>/dev/null; do
-        if [ "$port" == "$1" ]; then
-            echo -e "  ${YELLOW}⚠️  Warning: Port $port is already in use.${NC}"
-            echo -e "  ${LIGHT_CYAN}🔍 Searching for an alternative port...${NC}"
+    local port_busy=false
+    
+    while true; do
+        # Check using 'ss' or 'netstat' which are more common than 'lsof'
+        if (ss -tuln | grep -q ":$port ") || (netstat -tuln | grep -q ":$port ") 2>/dev/null; then
+            port_busy=true
+        else
+            port_busy=false
         fi
-        port=$((port+1))
+
+        if [ "$port_busy" = true ]; then
+            if [ "$port" == "$1" ]; then
+                echo -e "  ${YELLOW}⚠️  Warning: Port $port is already in use.${NC}"
+                echo -e "  ${LIGHT_CYAN}🔍 Searching for an alternative port...${NC}"
+            fi
+            port=$((port+1))
+        else
+            break
+        fi
     done
     
     if [ "$port" != "$1" ]; then
@@ -64,7 +75,7 @@ install_netcloud() {
     read PORT_INPUT
     PORT_INPUT=${PORT_INPUT:-$DEFAULT_PORT}
     
-    # Port auto-check
+    # Port auto-check (Safe version)
     PORT=$(check_port $PORT_INPUT)
 
     echo -ne "  ${YELLOW}[?]${NC} 🌍 Enter Timezone (Default: ${LIGHT_CYAN}${DEFAULT_TZ}${NC}): "
@@ -72,8 +83,7 @@ install_netcloud() {
     TZ_INPUT=${TZ_INPUT:-$DEFAULT_TZ}
 
     echo -e "\n  ${LIGHT_CYAN}[1/6]${NC} 🔄 Updating packages and installing requirements..."
-    # <RADAR-LINK-PRO-NEW-CODE> - Added 'lsof' and 'iproute2' to requirements for future use
-    apt update && apt install nginx php8.2-fpm php8.2-curl ufw lsof iproute2 -y > /dev/null 2>&1
+    apt update && apt install nginx php8.2-fpm php8.2-curl ufw iproute2 -y > /dev/null 2>&1
 
     echo -e "  ${LIGHT_CYAN}[2/6]${NC} 📁 Setting up system directories & permissions..."
     mkdir -p $WEB_ROOT/uploads
@@ -148,12 +158,12 @@ EOF
 show_menu() {
     clear
     echo -e "${LIGHT_CYAN}========================================================${NC}"
-    echo -e "           ${LIGHT_GREEN} NET-CLOUD MANAGER V 2.1 (ENHANCED) ${NC}"
+    echo -e "           ${LIGHT_GREEN} NET-CLOUD MANAGER V 2.2 (ENHANCED) ${NC}"
     echo -e "${LIGHT_CYAN}========================================================${NC}\n"
     
     echo -e "  ${LIGHT_CYAN}[01]${NC} INSTALL NET-CLOUD SETUP"
     echo -e "  ${LIGHT_CYAN}[02]${NC} RE-CONFIGURE DOMAIN"
-    echo -e "  ${LIGHT_CYAN}[03]${NC} RE-CONFIGURE PORT (WITH AUTO-CHECK)"
+    echo -e "  ${LIGHT_CYAN}[03]${NC} RE-CONFIGURE PORT (AUTO-CHECK)"
     echo -e "  ${LIGHT_CYAN}[04]${NC} START NGINX SERVICE"
     echo -e "  ${LIGHT_CYAN}[05]${NC} STOP NGINX SERVICE"
     echo -e "  ${LIGHT_CYAN}[06]${NC} RESTART NGINX & PHP"
@@ -173,9 +183,7 @@ read_choice() {
     read choice
     echo -e "${NC}"
     case $choice in
-        1|01) 
-            install_netcloud 
-            ;;
+        1|01) install_netcloud ;;
         2|02) 
             echo -ne "  ${YELLOW}[?]${NC} Enter New Domain: "
             read NEW_DOMAIN
@@ -184,109 +192,67 @@ read_choice() {
                 systemctl restart nginx
                 echo -e "  ${GREEN}✔️ Domain updated successfully to: ${NEW_DOMAIN}${NC}"
             else
-                echo -e "  ${RED}❌ System is not installed! Please run installation first.${NC}"
+                echo -e "  ${RED}❌ System is not installed!${NC}"
             fi
             echo -ne "\n  Press [ENTER] to continue..."
             read
             ;;
         3|03) 
-            echo -ne "  ${YELLOW}[?]${NC} Enter New Port (e.g., 80, 8080, 9999): "
+            echo -ne "  ${YELLOW}[?]${NC} Enter New Port: "
             read NEW_PORT_INPUT
-            # Port auto-check
             NEW_PORT=$(check_port $NEW_PORT_INPUT)
-            
             if [ -f "$NGINX_CONF" ]; then
                 sed -i -E "s/listen [0-9]+;/listen $NEW_PORT;/" $NGINX_CONF
                 ufw allow $NEW_PORT/tcp > /dev/null 2>&1
                 systemctl restart nginx
-                echo -e "  ${GREEN}✔️ Port updated and firewall opened successfully for port: ${NEW_PORT}${NC}"
+                echo -e "  ${GREEN}✔️ Port updated to: ${NEW_PORT}${NC}"
             else
-                echo -e "  ${RED}❌ System is not installed! Please run installation first.${NC}"
+                echo -e "  ${RED}❌ System is not installed!${NC}"
             fi
             echo -ne "\n  Press [ENTER] to continue..."
             read
             ;;
-        4|04) 
-            systemctl start nginx
-            echo -e "  ${GREEN}▶️  Nginx Service Started.${NC}"
-            echo -ne "\n  Press [ENTER] to continue..."
-            read
-            ;;
-        5|05) 
-            systemctl stop nginx
-            echo -e "  ${YELLOW}🛑 Nginx Service Stopped.${NC}"
-            echo -ne "\n  Press [ENTER] to continue..."
-            read
-            ;;
-        6|06) 
-            systemctl restart nginx
-            systemctl restart php8.2-fpm
-            echo -e "  ${LIGHT_CYAN}🔄 Nginx & PHP Services Restarted successfully.${NC}"
-            echo -ne "\n  Press [ENTER] to continue..."
-            read
-            ;;
+        4|04) systemctl start nginx; echo -e "  ${GREEN}▶️  Nginx Started.${NC}"; echo -ne "\n  Press [ENTER]..."; read ;;
+        5|05) systemctl stop nginx; echo -e "  ${YELLOW}🛑 Nginx Stopped.${NC}"; echo -ne "\n  Press [ENTER]..."; read ;;
+        6|06) systemctl restart nginx; systemctl restart php8.2-fpm; echo -e "  ${LIGHT_CYAN}🔄 Restarted.${NC}"; echo -ne "\n  Press [ENTER]..."; read ;;
         7|07) 
-            if [ -d "$WEB_ROOT" ]; then
-                nano $WEB_ROOT/admin.php
-                nano $WEB_ROOT/index.php
-                nano $NGINX_CONF
-            else
-                echo -e "  ${RED}❌ Project files not found. Not installed yet.${NC}"
-                echo -ne "\n  Press [ENTER] to continue..."
-                read
-            fi
-            ;;
+            if [ -d "$WEB_ROOT" ]; then nano $WEB_ROOT/admin.php; nano $WEB_ROOT/index.php; nano $NGINX_CONF; 
+            else echo -e "  ${RED}❌ Not installed.${NC}"; echo -ne "\n  Press [ENTER]..."; read; fi ;;
         8|08)
-            echo -ne "  ${YELLOW}[?]${NC} Enter Timezone (Default: Africa/Tunis): "
+            echo -ne "  ${YELLOW}[?]${NC} Enter Timezone: "
             read TZ_INPUT
             TZ_INPUT=${TZ_INPUT:-Africa/Tunis}
-            
-            if [ -f "$WEB_ROOT/index.php" ] && [ -f "$WEB_ROOT/admin.php" ]; then
+            if [ -f "$WEB_ROOT/index.php" ]; then
                 sed -i "/date_default_timezone_set/d" $WEB_ROOT/index.php
                 sed -i "/date_default_timezone_set/d" $WEB_ROOT/admin.php
                 sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/index.php
                 sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/admin.php
-                
                 systemctl restart php8.2-fpm
-                echo -e "  ${GREEN}✔️ Timezone seamlessly injected & updated to: ${TZ_INPUT}${NC}"
+                echo -e "  ${GREEN}✔️ Timezone updated.${NC}"
             else
-                echo -e "  ${RED}❌ Project files not found. Please install the system first.${NC}"
+                echo -e "  ${RED}❌ Not installed.${NC}"
             fi
             echo -ne "\n  Press [ENTER] to continue..."
             read
             ;;
         9|09) 
-            echo -ne "  ${RED}⚠️  WARNING: Are you sure you want to completely WIPE the system? (y/n): ${NC}"
+            echo -ne "  ${RED}⚠️  WIPE system? (y/n): ${NC}"
             read confirm
             if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-                rm -rf $WEB_ROOT
-                rm -f $NGINX_CONF
-                rm -f /etc/nginx/sites-enabled/netcloud
-                systemctl restart nginx
-                echo -e "  ${GREEN}🗑️  System successfully uninstalled and all data wiped.${NC}"
-            else
-                echo -e "  ${LIGHT_CYAN}Cancel... System safe.${NC}"
+                rm -rf $WEB_ROOT; rm -f $NGINX_CONF; rm -f /etc/nginx/sites-enabled/netcloud; systemctl restart nginx
+                echo -e "  ${GREEN}🗑️  Uninstalled.${NC}"
             fi
-            echo -ne "\n  Press [ENTER] to continue..."
-            read
-            ;;
-        0|00) 
-            echo -e "  ${LIGHT_CYAN}👋 System Terminated. Goodbye!${NC}\n"
-            exit 0 
-            ;;
-        *) 
-            echo -e "  ${RED}❌ Invalid command code!${NC}"
-            sleep 1
-            ;;
+            echo -ne "\n  Press [ENTER]..."; read ;;
+        0|00) echo -e "  ${LIGHT_CYAN}👋 Goodbye!${NC}\n"; exit 0 ;;
+        *) echo -e "  ${RED}❌ Invalid choice!${NC}"; sleep 1 ;;
     esac
 }
 
 # ==========================================
 # Main Script Execution
 # ==========================================
-
 if [ "$EUID" -ne 0 ]; then 
-    echo -e "  ${RED}${BOLD}❌ SECURITY ALERT: Please run the script with root privileges (sudo bash script.sh).${NC}"
+    echo -e "  ${RED}${BOLD}❌ Run with sudo!${NC}"
     exit 1
 fi
 
