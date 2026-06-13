@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Enhanced Admin Panel (V6)
+ * NET-CLOUD-CONFIG - Enhanced Admin Panel (V2)
  * Secure Admin Panel & Log Radar with Advanced Effects
  * File Name: admin.php
  */
@@ -239,19 +239,31 @@ foreach ($db as $d) {
                                 <span class="font-mono text-[#51C0C0] font-bold text-lg neon-text-glow"><?= $id ?>.hc</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap">
-                            <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
+                        <!-- <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap"> -->
+                        <div class="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end flex-wrap md:flex-nowrap">
+                            <!-- <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover"> -->
+                            <div class="flex-1 md:flex-none text-center md:text-right font-mono bg-[#0d131f] px-3 py-2 rounded-xl border border-[#1e2738] smooth-transition glow-hover min-w-[100px]">
                                 <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Downloads</span>
                                 <span class="text-white font-bold text-sm"><?= $d['downloads'] ?> <span class="text-[#425975] mx-1">/</span> <span class="<?= $d['limit'] > 0 ? 'text-[#51C0C0]' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
                             </div>
-                            <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
+                            <!-- <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover"> -->
+                            <div class="flex-1 md:flex-none text-center md:text-right font-mono bg-[#0d131f] px-3 py-2 rounded-xl border border-[#1e2738] smooth-transition glow-hover min-w-[100px]">
                                 <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Expires In</span>
                                 <span class="text-white font-bold text-sm"><?= $expiresInHours ?>h <?= $expiresInMins ?>m</span>
                             </div>
-                            <div><?= $statusHtml ?></div>
-                            <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] ripple smooth-transition">
-                                <i class="fa-solid fa-trash text-sm"></i>
-                            </a>
+                            <!-- <div><?= $statusHtml ?></div> -->
+                            <div class="w-full md:w-auto flex justify-center md:block"><?= $statusHtml ?></div>
+                            
+                            <div class="flex items-center gap-2 mt-2 md:mt-0">
+                                <!-- <RADAR-LINK-PRO-NEW-CODE> -->
+                                <button onclick="viewLinkDetails('<?= $id ?>', '<?= htmlspecialchars($d['original_name']) ?>')" class="bg-[#0d131f] hover:bg-[#51C0C0]/20 border border-[#51C0C0]/30 text-[#51C0C0] w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] ripple smooth-transition" title="Search/View Details">
+                                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                                </button>
+                                
+                                <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] ripple smooth-transition" title="Delete Link">
+                                    <i class="fa-solid fa-trash text-sm"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -308,6 +320,12 @@ foreach ($db as $d) {
     </div>
 
     <script>
+        /* <RADAR-LINK-PRO-NEW-CODE> */
+        function viewLinkDetails(id, name) {
+            console.log("Viewing details for Link ID: " + id + " (File: " + name + ")");
+            alert("Radar Link Pro - Link Details\n\nID: " + id + "\nFile: " + name + "\n\n(Logic to be expanded later)");
+        }
+
         // Auto-refresh statistics every 30 seconds
         setInterval(() => {
             location.reload();
