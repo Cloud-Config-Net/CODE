@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # ==========================================
-# NET-CLOUD MANAGER (SECURE)
+# NET-CLOUD MANAGER (ENHANCED V2)
+# <RADAR-LINK-PRO-NEW-CODE>
 # ==========================================
 
 # --- Colors & Styling ---
@@ -26,6 +27,22 @@ LINK_INDEX="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/index.p
 LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.php"
 
 # ==========================================
+# Helper: Check & Auto-Select Port
+# ==========================================
+check_port() {
+    local port=$1
+    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null ; then
+        echo -e "  ${YELLOW}⚠️  Warning: Port $port is already in use.${NC}"
+        echo -e "  ${LIGHT_CYAN}🔍 Searching for an alternative port...${NC}"
+        while lsof -Pi :$port -sTCP:LISTEN -t >/dev/null ; do
+            port=$((port+1))
+        done
+        echo -e "  ${GREEN}✅ Selected alternative port: $port${NC}"
+    fi
+    echo $port
+}
+
+# ==========================================
 # Install Function
 # ==========================================
 install_netcloud() {
@@ -39,8 +56,11 @@ install_netcloud() {
     DOMAIN=${DOMAIN:-$DEFAULT_DOMAIN}
 
     echo -ne "  ${YELLOW}[?]${NC} 🔌 Enter Port (Default: ${LIGHT_CYAN}${DEFAULT_PORT}${NC}): "
-    read PORT
-    PORT=${PORT:-$DEFAULT_PORT}
+    read PORT_INPUT
+    PORT_INPUT=${PORT_INPUT:-$DEFAULT_PORT}
+    
+    # <RADAR-LINK-PRO-NEW-CODE> - Port auto-check
+    PORT=$(check_port $PORT_INPUT)
 
     echo -ne "  ${YELLOW}[?]${NC} 🌍 Enter Timezone (Default: ${LIGHT_CYAN}${DEFAULT_TZ}${NC}): "
     read TZ_INPUT
@@ -122,12 +142,12 @@ EOF
 show_menu() {
     clear
     echo -e "${LIGHT_CYAN}========================================================${NC}"
-    echo -e "           ${LIGHT_GREEN} CLOUD-CLOUD MANAGER V 1.0 (SECURE) ${NC}"
+    echo -e "           ${LIGHT_GREEN} NET-CLOUD MANAGER V 2.0 (ENHANCED) ${NC}"
     echo -e "${LIGHT_CYAN}========================================================${NC}\n"
     
-    echo -e "  ${LIGHT_CYAN}[01]${NC} INSTALL CLOUD-CLOUD SETUP"
+    echo -e "  ${LIGHT_CYAN}[01]${NC} INSTALL NET-CLOUD SETUP"
     echo -e "  ${LIGHT_CYAN}[02]${NC} RE-CONFIGURE DOMAIN"
-    echo -e "  ${LIGHT_CYAN}[03]${NC} RE-CONFIGURE PORT"
+    echo -e "  ${LIGHT_CYAN}[03]${NC} RE-CONFIGURE PORT (WITH AUTO-CHECK)"
     echo -e "  ${LIGHT_CYAN}[04]${NC} START NGINX SERVICE"
     echo -e "  ${LIGHT_CYAN}[05]${NC} STOP NGINX SERVICE"
     echo -e "  ${LIGHT_CYAN}[06]${NC} RESTART NGINX & PHP"
@@ -165,7 +185,10 @@ read_choice() {
             ;;
         3|03) 
             echo -ne "  ${YELLOW}[?]${NC} Enter New Port (e.g., 80, 8080, 9999): "
-            read NEW_PORT
+            read NEW_PORT_INPUT
+            # <RADAR-LINK-PRO-NEW-CODE> - Port auto-check
+            NEW_PORT=$(check_port $NEW_PORT_INPUT)
+            
             if [ -f "$NGINX_CONF" ]; then
                 sed -i -E "s/listen [0-9]+;/listen $NEW_PORT;/" $NGINX_CONF
                 ufw allow $NEW_PORT/tcp > /dev/null 2>&1
