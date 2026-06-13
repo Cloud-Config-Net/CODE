@@ -167,8 +167,9 @@ if (isset($_SESSION['temp_generated_links'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { -webkit-tap-highlight-color: transparent; font-family: 'Oswald', sans-serif !important; letter-spacing: 0.5px; text-transform: uppercase; } 
-        body { background-color: #05080f; overflow-x: hidden; }
+        * { -webkit-tap-highlight-color: transparent; } 
+        body { background-color: #05080f; overflow-x: hidden; font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
+        input, button, select, textarea { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
         .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -222,7 +223,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                 <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">
                     <i class="fa-solid fa-key mr-2"></i> PASSWORD
                 </label>
-                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••••••">
+                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••••••">
             </div>
             
             <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[16px] flex items-center justify-center tracking-widest mt-6">
@@ -272,7 +273,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                     </div>
                 </div>
                 
-                <div class="bg-[#0d131f] border border-[#1e2738] rounded-xl py-3.5 px-4 mb-4 flex items-center justify-center gap-3">
+                <div class="bg-[#0d131f] border border-[#1e2738] rounded-xl py-3.5 px-4 mb-4 flex items-center justify-center gap-3 overflow-x-auto custom-scroll">
                     <i class="fa-solid fa-link text-[#51C0C0] text-[13px]"></i>
                     <span class="text-[#51C0C0] text-[11px] sm:text-[13px] font-bold whitespace-nowrap tracking-wider" id="link-<?= $idx ?>">
                         <?= $item['link'] ?>
@@ -340,7 +341,6 @@ if (isset($_SESSION['temp_generated_links'])) {
             }
 
             function copySingle(id, btn) {
-                // استخدام textContent لضمان نسخ الرابط الأصلي بدون تأثير Uppercase من الـ CSS
                 const linkText = document.getElementById(id).textContent.trim();
                 copyData(linkText, btn);
             }
