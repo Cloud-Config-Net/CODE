@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ==========================================
-# NET-CLOUD MANAGER (ENHANCED V2)
-# <RADAR-LINK-PRO-NEW-CODE>
+# NET-CLOUD MANAGER (ENHANCED V2.1)
+# <RADAR-LINK-PRO-NEW-CODE> - Fixed lsof & Port Check
 # ==========================================
 
 # --- Colors & Styling ---
@@ -31,12 +31,17 @@ LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.p
 # ==========================================
 check_port() {
     local port=$1
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null ; then
-        echo -e "  ${YELLOW}⚠️  Warning: Port $port is already in use.${NC}"
-        echo -e "  ${LIGHT_CYAN}🔍 Searching for an alternative port...${NC}"
-        while lsof -Pi :$port -sTCP:LISTEN -t >/dev/null ; do
-            port=$((port+1))
-        done
+    # <RADAR-LINK-PRO-NEW-CODE> - Using 'ss' or 'netstat' as alternatives to 'lsof'
+    # This prevents the "lsof: command not found" error
+    while (ss -tuln | grep -q ":$port ") || (netstat -tuln | grep -q ":$port ") 2>/dev/null; do
+        if [ "$port" == "$1" ]; then
+            echo -e "  ${YELLOW}⚠️  Warning: Port $port is already in use.${NC}"
+            echo -e "  ${LIGHT_CYAN}🔍 Searching for an alternative port...${NC}"
+        fi
+        port=$((port+1))
+    done
+    
+    if [ "$port" != "$1" ]; then
         echo -e "  ${GREEN}✅ Selected alternative port: $port${NC}"
     fi
     echo $port
@@ -59,7 +64,7 @@ install_netcloud() {
     read PORT_INPUT
     PORT_INPUT=${PORT_INPUT:-$DEFAULT_PORT}
     
-    # <RADAR-LINK-PRO-NEW-CODE> - Port auto-check
+    # Port auto-check
     PORT=$(check_port $PORT_INPUT)
 
     echo -ne "  ${YELLOW}[?]${NC} 🌍 Enter Timezone (Default: ${LIGHT_CYAN}${DEFAULT_TZ}${NC}): "
@@ -67,7 +72,8 @@ install_netcloud() {
     TZ_INPUT=${TZ_INPUT:-$DEFAULT_TZ}
 
     echo -e "\n  ${LIGHT_CYAN}[1/6]${NC} 🔄 Updating packages and installing requirements..."
-    apt update && apt install nginx php8.2-fpm php8.2-curl ufw -y > /dev/null 2>&1
+    # <RADAR-LINK-PRO-NEW-CODE> - Added 'lsof' and 'iproute2' to requirements for future use
+    apt update && apt install nginx php8.2-fpm php8.2-curl ufw lsof iproute2 -y > /dev/null 2>&1
 
     echo -e "  ${LIGHT_CYAN}[2/6]${NC} 📁 Setting up system directories & permissions..."
     mkdir -p $WEB_ROOT/uploads
@@ -142,7 +148,7 @@ EOF
 show_menu() {
     clear
     echo -e "${LIGHT_CYAN}========================================================${NC}"
-    echo -e "           ${LIGHT_GREEN} NET-CLOUD MANAGER V 2.0 (ENHANCED) ${NC}"
+    echo -e "           ${LIGHT_GREEN} NET-CLOUD MANAGER V 2.1 (ENHANCED) ${NC}"
     echo -e "${LIGHT_CYAN}========================================================${NC}\n"
     
     echo -e "  ${LIGHT_CYAN}[01]${NC} INSTALL NET-CLOUD SETUP"
@@ -186,7 +192,7 @@ read_choice() {
         3|03) 
             echo -ne "  ${YELLOW}[?]${NC} Enter New Port (e.g., 80, 8080, 9999): "
             read NEW_PORT_INPUT
-            # <RADAR-LINK-PRO-NEW-CODE> - Port auto-check
+            # Port auto-check
             NEW_PORT=$(check_port $NEW_PORT_INPUT)
             
             if [ -f "$NGINX_CONF" ]; then
