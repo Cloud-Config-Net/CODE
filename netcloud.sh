@@ -93,12 +93,61 @@ install_netcloud() {
     echo -e "  ${DARK_GRAY}[4/6]${NC} ${CYAN}INJECTING TIMEZONE (${WHITE}$TZ_INPUT${CYAN}) INTO CORE...${NC}"
     sed -i "/date_default_timezone_set/d" $WEB_ROOT/index.php
     sed -i "/date_default_timezone_set/d" $WEB_ROOT/admin.php
-    sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/index.php
-    sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/admin.php
+    sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/index.php
+    sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/admin.php
     chown www-data:www-data $WEB_ROOT/index.php $WEB_ROOT/admin.php
 
     echo -e "  ${DARK_GRAY}[5/6]${NC} ${CYAN}COMPILING NGINX SMART-FIREWALL CONFIG...${NC}"
-    cat <<EOF > $NGINX_CONF
+    
+    # --- AUTO SSL DETECTION LOGIC ---
+    if [ "$PORT" == "443" ]; then
+        echo -e "  ${DARK_GRAY}[SSL]${NC} ${CYAN}PORT 443 DETECTED. FETCHING SSL CERTIFICATE FOR ${WHITE}$DOMAIN${NC}..."
+        apt install certbot -y > /dev/null 2>&1
+        systemctl stop nginx
+        
+        echo -e "\n  ${YELLOW}* ATTENTION: PORT 80 MUST BE FREE FOR 10 SECONDS TO VERIFY SSL *${NC}"
+        echo -e "  ${DARK_GRAY}If SSH WS is running on Port 80, please pause it from another terminal now.${NC}"
+        echo -ne "  ${CYAN}PRESS [ENTER] WHEN PORT 80 IS READY >${NC} "
+        read
+        
+        certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email
+        
+        cat <<EOF > $NGINX_CONF
+server {
+    listen 443 ssl;
+    server_name $DOMAIN;
+    root $WEB_ROOT;
+    index index.php index.html;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    # Smart Download Firewall
+    location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
+        if (\$http_user_agent ~* (WhatsApp|TelegramBot|facebookexternalhit|Twitterbot|Slackbot)) {
+            return 200 "NetCloud Preview Blocked Safely";
+        }
+        rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
+    }
+    
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location /db.json { deny all; return 404; }
+    location /uploads/ { deny all; return 404; }
+}
+EOF
+    else
+        # --- NORMAL CONFIGURATION FOR PORT 80 / 8080 ---
+        cat <<EOF > $NGINX_CONF
 server {
     listen $PORT;
     server_name $DOMAIN;
@@ -128,6 +177,7 @@ server {
     location /uploads/ { deny all; return 404; }
 }
 EOF
+    fi
 
     echo -e "  ${DARK_GRAY}[6/6]${NC} ${CYAN}APPLYING RULES & RESTARTING SERVICES...${NC}"
     ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
@@ -144,6 +194,9 @@ EOF
     echo -e "  TARGET DOMAIN : ${WHITE}${DOMAIN}${NC}"
     echo -e "  ACTIVE PORT   : ${WHITE}${PORT}${NC}"
     echo -e "  TIMEZONE      : ${WHITE}${TZ_INPUT}${NC}"
+    if [ "$PORT" == "443" ]; then
+        echo -e "  SSL SECURITY  : ${GREEN}ACTIVE (HTTPS)${NC}"
+    fi
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO RETURN TO THE MENU...${NC}"
     read
@@ -167,6 +220,7 @@ show_menu() {
     echo -e "  ${DARK_GRAY}[${WHITE}07${DARK_GRAY}]${NC} ${CYAN}EDIT CONFIGURATION FILES${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}08${DARK_GRAY}]${NC} ${CYAN}UPDATE SYSTEM TIMEZONE${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${RED}WIPE AND DESTROY SYSTEM${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}10${DARK_GRAY}]${NC} ${GREEN}INSTALL SSL CERTIFICATE (HTTPS 443)${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}EXIT MANAGER\n${NC}"
     
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -176,7 +230,7 @@ show_menu() {
 # READ CHOICE FUNCTION
 # ==========================================
 read_choice() {
-    echo -ne "\n  ${CYAN}SELECT MODULE [00-09] >${NC} ${WHITE}"
+    echo -ne "\n  ${CYAN}SELECT MODULE [00-10] >${NC} ${WHITE}"
     read choice
     echo -e "${NC}"
     case $choice in
@@ -220,8 +274,8 @@ read_choice() {
             if [ -f "$WEB_ROOT/index.php" ]; then
                 sed -i "/date_default_timezone_set/d" $WEB_ROOT/index.php
                 sed -i "/date_default_timezone_set/d" $WEB_ROOT/admin.php
-                sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/index.php
-                sed -i "s/session_start();/session_start();\ndate_default_timezone_set('$TZ_INPUT');/" $WEB_ROOT/admin.php
+                sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/index.php
+                sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/admin.php
                 systemctl restart php8.2-fpm
                 echo -e "  ${GREEN}TIMEZONE UPDATED TO ${WHITE}${TZ_INPUT}${NC}"
             else
@@ -237,6 +291,59 @@ read_choice() {
                 echo -e "  ${GREEN}SYSTEM COMPLETELY REMOVED.${NC}"
             fi
             echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
+        10)
+            echo -ne "  ${CYAN}[?]${NC} ENTER DOMAIN TO SECURE (SSL): ${WHITE}"
+            read SSL_DOMAIN
+            echo -e "  ${YELLOW}\n  * ATTENTION: PORT 80 MUST BE FREE FOR 10 SECONDS *${NC}"
+            echo -e "  ${DARK_GRAY}Pause SSH WS if it is running on Port 80.${NC}"
+            echo -ne "  ${CYAN}PRESS [ENTER] WHEN PORT 80 IS READY >${NC} "
+            read
+            apt install certbot -y > /dev/null 2>&1
+            systemctl stop nginx
+            certbot certonly --standalone -d $SSL_DOMAIN --non-interactive --agree-tos --register-unsafely-without-email
+            
+            if [ -f "/etc/letsencrypt/live/$SSL_DOMAIN/fullchain.pem" ]; then
+                cat <<EOF > $NGINX_CONF
+server {
+    listen 443 ssl;
+    server_name $SSL_DOMAIN;
+    root $WEB_ROOT;
+    index index.php index.html;
+
+    ssl_certificate /etc/letsencrypt/live/$SSL_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$SSL_DOMAIN/privkey.pem;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
+        if (\$http_user_agent ~* (WhatsApp|TelegramBot|facebookexternalhit|Twitterbot|Slackbot)) {
+            return 200 "NetCloud Preview Blocked Safely";
+        }
+        rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
+    }
+    
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location /db.json { deny all; return 404; }
+    location /uploads/ { deny all; return 404; }
+}
+EOF
+                systemctl restart nginx
+                ufw allow 443/tcp > /dev/null 2>&1
+                echo -e "\n  ${GREEN}SSL INSTALLED AND PORT SWITCHED TO 443 SUCCESSFULLY!${NC}"
+            else
+                echo -e "\n  ${RED}SSL INSTALLATION FAILED. MAKE SURE PORT 80 WAS FREE.${NC}"
+                systemctl restart nginx
+            fi
+            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
+            ;;
         0|00) echo -e "  ${CYAN}TERMINATING SESSION. GOODBYE!${NC}\n"; exit 0 ;;
         *) echo -e "  ${RED}INVALID SELECTION!${NC}"; sleep 1 ;;
     esac
