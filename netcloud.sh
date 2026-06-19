@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================================
-#   CLOUD CONFIG MANAGER PRO - SYSTEM INSTALLER
+#   CLOUD CONFIG MANAGER PRO - SYSTEM INSTALLER (ULTIMATE)
 # ========================================================
 
 # --- MODERN COLORS & STYLING ---
@@ -63,7 +63,7 @@ check_port() {
 install_netcloud() {
     clear
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${WHITE}${BOLD}INITIATING CLOUD CONFIG CORE DEPLOYMENT...${NC}"
+    echo -e "  ${WHITE}${BOLD}INITIATING CLOUD CONFIG SECURE DEPLOYMENT...${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${NC}"
     
     echo -ne "  ${CYAN}ENTER DOMAIN  : ${WHITE}"
@@ -116,17 +116,14 @@ install_netcloud() {
         echo -ne "  ${CYAN}PRESS [ENTER] WHEN PORT 80 IS READY >${NC} "
         read
         
-        # STOP NGINX TO PREVENT PORT CONFLICT DURING CERTIFICATE VALIDATION
         systemctl stop nginx
         
-        # REQUEST CERTIFICATE VIA TEMPORARY STANDALONE SERVER (PORT 80)
         echo -e "  ${CYAN}REQUESTING SSL CERTIFICATE FROM LET'S ENCRYPT FOR $DOMAIN...${NC}"
         certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email
         
-        # WRITE NGINX CONFIGURATION FOR PORT 443 ONLY (HTTPS)
         cat <<EOF > $NGINX_CONF
 server {
-    listen 443 ssl;
+    listen 443 ssl http2;
     server_name $DOMAIN;
     root $WEB_ROOT;
     index index.php index.html;
@@ -135,22 +132,18 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
 
     # SECURITY HEADERS
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
 
-    # CLEAN URL FOR ADMIN PANEL
-    location = /admin {
-        rewrite ^/admin$ /admin.php last;
-    }
-
+    # ADVANCED CLEAN URLs (Hides .php extensions automatically)
     location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
+        try_files \$uri \$uri/ \$uri.php?\$query_string;
     }
 
     # ANTI-SCRAPING & SMART DOWNLOAD FIREWALL
     location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
-        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot)) {
+        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot|postman)) {
             return 403 "ACCESS DENIED: AUTOMATED TOOLS ARE NOT ALLOWED";
         }
         rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
@@ -163,12 +156,11 @@ server {
         include fastcgi_params;
     }
 
-    location /db.json { deny all; return 404; }
-    location /uploads/ { deny all; return 404; }
+    # CRITICAL FOLDERS LOCKDOWN
+    location ~ ^/(uploads|db\.json) { deny all; return 404; }
 }
 EOF
     else
-        # IF PORT IS 80 OR ANY OTHER NON-SSL PORT
         cat <<EOF > $NGINX_CONF
 server {
     listen $PORT;
@@ -177,22 +169,18 @@ server {
     index index.php index.html;
 
     # SECURITY HEADERS
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
 
-    # CLEAN URL FOR ADMIN PANEL
-    location = /admin {
-        rewrite ^/admin$ /admin.php last;
-    }
-
+    # ADVANCED CLEAN URLs (Hides .php extensions automatically)
     location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
+        try_files \$uri \$uri/ \$uri.php?\$query_string;
     }
 
     # ANTI-SCRAPING & SMART DOWNLOAD FIREWALL
     location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
-        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot)) {
+        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot|postman)) {
             return 403 "ACCESS DENIED: AUTOMATED TOOLS ARE NOT ALLOWED";
         }
         rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
@@ -205,8 +193,8 @@ server {
         include fastcgi_params;
     }
 
-    location /db.json { deny all; return 404; }
-    location /uploads/ { deny all; return 404; }
+    # CRITICAL FOLDERS LOCKDOWN
+    location ~ ^/(uploads|db\.json) { deny all; return 404; }
 }
 EOF
     fi
