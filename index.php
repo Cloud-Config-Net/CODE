@@ -1,9 +1,12 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Main Upload & Client Sniffer 
+ * NET-CLOUD-CONFIG - Main Upload & Client Sniffer (PRO EDITION)
  * File Name: index.php
  */
 
+// إعداد استقرار الجلسات (Persistent Login) لمدة 30 يوماً
+ini_set('session.cookie_lifetime', 2592000);
+ini_set('session.gc_maxlifetime', 2592000);
 session_start();
 date_default_timezone_set('Africa/Tunis');
 
@@ -16,7 +19,7 @@ if (!file_exists($dbFile)) { file_put_contents($dbFile, json_encode([])); }
 $db = json_decode(file_get_contents($dbFile), true) ?: [];
 
 // ==========================================
-// PUBLIC AREA: Smart Download & Client Sniffer Radar
+// Smart Download & Client Sniffer Radar (Self-Destructing Payload)
 // ==========================================
 if (isset($_GET['c'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['c']);
@@ -38,7 +41,6 @@ if (isset($_GET['c'])) {
     if (isset($db[$id])) {
         $entry = $db[$id];
         
-        // Check link expiry or download limits
         if (time() > $entry['expires'] || ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel . ' (Expired)', 'time' => time(), 'status' => 'Failed'];
             file_put_contents($dbFile, json_encode($db));
@@ -46,7 +48,6 @@ if (isset($_GET['c'])) {
             header("HTTP/1.1 410 Gone"); die("This link has expired or reached its download limit.");
         }
         
-        // Block regular web browsers from viewing or parsing payloads
         if ($isBrowser) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Blocked'];
             file_put_contents($dbFile, json_encode($db));
@@ -54,102 +55,108 @@ if (isset($_GET['c'])) {
             die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Access Denied</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box; -webkit-tap-highlight-color:transparent; text-transform:uppercase;}img{max-width:100%;height:auto;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.5);margin-bottom:20px;max-height:60vh;border:1px solid #1e2738;}h1{margin:0 0 10px 0;font-size:28px;letter-spacing:1px;font-weight:700;}p{margin:0;color:#8a9bb3;font-size:16px;line-height:1.6;max-width:400px;}</style></head><body><img src="https://i.postimg.cc/TYfpcBy3/IMG-20260612-024446-049.jpg" alt="Tutorial"><h1>🛑 ACCESS DENIED</h1><p>This config link cannot be opened in a web browser.<br>Please copy the link and import it directly inside the <b>HTTP Custom</b> app as shown above.</p></body></html>');
         }
 
-        // Legitimate secure download execution
-        $db[$id]['downloads']++;
-        $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Success'];
-        
-        // Self-Destruct Trigger: Delete data instantly from JSON when limit is reached
-        $isLimitReached = ($entry['limit'] > 0 && $db[$id]['downloads'] >= $entry['limit']);
-        $pathToSend = $entry['real_path'];
-        $fileNameToSend = basename($entry['original_name']);
+        // منطق التدمير الذاتي قبل اكتمال الاتصال
+        $isLastDownload = ($entry['limit'] > 0 && ($entry['downloads'] + 1) >= $entry['limit']);
+        $fileSize = filesize($entry['real_path']);
+        $fileContent = file_get_contents($entry['real_path']);
 
-        if ($isLimitReached) {
-            unset($db[$id]); 
+        if ($isLastDownload) {
+            @unlink($entry['real_path']); // تدمير الملف من القرص الصلب
+            unset($db[$id]);              // تدمير البيانات من السجل نهائياً
+            file_put_contents($dbFile, json_encode($db));
+        } else {
+            $db[$id]['downloads']++;
+            $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Success'];
+            file_put_contents($dbFile, json_encode($db));
         }
-
-        file_put_contents($dbFile, json_encode($db));
         
         if (ob_get_length()) { ob_end_clean(); } 
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream'); 
-        header('Content-Disposition: attachment; filename="' . $fileNameToSend . '"');
+        header('Content-Disposition: attachment; filename="' . basename($entry['original_name']) . '"');
         header('Content-Transfer-Encoding: binary'); 
         header('Expires: 0');
         header('Cache-Control: must-revalidate'); 
         header('Pragma: public');
-        header('Content-Length: ' . filesize($pathToSend));
+        header('Content-Length: ' . $fileSize);
         
-        readfile($pathToSend); 
-
-        // Erase physical file from disk instantly to prevent deep reverse-engineering
-        if ($isLimitReached) {
-            @unlink($pathToSend);
-        }
+        echo $fileContent; // إرسال الملف من الذاكرة العشوائية بعد تدمير الأصل
         exit;
     }
     header("HTTP/1.1 404 Not Found"); die("File Not Found.");
 }
 
 // ==========================================
-// SECURE BOUNDARY: Private Admin Authentication Required Below
+// UNIFIED UI Login System
 // ==========================================
-if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
-    header("Location: /admin"); 
-    exit;
+$adminUser = 'Admin';
+$adminPass = '38sPcd6Ysr04NGVk'; 
+
+$loginError = false;
+
+if (isset($_GET['logout'])) {
+    unset($_SESSION['main_logged']);
+    header("Location: /"); exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
+    if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
+        $_SESSION['main_logged'] = true;
+        header("Location: /"); exit;
+    } else {
+        $loginError = "INVALID LOGIN CREDENTIALS!";
+    }
+}
+
+$isLogged = isset($_SESSION['main_logged']) && $_SESSION['main_logged'] === true;
+
 // ==========================================
-// Multi-Upload Handling Logic
+// Multi-Upload Handling Logic & Whitelist
 // ==========================================
 $generatedLinks = [];
+$allowedExts = ['hc', 'ovpn', 'ehi', 'nm']; // جدار حماية الامتدادات
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
-    $limit = isset($_POST['limit']) ? (int)$_POST['limit'] : 1; 
-    $duration = isset($_POST['duration']) ? (int)$_POST['duration'] : 5;
-    $timeUnit = $_POST['time_unit'] ?? 'hours';
+if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
+    $limit = (int)$_POST['limit']; 
+    $duration = (int)$_POST['duration'];
+    $timeUnit = $_POST['time_unit'] ?? 'minutes';
     
     $seconds = ($timeUnit === 'minutes') ? ($duration * 60) : ($duration * 3600);
     $fileCount = count($_FILES['files']['name']);
     
-    // Strict Whitelist File Extensions to prevent shell injections
-    $allowedExtensions = ['hc', 'ovpn', 'ehi', 'nm'];
-
     for ($i = 0; $i < $fileCount; $i++) {
         if ($_FILES['files']['error'][$i] === UPLOAD_ERR_OK) {
-            $tmpName = $_FILES['files']['tmp_name'][$i];
             $originalName = basename($_FILES['files']['name'][$i]);
-            
             $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
             
-            // Enforce extensions whitelist filtering
-            if (!not_in_array($ext, $allowedExtensions)) {
-                $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
+            // تحقق صارم من الامتداد
+            if (!in_array($ext, $allowedExts)) { continue; }
+
+            $tmpName = $_FILES['files']['tmp_name'][$i];
+            $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
+            
+            if (move_uploaded_file($tmpName, $targetPath)) {
+                $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                $host = $_SERVER['HTTP_HOST'];
+                $host = preg_replace('/:\d+$/', '', $host); 
+                $link = "https://" . $host . '/' . $shortId . '.hc';
                 
-                if (move_uploaded_file($tmpName, $targetPath)) {
-                    $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
-                    
-                    $host = $_SERVER['HTTP_HOST'];
-                    $host = preg_replace('/:\d+$/', '', $host); 
-                    
-                    $link = "https://" . $host . '/' . $shortId . '.hc';
-                    
-                    $db[$shortId] = [
-                        'original_name' => $originalName,
-                        'real_path' => $targetPath,
-                        'limit' => $limit,
-                        'downloads' => 0,
-                        'expires' => time() + $seconds,
-                        'upload_date' => time(),
-                        'logs' => []
-                    ];
-                    $generatedLinks[] = [
-                        'original_name' => $originalName, 
-                        'link' => $link,
-                        'limit' => $limit,
-                        'duration' => $duration,
-                        'time_unit' => $timeUnit
-                    ];
-                }
+                $db[$shortId] = [
+                    'original_name' => $originalName,
+                    'real_path' => $targetPath,
+                    'limit' => $limit,
+                    'downloads' => 0,
+                    'expires' => time() + $seconds,
+                    'upload_date' => time(),
+                    'logs' => []
+                ];
+                $generatedLinks[] = [
+                    'original_name' => $originalName, 
+                    'link' => $link,
+                    'limit' => $limit,
+                    'duration' => $duration,
+                    'time_unit' => $timeUnit
+                ];
             }
         }
     }
@@ -172,7 +179,7 @@ if (isset($_SESSION['temp_generated_links'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CLOUD CONFIG MANAGER</title>
+    <title>SYSTEM LOGIN | CLOUD CONFIG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -191,153 +198,56 @@ if (isset($_SESSION['temp_generated_links'])) {
     </style>
 </head>
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4 relative">
-
     <div class="bg-animations">
-        <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s; animation-delay: 0s;">☁️</div>
-        <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s; animation-delay: 5s;">🚀</div>
-        <div class="floating-element text-5xl text-[#51C0C0]" style="left: 70%; animation-duration: 18s; animation-delay: 2s;"><i class="fa-solid fa-microchip"></i></div>
-        <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s; animation-delay: 8s;">⚡</div>
-        <div class="floating-element text-4xl text-[#51C0C0]" style="left: 50%; animation-duration: 22s; animation-delay: 12s;"><i class="fa-solid fa-satellite-dish"></i></div>
-        <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;">🔒</div>
-    </div>
-
+        </div>
     <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10">
         
+        <?php if(!$isLogged): ?>
+        <div class="text-center mt-6 mb-8 w-full flex flex-col items-center relative z-10">
+            <h2 class="text-[32px] text-white drop-shadow-lg font-bold">SYSTEM <span class="text-[#51C0C0] neon-text-glow">LOGIN</span></h2>
+        </div>
+        <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 sm:p-8 rounded-[2rem] border border-[#1e2738] shadow-[0_0_20px_rgba(0,0,0,0.3)]">
+            <input type="hidden" name="ui_login" value="1">
+            <?php if($loginError): ?>
+                <div class="bg-[#1a0f14] border border-red-900/50 text-red-400 text-sm p-3 rounded-xl text-center font-bold tracking-wide">
+                    <?= $loginError ?>
+                </div>
+            <?php endif; ?>
+            <div>
+                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">USERNAME</label>
+                <input type="text" name="username" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="ENTER ADMIN">
+            </div>
+            <div>
+                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">PASSWORD</label>
+                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••••••">
+            </div>
+            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[16px] flex items-center justify-center tracking-widest mt-6">
+                ACCESS SYSTEM
+            </button>
+        </form>
+
+        <?php else: ?>
         <a href="/admin" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition z-20" title="Radar Analytics">
             <i class="fa-solid fa-chart-line text-[15px]"></i>
         </a>
-
-        <a href="/admin?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
+        <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
             <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
         </a>
 
         <?php if(!empty($generatedLinks)): ?>
-        <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
-            <h1 class="text-[40px] font-bold text-white drop-shadow-lg">
-                LINK<span class="text-[#51C0C0] neon-text-glow ml-1">CODE</span>
-            </h1>
-            <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
-        </div>
-
-        <div class="bg-transparent mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-5 relative z-20 px-2 pb-4">
-            <?php foreach($generatedLinks as $idx => $item): ?>
-            <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-2xl p-5 shadow-lg w-full overflow-hidden shrink-0">
-                
-                <div class="flex justify-between items-center bg-[#0d131f] rounded-xl py-4 px-2 mb-4 border border-[#141c2b]">
-                    <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Original File">
-                        <i class="fa-regular fa-file-code text-[#51C0C0] text-[18px] mb-2"></i>
-                        <span class="text-[#8a9bb3] text-[13px] font-bold truncate w-[90%] text-center tracking-wide">
-                            <?= htmlspecialchars($item['original_name']) ?>
-                        </span>
-                    </div>
-                    <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Limit">
-                        <i class="fa-solid fa-download text-[#51C0C0] text-[18px] mb-2"></i>
-                        <span class="text-[#8a9bb3] text-[15px] font-bold tracking-wide">
-                            <?= $item['limit'] > 0 ? $item['limit'] : '∞' ?>
-                        </span>
-                    </div>
-                    <div class="flex flex-col items-center justify-center w-1/3" title="Validity Time">
-                        <i class="fa-regular fa-rectangle-xmark text-[#51C0C0] text-[18px] mb-2"></i>
-                        <span class="text-[#8a9bb3] text-[14px] font-bold tracking-wide">
-                            <?= $item['duration'] ?> <?= $item['time_unit'] === 'minutes' ? 'MIN' : 'HR' ?>
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="bg-[#0d131f] border border-[#1e2738] rounded-xl py-3.5 px-4 mb-4 flex items-center justify-center gap-3 overflow-x-auto custom-scroll">
-                    <i class="fa-solid fa-link text-[#51C0C0] text-[13px]"></i>
-                    <span class="text-[#51C0C0] text-[11px] sm:text-[13px] font-bold whitespace-nowrap tracking-wider" id="link-<?= $idx ?>">
-                        <?= $item['link'] ?>
-                    </span>
-                </div>
-
-                <div class="flex justify-center">
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="w-full sm:w-[60%] bg-[#51C0C0]/10 hover:bg-[#51C0C0]/20 text-[#51C0C0] border border-[#51C0C0]/30 py-3 rounded-xl text-[15px] font-bold tracking-widest transition-colors flex items-center justify-center gap-2">
-                        <i class="fa-regular fa-copy text-[16px]"></i> COPY
-                    </button>
-                </div>
-
-            </div>
-            <?php endforeach; ?>
-        </div>
-
         <div class="flex gap-4 mt-auto">
-            <button onclick="window.location.href='/'" class="flex-[1] bg-[#0a0f1c] border border-[#1e2738] hover:bg-[#141c2b] text-white font-bold py-4 rounded-xl transition text-[15px] tracking-wider">
-                 BACK
-            </button>
-            <button onclick="copyAll()" class="flex-[2] bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[15px] tracking-wider flex items-center justify-center">
-                 <i class="fa-solid fa-clone mr-2"></i> COPY ALL
-            </button>
+            <button onclick="window.location.href='/'" class="flex-[1] bg-[#0a0f1c] border border-[#1e2738] hover:bg-[#141c2b] text-white font-bold py-4 rounded-xl transition text-[15px] tracking-wider">BACK</button>
+            <button onclick="copyAll()" class="flex-[2] bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[15px] tracking-wider flex items-center justify-center">COPY ALL</button>
         </div>
-
-        <div id="toast" class="fixed bottom-10 right-1/2 translate-x-1/2 sm:right-5 sm:translate-x-0 bg-[#51C0C0] text-[#0a0f1c] px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(81,192,192,0.4)] transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-[14px] font-bold tracking-wide border border-[#43a3a3] pointer-events-none">
-            <i class="fa-solid fa-check-circle mr-1"></i> COPIED!
-        </div>
-
-        <script>
-            function showToast() {
-                const toast = document.getElementById('toast');
-                toast.classList.remove('translate-y-20', 'opacity-0');
-                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
-            }
-
-            function fallbackCopyText(text) {
-                var textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try { document.execCommand('copy'); } catch (err) {}
-                document.body.removeChild(textArea);
-            }
-
-            function copyData(text, btnElement) {
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
-                } else {
-                    fallbackCopyText(text);
-                }
-                
-                if (btnElement) {
-                    const icon = btnElement.querySelector('i');
-                    if(icon) {
-                        icon.className = 'fa-solid fa-check text-[#51C0C0] text-[16px]';
-                        setTimeout(() => icon.className = 'fa-regular fa-copy text-[16px]', 1500);
-                    }
-                }
-                showToast();
-            }
-
-            function copySingle(id, btn) {
-                const linkText = document.getElementById(id).textContent.trim();
-                copyData(linkText, btn);
-            }
-
-            function copyAll() {
-                let allLinks = [];
-                <?php foreach($generatedLinks as $idx => $item): ?> 
-                allLinks.push("<?= $item['link'] ?>"); 
-                <?php endforeach; ?>
-                copyData(allLinks.join("\n"), null);
-            }
-        </script>
-
         <?php else: ?>
         <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
-            <h1 class="text-[40px] font-bold text-white drop-shadow-lg">
-                CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
-            </h1>
+            <h1 class="text-[40px] font-bold text-white drop-shadow-lg">CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span></h1>
             <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto relative z-20 w-full">
-            
             <div class="relative border border-dashed border-[#1e2738] rounded-2xl p-10 sm:p-12 text-center hover:border-[#51C0C0] transition-colors group cursor-pointer bg-transparent">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
-                
                 <div class="flex flex-col items-center justify-center pointer-events-none">
                     <div class="w-16 h-16 rounded-full border border-[#1e2738] flex items-center justify-center mb-4 transition-colors">
                         <div class="w-12 h-12 rounded-full bg-[#0d131f] flex items-center justify-center group-hover:bg-[#151e2e] transition-colors">
@@ -350,18 +260,14 @@ if (isset($_SESSION['temp_generated_links'])) {
 
             <div class="space-y-5 pt-2">
                 <div>
-                    <label class="flex items-center text-[13px] text-[#51C0C0] tracking-widest mb-2 font-bold">
-                        <i class="fa-solid fa-download mr-2 text-[14px]"></i> LIMIT
-                    </label>
-                    <input type="number" name="limit" value="1" placeholder="LIMIT (E.G. 1)" class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
+                    <label class="flex items-center text-[13px] text-[#51C0C0] tracking-widest mb-2 font-bold"><i class="fa-solid fa-download mr-2 text-[14px]"></i> LIMIT</label>
+                    <input type="number" name="limit" placeholder="LIMIT (E.G. 1)" value="1" class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                 </div>
 
                 <div>
-                    <label class="flex items-center text-[13px] text-[#51C0C0] tracking-widest mb-2 font-bold">
-                        <i class="fa-regular fa-clock mr-2 text-[14px]"></i> VALIDITY TIME
-                    </label>
+                    <label class="flex items-center text-[13px] text-[#51C0C0] tracking-widest mb-2 font-bold"><i class="fa-regular fa-clock mr-2 text-[14px]"></i> VALIDITY TIME</label>
                     <div class="grid grid-cols-2 gap-3">
-                        <input type="number" name="duration" value="5" placeholder="DURATION" min="1" required class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-center text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
+                        <input type="number" name="duration" placeholder="DURATION" value="5" min="1" required class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-center text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                         
                         <div class="relative w-full">
                             <select name="time_unit" class="w-full h-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-[#51C0C0] font-bold focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer text-center">
@@ -375,26 +281,20 @@ if (isset($_SESSION['temp_generated_links'])) {
                     </div>
                 </div>
             </div>
-
             <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[15px] flex items-center justify-center tracking-widest mt-2">
                 <i class="fa-solid fa-gear mr-2 text-[16px]"></i> GENERATE LINK
             </button>
         </form>
-
         <script>
             document.getElementById('fileInput').addEventListener('change', function(e) {
                 const count = e.target.files.length;
                 const fileNameElem = document.getElementById('fileName');
-                if(count === 1) { 
-                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + e.target.files[0].name + '</span>'; 
-                }
-                else if(count > 1) { 
-                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + count + ' FILES SELECTED</span>'; 
-                } else {
-                    fileNameElem.innerHTML = 'SELECT OR DROP FILES HERE';
-                }
+                if(count === 1) { fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + e.target.files[0].name + '</span>'; }
+                else if(count > 1) { fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + count + ' FILES SELECTED</span>'; } 
+                else { fileNameElem.innerHTML = 'SELECT OR DROP FILES HERE'; }
             });
         </script>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 </body>
