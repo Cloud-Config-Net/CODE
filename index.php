@@ -213,6 +213,9 @@ if (isset($_SESSION['temp_generated_links'])) {
         .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
         .floating-element { position: absolute; animation: float-up linear infinite; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(81,192,192,0.5)); }
         @keyframes float-up { 0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 0.2; } 90% { opacity: 0.2; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; } }
+        /* إخفاء أسهم الأرقام لتصميم أنظف */
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4 relative">
@@ -397,54 +400,56 @@ if (isset($_SESSION['temp_generated_links'])) {
             <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto relative z-20 w-full">
+        <form method="POST" enctype="multipart/form-data" class="bg-[#0a0f1c] border border-[#1e2738] rounded-[2rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 mt-auto mb-auto transition-transform duration-300 hover:border-[#51C0C0]/30">
             
-            <div class="relative border border-dashed border-[#1e2738] rounded-2xl p-10 sm:p-12 text-center hover:border-[#51C0C0] transition-colors group cursor-pointer bg-transparent">
+            <div class="relative border border-dashed border-[#1e2738] bg-transparent rounded-2xl p-8 sm:p-10 text-center hover:border-[#51C0C0] transition-colors group cursor-pointer">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
                 
                 <div class="flex flex-col items-center justify-center pointer-events-none">
-                    <div class="w-16 h-16 rounded-full border border-[#1e2738] flex items-center justify-center mb-4 transition-colors">
-                        <div class="w-12 h-12 rounded-full bg-[#0d131f] flex items-center justify-center group-hover:bg-[#151e2e] transition-colors">
-                            <i class="fa-solid fa-cloud-arrow-up text-[#51C0C0] text-[20px]"></i>
+                    <div class="w-14 h-14 rounded-full border border-[#1e2738] flex items-center justify-center mb-4 bg-transparent group-hover:border-[#51C0C0]/50 transition-colors">
+                        <div class="w-10 h-10 rounded-full bg-[#0d131f] flex items-center justify-center group-hover:bg-[#151e2e] transition-colors">
+                            <i class="fa-solid fa-cloud-arrow-up text-[#51C0C0] text-[18px]"></i>
                         </div>
                     </div>
-                    <p class="text-[16px] text-[#8a9bb3] tracking-wide font-bold" id="fileName">SELECT OR DROP FILES HERE</p>
+                    <p class="text-[14px] text-[#8a9bb3] tracking-widest font-bold" id="fileName">SELECT OR DROP FILES HERE</p>
                 </div>
             </div>
 
-            <div class="space-y-5 pt-2">
+            <div class="space-y-6">
+                
                 <div>
-                    <label class="flex items-center text-[13px] text-[#51C0C0] tracking-widest mb-2 font-bold">
+                    <label class="flex items-center text-[12px] text-[#51C0C0] tracking-widest mb-2.5 font-bold ml-1">
                         <i class="fa-solid fa-download mr-2 text-[14px]"></i> LIMIT
                     </label>
-                    <input type="number" name="limit" placeholder="LIMIT (E.G. 1)" value="1" class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-[#8a9bb3] font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
+                    <input type="number" name="limit" placeholder="1" value="1" class="w-full bg-[#05080f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                 </div>
 
                 <div>
-                    <label class="flex items-center text-[13px] text-[#51C0C0] tracking-widest mb-2 font-bold">
+                    <label class="flex items-center text-[12px] text-[#51C0C0] tracking-widest mb-2.5 font-bold ml-1">
                         <i class="fa-regular fa-clock mr-2 text-[14px]"></i> VALIDITY TIME
                     </label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="number" name="duration" placeholder="DURATION" value="5" min="1" required class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-center text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="number" name="duration" placeholder="5" value="5" min="1" required class="w-full bg-[#05080f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-center text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                         
                         <div class="relative w-full">
-                            <select name="time_unit" class="w-full h-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-[#51C0C0] font-bold focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer text-center">
-                                <option value="minutes" selected class="bg-[#05080f]">MINUTES</option>
-                                <option value="hours" class="bg-[#05080f]">HOURS</option>
+                            <select name="time_unit" class="w-full h-full bg-[#05080f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-[#51C0C0] font-bold focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer text-center">
+                                <option value="minutes" selected>MINUTES</option>
+                                <option value="hours">HOURS</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#425975]">
-                                <i class="fa-solid fa-chevron-down text-[14px]"></i>
+                                <i class="fa-solid fa-chevron-down text-[12px]"></i>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
-            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[15px] flex items-center justify-center tracking-widest mt-2">
-                <i class="fa-solid fa-gear mr-2 text-[16px]"></i> GENERATE LINK
+            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition-colors text-[16px] flex items-center justify-center tracking-widest mt-2 shadow-[0_0_15px_rgba(81,192,192,0.15)]">
+                GENERATE LINK
             </button>
-        </form>
 
+        </form>
         <script>
             document.getElementById('fileInput').addEventListener('change', function(e) {
                 const count = e.target.files.length;
