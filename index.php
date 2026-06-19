@@ -7,6 +7,12 @@
 session_start();
 date_default_timezone_set('Africa/Tunis');
 
+// فحص أمني: إذا لم يقم بتسجيل الدخول، حوله إلى مسار الأدمن المخفي
+if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
+    header("Location: /admin"); 
+    exit;
+}
+
 $uploadDir = __DIR__ . '/uploads/';
 $dbFile = __DIR__ . '/db.json';
 
@@ -54,54 +60,45 @@ if (isset($_GET['c'])) {
 
         $db[$id]['downloads']++;
         $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Success'];
+        
+        // ميزة الرابط الانتحاري: إذا وصل للحد الأقصى، يمسح نفسه فوراً قبل حتى إرسال الملف
+        $isLimitReached = ($entry['limit'] > 0 && $db[$id]['downloads'] >= $entry['limit']);
+        $pathToSend = $entry['real_path'];
+        $fileNameToSend = basename($entry['original_name']);
+
+        if ($isLimitReached) {
+            unset($db[$id]); // حذفه من قاعدة البيانات فوراً
+        }
+
         file_put_contents($dbFile, json_encode($db));
         
         if (ob_get_length()) { ob_end_clean(); } 
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream'); 
-        header('Content-Disposition: attachment; filename="' . basename($entry['original_name']) . '"');
+        header('Content-Disposition: attachment; filename="' . $fileNameToSend . '"');
         header('Content-Transfer-Encoding: binary'); 
         header('Expires: 0');
         header('Cache-Control: must-revalidate'); 
         header('Pragma: public');
-        header('Content-Length: ' . filesize($entry['real_path']));
+        header('Content-Length: ' . filesize($pathToSend));
         
-        readfile($entry['real_path']); 
+        readfile($pathToSend); 
+
+        // تدمير الملف من السيرفر تماماً إذا اكتمل الليمت
+        if ($isLimitReached) {
+            @unlink($pathToSend);
+        }
         exit;
     }
     header("HTTP/1.1 404 Not Found"); die("File Not Found.");
 }
 
 // ==========================================
-// UNIFIED UI Login System
-// ==========================================
-$adminUser = 'Admin';
-$adminPass = '38sPcd6Ysr04NGVk'; 
-
-$loginError = false;
-
-if (isset($_GET['logout'])) {
-    unset($_SESSION['main_logged']);
-    header("Location: /"); exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
-    if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
-        $_SESSION['main_logged'] = true;
-        header("Location: /"); exit;
-    } else {
-        $loginError = "INVALID LOGIN CREDENTIALS!";
-    }
-}
-
-$isLogged = isset($_SESSION['main_logged']) && $_SESSION['main_logged'] === true;
-
-// ==========================================
 // Multi-Upload Handling Logic
 // ==========================================
 $generatedLinks = [];
 
-if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
     $limit = (int)$_POST['limit']; 
     $duration = (int)$_POST['duration'];
     $timeUnit = $_POST['time_unit'] ?? 'hours';
@@ -109,10 +106,21 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
     $seconds = ($timeUnit === 'minutes') ? ($duration * 60) : ($duration * 3600);
     $fileCount = count($_FILES['files']['name']);
     
+    // نظام القائمة البيضاء المسموح برفعها فقط
+    $allowedExtensions = ['hc', 'ovpn', 'ehi', 'nm'];
+
     for ($i = 0; $i < $fileCount; $i++) {
         if ($_FILES['files']['error'][$i] === UPLOAD_ERR_OK) {
             $tmpName = $_FILES['files']['tmp_name'][$i];
             $originalName = basename($_FILES['files']['name'][$i]);
+            
+            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+            
+            // حظر رفع الملفات الخبيثة
+            if (!in_array($ext, $allowedExtensions)) {
+                continue; 
+            }
+
             $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
             
             if (move_uploaded_file($tmpName, $targetPath)) {
@@ -146,7 +154,7 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
     if (!empty($generatedLinks)) { 
         file_put_contents($dbFile, json_encode($db)); 
         $_SESSION['temp_generated_links'] = $generatedLinks; 
-        header("Location: index.php"); 
+        header("Location: /"); 
         exit;
     }
 }
@@ -155,14 +163,13 @@ if (isset($_SESSION['temp_generated_links'])) {
     $generatedLinks = $_SESSION['temp_generated_links'];
     unset($_SESSION['temp_generated_links']); 
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SYSTEM LOGIN | CLOUD CONFIG</title>
+    <title>CLOUD CONFIG MANAGER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -193,50 +200,11 @@ if (isset($_SESSION['temp_generated_links'])) {
 
     <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10">
         
-        <?php if(!$isLogged): ?>
-        <div class="text-center mt-6 mb-8 w-full flex flex-col items-center relative z-10">
-            <div class="w-16 h-16 rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mx-auto mb-5 relative shadow-[0_0_15px_rgba(81,192,192,0.2)]">
-                <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/5"></div>
-                <i class="fa-solid fa-user-shield text-[#51C0C0] text-2xl z-10"></i>
-            </div>
-            <h2 class="text-[32px] text-white drop-shadow-lg font-bold">SYSTEM <span class="text-[#51C0C0] neon-text-glow">LOGIN</span></h2>
-            <div class="h-[3px] w-12 bg-[#51C0C0] mt-3 mx-auto rounded-full shadow-[0_0_10px_#51C0C0]"></div>
-        </div>
-
-        <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 sm:p-8 rounded-[2rem] border border-[#1e2738] shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-            <input type="hidden" name="ui_login" value="1">
-            
-            <?php if($loginError): ?>
-                <div class="bg-[#1a0f14] border border-red-900/50 text-red-400 text-sm p-3 rounded-xl text-center font-bold tracking-wide">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <?= $loginError ?>
-                </div>
-            <?php endif; ?>
-
-            <div>
-                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">
-                    <i class="fa-solid fa-user-astronaut mr-2"></i> USERNAME
-                </label>
-                <input type="text" name="username" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="ENTER ADMIN">
-            </div>
-            
-            <div>
-                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">
-                    <i class="fa-solid fa-key mr-2"></i> PASSWORD
-                </label>
-                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••••••">
-            </div>
-            
-            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[16px] flex items-center justify-center tracking-widest mt-6">
-                ACCESS SYSTEM <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
-            </button>
-        </form>
-
-        <?php else: ?>
-        <a href="admin.php" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition z-20" title="Radar Analytics">
+        <a href="/admin" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition z-20" title="Radar Analytics">
             <i class="fa-solid fa-chart-line text-[15px]"></i>
         </a>
 
-        <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
+        <a href="/admin?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
             <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
         </a>
 
@@ -251,7 +219,6 @@ if (isset($_SESSION['temp_generated_links'])) {
         <div class="bg-transparent mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-5 relative z-20 px-2 pb-4">
             <?php foreach($generatedLinks as $idx => $item): ?>
             <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-2xl p-5 shadow-lg w-full overflow-hidden shrink-0">
-                
                 <div class="flex justify-between items-center bg-[#0d131f] rounded-xl py-4 px-2 mb-4 border border-[#141c2b]">
                     <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Original File">
                         <i class="fa-regular fa-file-code text-[#51C0C0] text-[18px] mb-2"></i>
@@ -285,7 +252,6 @@ if (isset($_SESSION['temp_generated_links'])) {
                         <i class="fa-regular fa-copy text-[16px]"></i> COPY
                     </button>
                 </div>
-
             </div>
             <?php endforeach; ?>
         </div>
@@ -309,27 +275,19 @@ if (isset($_SESSION['temp_generated_links'])) {
                 toast.classList.remove('translate-y-20', 'opacity-0');
                 setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
             }
-
             function fallbackCopyText(text) {
                 var textArea = document.createElement("textarea");
                 textArea.value = text;
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.position = "fixed";
+                textArea.style.top = "0"; textArea.style.left = "0"; textArea.style.position = "fixed";
                 document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
+                textArea.focus(); textArea.select();
                 try { document.execCommand('copy'); } catch (err) {}
                 document.body.removeChild(textArea);
             }
-
             function copyData(text, btnElement) {
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
-                } else {
-                    fallbackCopyText(text);
-                }
-                
+                } else { fallbackCopyText(text); }
                 if (btnElement) {
                     const icon = btnElement.querySelector('i');
                     if(icon) {
@@ -339,12 +297,10 @@ if (isset($_SESSION['temp_generated_links'])) {
                 }
                 showToast();
             }
-
             function copySingle(id, btn) {
                 const linkText = document.getElementById(id).textContent.trim();
                 copyData(linkText, btn);
             }
-
             function copyAll() {
                 let allLinks = [];
                 <?php foreach($generatedLinks as $idx => $item): ?> 
@@ -363,10 +319,8 @@ if (isset($_SESSION['temp_generated_links'])) {
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto relative z-20 w-full">
-            
             <div class="relative border border-dashed border-[#1e2738] rounded-2xl p-10 sm:p-12 text-center hover:border-[#51C0C0] transition-colors group cursor-pointer bg-transparent">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
-                
                 <div class="flex flex-col items-center justify-center pointer-events-none">
                     <div class="w-16 h-16 rounded-full border border-[#1e2738] flex items-center justify-center mb-4 transition-colors">
                         <div class="w-12 h-12 rounded-full bg-[#0d131f] flex items-center justify-center group-hover:bg-[#151e2e] transition-colors">
@@ -382,7 +336,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                     <label class="flex items-center text-[13px] text-[#51C0C0] tracking-widest mb-2 font-bold">
                         <i class="fa-solid fa-download mr-2 text-[14px]"></i> LIMIT
                     </label>
-                    <input type="number" name="limit" placeholder="LIMIT (E.G. 1)" class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-[#8a9bb3] font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
+                    <input type="number" name="limit" value="1" placeholder="LIMIT (E.G. 1)" class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                 </div>
 
                 <div>
@@ -390,12 +344,12 @@ if (isset($_SESSION['temp_generated_links'])) {
                         <i class="fa-regular fa-clock mr-2 text-[14px]"></i> VALIDITY TIME
                     </label>
                     <div class="grid grid-cols-2 gap-3">
-                        <input type="number" name="duration" placeholder="DURATION" value="" min="1" required class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-center text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
+                        <input type="number" name="duration" value="5" placeholder="DURATION" min="1" required class="w-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-center text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                         
                         <div class="relative w-full">
                             <select name="time_unit" class="w-full h-full bg-transparent border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-[#51C0C0] font-bold focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer text-center">
-                                <option value="minutes" class="bg-[#05080f]">MINUTES</option>
-                                <option value="hours" selected class="bg-[#05080f]">HOURS</option>
+                                <option value="minutes" selected class="bg-[#05080f]">MINUTES</option>
+                                <option value="hours" class="bg-[#05080f]">HOURS</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-[#425975]">
                                 <i class="fa-solid fa-chevron-down text-[14px]"></i>
@@ -424,7 +378,6 @@ if (isset($_SESSION['temp_generated_links'])) {
                 }
             });
         </script>
-        <?php endif; ?>
         <?php endif; ?>
     </div>
 </body>
