@@ -213,7 +213,6 @@ if (isset($_SESSION['temp_generated_links'])) {
         .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
         .floating-element { position: absolute; animation: float-up linear infinite; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(81,192,192,0.5)); }
         @keyframes float-up { 0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 0.2; } 90% { opacity: 0.2; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; } }
-        /* إخفاء أسهم الأرقام لتصميم أنظف */
         input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; }
     </style>
@@ -270,72 +269,79 @@ if (isset($_SESSION['temp_generated_links'])) {
         </form>
 
         <?php else: ?>
-        <a href="admin.php" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-[#0d131f] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition z-20" title="Radar Analytics">
+        <a href="admin.php" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-transparent border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition z-20" title="Radar Analytics">
             <i class="fa-solid fa-chart-line text-[15px]"></i>
         </a>
-
-        <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-[#1a0f14] border border-red-900/50 hover:bg-red-900/20 text-red-400 rounded-xl shadow-inner transition z-20" title="Logout">
+        <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-transparent border border-[#3a1a1a] hover:bg-red-900/20 text-[#ef4444] rounded-xl shadow-inner transition z-20" title="Logout">
             <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
         </a>
 
         <?php if(!empty($generatedLinks)): ?>
         <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
-            <h1 class="text-[40px] font-bold text-white drop-shadow-lg">
+            <h1 class="text-[36px] font-bold text-white drop-shadow-lg">
                 LINK<span class="text-[#51C0C0] neon-text-glow ml-1">CODE</span>
             </h1>
-            <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+            <div class="h-[3px] w-14 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
-        <div class="bg-transparent mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-5 relative z-20 px-2 pb-4">
+        <div class="bg-transparent mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-6 relative z-20 w-full px-1 pb-4">
             <?php foreach($generatedLinks as $idx => $item): ?>
-            <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-2xl p-5 shadow-lg w-full overflow-hidden shrink-0">
+            <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-[1.5rem] p-5 shadow-2xl w-full flex flex-col gap-5 shrink-0 transition-transform duration-300 hover:border-[#51C0C0]/30">
                 
-                <div class="flex justify-between items-center bg-[#0d131f] rounded-xl py-4 px-2 mb-4 border border-[#141c2b]">
+                <div class="flex justify-between items-center px-1">
+                    
                     <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Original File">
-                        <i class="fa-regular fa-file-code text-[#51C0C0] text-[18px] mb-2"></i>
-                        <span class="text-[#8a9bb3] text-[13px] font-bold truncate w-[90%] text-center tracking-wide">
+                        <div class="w-8 h-8 rounded border border-[#1e2738] flex items-center justify-center mb-2.5 bg-transparent">
+                            <i class="fa-solid fa-file-code text-[#51C0C0] text-[13px]"></i>
+                        </div>
+                        <span class="text-[#8a9bb3] text-[13px] font-bold truncate w-[90%] text-center tracking-wide uppercase">
                             <?= htmlspecialchars($item['original_name']) ?>
                         </span>
                     </div>
+                    
                     <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Limit">
-                        <i class="fa-solid fa-download text-[#51C0C0] text-[18px] mb-2"></i>
-                        <span class="text-[#8a9bb3] text-[15px] font-bold tracking-wide">
+                        <div class="w-8 h-8 rounded border border-[#1e2738] flex items-center justify-center mb-2.5 bg-transparent">
+                            <i class="fa-solid fa-download text-[#51C0C0] text-[13px]"></i>
+                        </div>
+                        <span class="text-[#8a9bb3] text-[14px] font-bold tracking-wide">
                             <?= $item['limit'] > 0 ? $item['limit'] : '∞' ?>
                         </span>
                     </div>
+                    
                     <div class="flex flex-col items-center justify-center w-1/3" title="Validity Time">
-                        <i class="fa-regular fa-rectangle-xmark text-[#51C0C0] text-[18px] mb-2"></i>
-                        <span class="text-[#8a9bb3] text-[14px] font-bold tracking-wide">
-                            <?= $item['duration'] ?> <?= $item['time_unit'] === 'minutes' ? 'MIN' : 'HR' ?>
+                        <div class="w-8 h-8 rounded border border-[#1e2738] flex items-center justify-center mb-2.5 bg-transparent">
+                            <i class="fa-regular fa-clock text-[#51C0C0] text-[13px]"></i>
+                        </div>
+                        <span class="text-[#8a9bb3] text-[13px] font-bold tracking-wide uppercase">
+                            <?= $item['duration'] ?> <?= strtoupper($item['time_unit'] === 'minutes' ? 'MINUTES' : 'HOURS') ?>
                         </span>
                     </div>
+
                 </div>
-                
-                <div class="bg-[#0d131f] border border-[#1e2738] rounded-xl py-3.5 px-4 mb-4 flex items-center justify-center gap-3 overflow-x-auto custom-scroll">
+
+                <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-xl py-4 px-4 flex items-center justify-center gap-3 overflow-x-auto custom-scroll shadow-inner">
                     <i class="fa-solid fa-link text-[#51C0C0] text-[13px]"></i>
-                    <span class="text-[#51C0C0] text-[11px] sm:text-[13px] font-bold whitespace-nowrap tracking-wider" id="link-<?= $idx ?>">
+                    <span class="text-[#51C0C0] text-[12px] sm:text-[13px] font-bold whitespace-nowrap tracking-wider uppercase" id="link-<?= $idx ?>">
                         <?= $item['link'] ?>
                     </span>
                 </div>
 
-                <div class="flex justify-center">
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="w-full sm:w-[60%] bg-[#51C0C0]/10 hover:bg-[#51C0C0]/20 text-[#51C0C0] border border-[#51C0C0]/30 py-3 rounded-xl text-[15px] font-bold tracking-widest transition-colors flex items-center justify-center gap-2">
-                        <i class="fa-regular fa-copy text-[16px]"></i> COPY
-                    </button>
-                </div>
+                <button onclick="copySingle('link-<?= $idx ?>', this)" class="w-full bg-transparent hover:bg-[#51C0C0]/10 text-[#51C0C0] border border-[#1e2738] hover:border-[#51C0C0]/50 py-4 rounded-xl text-[15px] font-bold tracking-widest transition-colors flex items-center justify-center gap-2.5">
+                    <i class="fa-regular fa-copy text-[16px]"></i> COPY
+                </button>
 
             </div>
             <?php endforeach; ?>
         </div>
 
-        <div class="w-full mt-auto mb-16">
-    <button onclick="window.location.href='/'" class="w-full bg-[#0a0f1c] border border-[#1e2738] hover:bg-[#141c2b] text-white font-bold py-4 rounded-xl transition text-[15px] tracking-wider text-center block">
-         BACK
-    </button>
+        <div class="flex mt-auto w-full mb-16">
+            <button onclick="window.location.href='/'" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition-colors text-[16px] tracking-widest flex items-center justify-center shadow-[0_0_15px_rgba(81,192,192,0.15)]">
+                 <i class="fa-solid fa-arrow-left mr-2"></i> BACK
+            </button>
         </div>
-        
 
         <script>
+            // نظام النسخ الاحتياطي القوي لمنع أي مشاكل
             function fallbackCopyText(text) {
                 var textArea = document.createElement("textarea");
                 textArea.value = text;
@@ -349,7 +355,6 @@ if (isset($_SESSION['temp_generated_links'])) {
                 document.body.removeChild(textArea);
             }
 
-            // تم إزالة نافذة COPIED المزعجة وتعديل الأيقونات فقط
             function copyData(text, btnElement) {
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
@@ -370,25 +375,17 @@ if (isset($_SESSION['temp_generated_links'])) {
                 const linkText = document.getElementById(id).textContent.trim();
                 copyData(linkText, btn);
             }
-
-            function copyAll() {
-                let allLinks = [];
-                <?php foreach($generatedLinks as $idx => $item): ?> 
-                allLinks.push("<?= $item['link'] ?>"); 
-                <?php endforeach; ?>
-                copyData(allLinks.join("\n"), null);
-            }
         </script>
 
         <?php else: ?>
-        <div class="text-center mt-12 mb-10 w-full flex flex-col items-center relative z-10">
+        <div class="text-center mt-6 mb-6 w-full flex flex-col items-center relative z-10">
             <h1 class="text-[40px] font-bold text-white drop-shadow-lg">
                 CLOUD<span class="text-[#51C0C0] neon-text-glow ml-1">CONFIG</span>
             </h1>
             <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="bg-[#0a0f1c] border border-[#1e2738] rounded-[2rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 mt-auto mb-16 transition-transform duration-300 hover:border-[#51C0C0]/30">
+        <form method="POST" enctype="multipart/form-data" class="bg-[#0a0f1c] border border-[#1e2738] rounded-[2rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 mb-20 transition-transform duration-300 hover:border-[#51C0C0]/30">
             
             <div class="relative border border-dashed border-[#1e2738] bg-transparent rounded-2xl p-8 sm:p-10 text-center hover:border-[#51C0C0] transition-colors group cursor-pointer">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
@@ -399,28 +396,28 @@ if (isset($_SESSION['temp_generated_links'])) {
                             <i class="fa-solid fa-cloud-arrow-up text-[#51C0C0] text-[18px]"></i>
                         </div>
                     </div>
-                    <p class="text-[14px] text-[#8a9bb3] tracking-widest font-bold" id="fileName">SELECT OR DROP FILES HERE</p>
+                    <p class="text-[14px] text-[#8a9bb3] tracking-widest font-bold uppercase" id="fileName">SELECT OR DROP FILES HERE</p>
                 </div>
             </div>
 
             <div class="space-y-6">
                 
                 <div>
-                    <label class="flex items-center text-[12px] text-[#51C0C0] tracking-widest mb-2.5 font-bold ml-1">
+                    <label class="flex items-center text-[12px] text-[#51C0C0] tracking-widest mb-2.5 font-bold ml-1 uppercase">
                         <i class="fa-solid fa-download mr-2 text-[14px]"></i> LIMIT
                     </label>
                     <input type="number" name="limit" placeholder="1" value="1" class="w-full bg-[#05080f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                 </div>
 
                 <div>
-                    <label class="flex items-center text-[12px] text-[#51C0C0] tracking-widest mb-2.5 font-bold ml-1">
+                    <label class="flex items-center text-[12px] text-[#51C0C0] tracking-widest mb-2.5 font-bold ml-1 uppercase">
                         <i class="fa-regular fa-clock mr-2 text-[14px]"></i> VALIDITY TIME
                     </label>
                     <div class="grid grid-cols-2 gap-4">
                         <input type="number" name="duration" placeholder="5" value="5" min="1" required class="w-full bg-[#05080f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-center text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]">
                         
                         <div class="relative w-full">
-                            <select name="time_unit" class="w-full h-full bg-[#05080f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-[#51C0C0] font-bold focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer text-center">
+                            <select name="time_unit" class="w-full h-full bg-[#05080f] border border-[#1e2738] rounded-xl px-4 py-4 text-[15px] text-[#51C0C0] font-bold focus:outline-none focus:border-[#51C0C0] transition appearance-none cursor-pointer text-center uppercase">
                                 <option value="minutes" selected>MINUTES</option>
                                 <option value="hours">HOURS</option>
                             </select>
@@ -433,7 +430,7 @@ if (isset($_SESSION['temp_generated_links'])) {
 
             </div>
 
-            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition-colors text-[16px] flex items-center justify-center tracking-widest mt-2 shadow-[0_0_15px_rgba(81,192,192,0.15)]">
+            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition-colors text-[16px] flex items-center justify-center tracking-widest mt-2 shadow-[0_0_15px_rgba(81,192,192,0.15)] uppercase">
                 GENERATE LINK
             </button>
 
@@ -443,7 +440,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                 const count = e.target.files.length;
                 const fileNameElem = document.getElementById('fileName');
                 if(count === 1) { 
-                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + e.target.files[0].name + '</span>'; 
+                    fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + e.target.files[0].name.toUpperCase() + '</span>'; 
                 }
                 else if(count > 1) { 
                     fileNameElem.innerHTML = '<span class="text-[#51C0C0] font-bold">' + count + ' FILES SELECTED</span>'; 
