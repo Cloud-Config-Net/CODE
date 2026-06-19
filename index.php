@@ -328,26 +328,14 @@ if (isset($_SESSION['temp_generated_links'])) {
             <?php endforeach; ?>
         </div>
 
-        <div class="flex gap-4 mt-auto">
-            <button onclick="window.location.href='/'" class="flex-[1] bg-[#0a0f1c] border border-[#1e2738] hover:bg-[#141c2b] text-white font-bold py-4 rounded-xl transition text-[15px] tracking-wider">
-                 BACK
-            </button>
-            <button onclick="copyAll()" class="flex-[2] bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[15px] tracking-wider flex items-center justify-center">
-                 <i class="fa-solid fa-clone mr-2"></i> COPY ALL
-            </button>
+        <div class="w-full mt-auto mb-16">
+    <button onclick="window.location.href='/'" class="w-full bg-[#0a0f1c] border border-[#1e2738] hover:bg-[#141c2b] text-white font-bold py-4 rounded-xl transition text-[15px] tracking-wider text-center block">
+         BACK
+    </button>
         </div>
-
-        <div id="toast" class="fixed bottom-10 right-1/2 translate-x-1/2 sm:right-5 sm:translate-x-0 bg-[#51C0C0] text-[#0a0f1c] px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(81,192,192,0.4)] transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-[14px] font-bold tracking-wide border border-[#43a3a3] pointer-events-none">
-            <i class="fa-solid fa-check-circle mr-1"></i> COPIED!
-        </div>
+        
 
         <script>
-            function showToast() {
-                const toast = document.getElementById('toast');
-                toast.classList.remove('translate-y-20', 'opacity-0');
-                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
-            }
-
             function fallbackCopyText(text) {
                 var textArea = document.createElement("textarea");
                 textArea.value = text;
@@ -361,6 +349,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                 document.body.removeChild(textArea);
             }
 
+            // تم إزالة نافذة COPIED المزعجة وتعديل الأيقونات فقط
             function copyData(text, btnElement) {
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
@@ -375,7 +364,6 @@ if (isset($_SESSION['temp_generated_links'])) {
                         setTimeout(() => icon.className = 'fa-regular fa-copy text-[16px]', 1500);
                     }
                 }
-                showToast();
             }
 
             function copySingle(id, btn) {
@@ -400,7 +388,7 @@ if (isset($_SESSION['temp_generated_links'])) {
             <div class="h-[3px] w-16 bg-[#51C0C0] mt-3 rounded-full shadow-[0_0_10px_#51C0C0]"></div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="bg-[#0a0f1c] border border-[#1e2738] rounded-[2rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 mt-auto mb-auto transition-transform duration-300 hover:border-[#51C0C0]/30">
+        <form method="POST" enctype="multipart/form-data" class="bg-[#0a0f1c] border border-[#1e2738] rounded-[2rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 mt-auto mb-16 transition-transform duration-300 hover:border-[#51C0C0]/30">
             
             <div class="relative border border-dashed border-[#1e2738] bg-transparent rounded-2xl p-8 sm:p-10 text-center hover:border-[#51C0C0] transition-colors group cursor-pointer">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
