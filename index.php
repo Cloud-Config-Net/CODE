@@ -7,12 +7,6 @@
 session_start();
 date_default_timezone_set('Africa/Tunis');
 
-// فحص أمني: إذا لم يقم بتسجيل الدخول، حوله إلى مسار الأدمن المخفي
-if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
-    header("Location: /admin"); 
-    exit;
-}
-
 $uploadDir = __DIR__ . '/uploads/';
 $dbFile = __DIR__ . '/db.json';
 
@@ -22,7 +16,7 @@ if (!file_exists($dbFile)) { file_put_contents($dbFile, json_encode([])); }
 $db = json_decode(file_get_contents($dbFile), true) ?: [];
 
 // ==========================================
-// Smart Download & Client Sniffer Radar
+// PUBLIC AREA: Smart Download & Client Sniffer Radar
 // ==========================================
 if (isset($_GET['c'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['c']);
@@ -44,6 +38,7 @@ if (isset($_GET['c'])) {
     if (isset($db[$id])) {
         $entry = $db[$id];
         
+        // Check link expiry or download limits
         if (time() > $entry['expires'] || ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit'])) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel . ' (Expired)', 'time' => time(), 'status' => 'Failed'];
             file_put_contents($dbFile, json_encode($db));
@@ -51,6 +46,7 @@ if (isset($_GET['c'])) {
             header("HTTP/1.1 410 Gone"); die("This link has expired or reached its download limit.");
         }
         
+        // Block regular web browsers from viewing or parsing payloads
         if ($isBrowser) {
             $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Blocked'];
             file_put_contents($dbFile, json_encode($db));
@@ -58,16 +54,17 @@ if (isset($_GET['c'])) {
             die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Access Denied</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box; -webkit-tap-highlight-color:transparent; text-transform:uppercase;}img{max-width:100%;height:auto;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.5);margin-bottom:20px;max-height:60vh;border:1px solid #1e2738;}h1{margin:0 0 10px 0;font-size:28px;letter-spacing:1px;font-weight:700;}p{margin:0;color:#8a9bb3;font-size:16px;line-height:1.6;max-width:400px;}</style></head><body><img src="https://i.postimg.cc/TYfpcBy3/IMG-20260612-024446-049.jpg" alt="Tutorial"><h1>🛑 ACCESS DENIED</h1><p>This config link cannot be opened in a web browser.<br>Please copy the link and import it directly inside the <b>HTTP Custom</b> app as shown above.</p></body></html>');
         }
 
+        // Legitimate secure download execution
         $db[$id]['downloads']++;
         $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Success'];
         
-        // ميزة الرابط الانتحاري: إذا وصل للحد الأقصى، يمسح نفسه فوراً قبل حتى إرسال الملف
+        // Self-Destruct Trigger: Delete data instantly from JSON when limit is reached
         $isLimitReached = ($entry['limit'] > 0 && $db[$id]['downloads'] >= $entry['limit']);
         $pathToSend = $entry['real_path'];
         $fileNameToSend = basename($entry['original_name']);
 
         if ($isLimitReached) {
-            unset($db[$id]); // حذفه من قاعدة البيانات فوراً
+            unset($db[$id]); 
         }
 
         file_put_contents($dbFile, json_encode($db));
@@ -84,7 +81,7 @@ if (isset($_GET['c'])) {
         
         readfile($pathToSend); 
 
-        // تدمير الملف من السيرفر تماماً إذا اكتمل الليمت
+        // Erase physical file from disk instantly to prevent deep reverse-engineering
         if ($isLimitReached) {
             @unlink($pathToSend);
         }
@@ -94,19 +91,27 @@ if (isset($_GET['c'])) {
 }
 
 // ==========================================
+// SECURE BOUNDARY: Private Admin Authentication Required Below
+// ==========================================
+if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
+    header("Location: /admin"); 
+    exit;
+}
+
+// ==========================================
 // Multi-Upload Handling Logic
 // ==========================================
 $generatedLinks = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
-    $limit = (int)$_POST['limit']; 
-    $duration = (int)$_POST['duration'];
+    $limit = isset($_POST['limit']) ? (int)$_POST['limit'] : 1; 
+    $duration = isset($_POST['duration']) ? (int)$_POST['duration'] : 5;
     $timeUnit = $_POST['time_unit'] ?? 'hours';
     
     $seconds = ($timeUnit === 'minutes') ? ($duration * 60) : ($duration * 3600);
     $fileCount = count($_FILES['files']['name']);
     
-    // نظام القائمة البيضاء المسموح برفعها فقط
+    // Strict Whitelist File Extensions to prevent shell injections
     $allowedExtensions = ['hc', 'ovpn', 'ehi', 'nm'];
 
     for ($i = 0; $i < $fileCount; $i++) {
@@ -116,37 +121,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
             
             $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
             
-            // حظر رفع الملفات الخبيثة
-            if (!in_array($ext, $allowedExtensions)) {
-                continue; 
-            }
-
-            $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
-            
-            if (move_uploaded_file($tmpName, $targetPath)) {
-                $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+            // Enforce extensions whitelist filtering
+            if (!not_in_array($ext, $allowedExtensions)) {
+                $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
                 
-                $host = $_SERVER['HTTP_HOST'];
-                $host = preg_replace('/:\d+$/', '', $host); 
-                
-                $link = "https://" . $host . '/' . $shortId . '.hc';
-                
-                $db[$shortId] = [
-                    'original_name' => $originalName,
-                    'real_path' => $targetPath,
-                    'limit' => $limit,
-                    'downloads' => 0,
-                    'expires' => time() + $seconds,
-                    'upload_date' => time(),
-                    'logs' => []
-                ];
-                $generatedLinks[] = [
-                    'original_name' => $originalName, 
-                    'link' => $link,
-                    'limit' => $limit,
-                    'duration' => $duration,
-                    'time_unit' => $timeUnit
-                ];
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                    
+                    $host = $_SERVER['HTTP_HOST'];
+                    $host = preg_replace('/:\d+$/', '', $host); 
+                    
+                    $link = "https://" . $host . '/' . $shortId . '.hc';
+                    
+                    $db[$shortId] = [
+                        'original_name' => $originalName,
+                        'real_path' => $targetPath,
+                        'limit' => $limit,
+                        'downloads' => 0,
+                        'expires' => time() + $seconds,
+                        'upload_date' => time(),
+                        'logs' => []
+                    ];
+                    $generatedLinks[] = [
+                        'original_name' => $originalName, 
+                        'link' => $link,
+                        'limit' => $limit,
+                        'duration' => $duration,
+                        'time_unit' => $timeUnit
+                    ];
+                }
             }
         }
     }
@@ -219,6 +222,7 @@ if (isset($_SESSION['temp_generated_links'])) {
         <div class="bg-transparent mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-5 relative z-20 px-2 pb-4">
             <?php foreach($generatedLinks as $idx => $item): ?>
             <div class="bg-[#0a0f1c] border border-[#1e2738] rounded-2xl p-5 shadow-lg w-full overflow-hidden shrink-0">
+                
                 <div class="flex justify-between items-center bg-[#0d131f] rounded-xl py-4 px-2 mb-4 border border-[#141c2b]">
                     <div class="flex flex-col items-center justify-center w-1/3 border-r border-[#1e2738]" title="Original File">
                         <i class="fa-regular fa-file-code text-[#51C0C0] text-[18px] mb-2"></i>
@@ -252,6 +256,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                         <i class="fa-regular fa-copy text-[16px]"></i> COPY
                     </button>
                 </div>
+
             </div>
             <?php endforeach; ?>
         </div>
@@ -275,19 +280,27 @@ if (isset($_SESSION['temp_generated_links'])) {
                 toast.classList.remove('translate-y-20', 'opacity-0');
                 setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
             }
+
             function fallbackCopyText(text) {
                 var textArea = document.createElement("textarea");
                 textArea.value = text;
-                textArea.style.top = "0"; textArea.style.left = "0"; textArea.style.position = "fixed";
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.position = "fixed";
                 document.body.appendChild(textArea);
-                textArea.focus(); textArea.select();
+                textArea.focus();
+                textArea.select();
                 try { document.execCommand('copy'); } catch (err) {}
                 document.body.removeChild(textArea);
             }
+
             function copyData(text, btnElement) {
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
-                } else { fallbackCopyText(text); }
+                } else {
+                    fallbackCopyText(text);
+                }
+                
                 if (btnElement) {
                     const icon = btnElement.querySelector('i');
                     if(icon) {
@@ -297,10 +310,12 @@ if (isset($_SESSION['temp_generated_links'])) {
                 }
                 showToast();
             }
+
             function copySingle(id, btn) {
                 const linkText = document.getElementById(id).textContent.trim();
                 copyData(linkText, btn);
             }
+
             function copyAll() {
                 let allLinks = [];
                 <?php foreach($generatedLinks as $idx => $item): ?> 
@@ -319,8 +334,10 @@ if (isset($_SESSION['temp_generated_links'])) {
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-auto mb-auto relative z-20 w-full">
+            
             <div class="relative border border-dashed border-[#1e2738] rounded-2xl p-10 sm:p-12 text-center hover:border-[#51C0C0] transition-colors group cursor-pointer bg-transparent">
                 <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
+                
                 <div class="flex flex-col items-center justify-center pointer-events-none">
                     <div class="w-16 h-16 rounded-full border border-[#1e2738] flex items-center justify-center mb-4 transition-colors">
                         <div class="w-12 h-12 rounded-full bg-[#0d131f] flex items-center justify-center group-hover:bg-[#151e2e] transition-colors">
