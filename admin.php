@@ -1,120 +1,28 @@
 <?php
 /**
  * CLOUD-CONFIG 
- * Secure Admin Panel & Log Radar with Advanced Effects
+ * Secure Admin Panel & Log Radar (PRO EDITION)
  * File Name: admin.php
  */
 
+// إعداد استقرار الجلسات لمنع الخروج التلقائي
+ini_set('session.cookie_lifetime', 2592000);
+ini_set('session.gc_maxlifetime', 2592000);
 session_start();
 date_default_timezone_set('Africa/Tunis');
 
-// ==========================================
-// UNIFIED UI Login System
-// ==========================================
-$adminUser = 'Admin';
-$adminPass = '38sPcd6Ysr04NGVk'; 
+if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
+    header("Location: /"); 
+    exit;
+}
 
-$loginError = false;
+$dbFile = __DIR__ . '/db.json';
+$db = json_decode(file_exists($dbFile) ? file_get_contents($dbFile) : '[]', true) ?: [];
 
 if (isset($_GET['logout'])) {
     unset($_SESSION['main_logged']);
-    header("Location: /admin"); 
-    exit;
+    header("Location: /"); exit;
 }
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
-    if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
-        $_SESSION['main_logged'] = true;
-        header("Location: /admin"); 
-        exit;
-    } else {
-        $loginError = "INVALID LOGIN CREDENTIALS!";
-    }
-}
-
-// إذا لم يكن مسجلاً للدخول، نعرض له واجهة الدخول دون طرده لـ index
-if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SYSTEM LOGIN | CLOUD CONFIG</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { -webkit-tap-highlight-color: transparent; } 
-        body { background-color: #05080f; overflow-x: hidden; font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
-        input, button { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
-        .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
-        .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
-        .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
-        .floating-element { position: absolute; animation: float-up linear infinite; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(81,192,192,0.5)); }
-        @keyframes float-up { 0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 0.2; } 90% { opacity: 0.2; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; } }
-    </style>
-</head>
-<body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4 relative">
-    <div class="bg-animations">
-        <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s;">☁️</div>
-        <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s;">🚀</div>
-        <div class="floating-element text-5xl text-[#51C0C0]" style="left: 70%; animation-duration: 18s;"><i class="fa-solid fa-microchip"></i></div>
-        <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s;">⚡</div>
-        <div class="floating-element text-4xl text-[#51C0C0]" style="left: 50%; animation-duration: 22s;"><i class="fa-solid fa-satellite-dish"></i></div>
-        <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s;">🔒</div>
-    </div>
-
-    <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10">
-        <div class="text-center mt-6 mb-8 w-full flex flex-col items-center relative z-10">
-            <div class="w-16 h-16 rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mx-auto mb-5 relative shadow-[0_0_15px_rgba(81,192,192,0.2)]">
-                <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/5"></div>
-                <i class="fa-solid fa-user-shield text-[#51C0C0] text-2xl z-10"></i>
-            </div>
-            <h2 class="text-[32px] text-white drop-shadow-lg font-bold">SYSTEM <span class="text-[#51C0C0] neon-text-glow">LOGIN</span></h2>
-            <div class="h-[3px] w-12 bg-[#51C0C0] mt-3 mx-auto rounded-full shadow-[0_0_10px_#51C0C0]"></div>
-        </div>
-
-        <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 sm:p-8 rounded-[2rem] border border-[#1e2738] shadow-[0_0_20px_rgba(0,0,0,0.3)]">
-            <input type="hidden" name="ui_login" value="1">
-            
-            <?php if($loginError): ?>
-                <div class="bg-[#1a0f14] border border-red-900/50 text-red-400 text-sm p-3 rounded-xl text-center font-bold tracking-wide">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <?= $loginError ?>
-                </div>
-            <?php endif; ?>
-
-            <div>
-                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">
-                    <i class="fa-solid fa-user-astronaut mr-2"></i> USERNAME
-                </label>
-                <input type="text" name="username" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="ENTER ADMIN">
-            </div>
-            
-            <div>
-                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">
-                    <i class="fa-solid fa-key mr-2"></i> PASSWORD
-                </label>
-                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••••••">
-            </div>
-            
-            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[16px] flex items-center justify-center tracking-widest mt-6">
-                ACCESS SYSTEM <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
-            </button>
-        </form>
-    </div>
-</body>
-</html>
-<?php
-    // إيقاف المعالجة هنا حتى لا تظهر لوحة التحكم أسفل واجهة الدخول
-    exit;
-}
-
-// ==========================================
-// Radar Pro Dashboard (Only shown if logged in)
-// ==========================================
-$dbFile = __DIR__ . '/db.json';
-$db = json_decode(file_exists($dbFile) ? file_get_contents($dbFile) : '[]', true) ?: [];
 
 if (isset($_GET['delete'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['delete']);
@@ -127,27 +35,22 @@ if (isset($_GET['delete'])) {
 }
 
 if (isset($_GET['delete_all'])) {
-    foreach ($db as $id => $d) {
-        @unlink($d['real_path']); 
-    }
+    foreach ($db as $id => $d) { @unlink($d['real_path']); }
     $db = []; 
     file_put_contents($dbFile, json_encode($db)); 
     header("Location: /admin"); exit;
 }
 
+// Statistics Logic (نفسه)
 $totalLinks = count($db);
 $totalDownloads = 0; $totalRequests = 0; $successfulRequests = 0; $blockedRequests = 0; $expiredLinks = 0;
-
 foreach ($db as $d) {
-    $totalDownloads += $d['downloads'];
+    $totalDownloads += $d['downloads'] ?? 0;
     $totalRequests += count($d['logs']);
     foreach ($d['logs'] as $log) {
-        if ($log['status'] === 'Success') $successfulRequests++;
-        else $blockedRequests++;
+        if ($log['status'] === 'Success') $successfulRequests++; else $blockedRequests++;
     }
-    if (time() > $d['expires'] || ($d['limit'] > 0 && $d['downloads'] >= $d['limit'])) {
-        $expiredLinks++;
-    }
+    if (time() > $d['expires'] || ($d['limit'] > 0 && ($d['downloads'] ?? 0) >= $d['limit'])) { $expiredLinks++; }
 }
 ?>
 <!DOCTYPE html>
@@ -162,234 +65,25 @@ foreach ($db as $d) {
     <style>
         * { -webkit-tap-highlight-color: transparent; } 
         body { background-color: #05080f; overflow-x: hidden; font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; color: #cbd5e1; }
-        input, button, select, textarea { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
         .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
-        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #51C0C0; border-radius: 10px; }
         .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
         .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .glow-hover { transition: all 0.3s ease; }
         .glow-hover:hover { filter: drop-shadow(0 0 15px rgba(81, 192, 192, 0.4)); }
-        tbody tr { transition: all 0.2s ease; }
-        tbody tr:hover { background-color: rgba(81, 192, 192, 0.05); }
-        .floating-bg { position: fixed; pointer-events: none; z-index: -1; }
-        .glow-circle { animation: glow-pulse 4s ease-in-out infinite; }
-        @keyframes glow-pulse { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.3; } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 relative">
-
-    <div class="floating-bg top-10 right-10 w-96 h-96 bg-[#51C0C0] rounded-full blur-[150px] opacity-10 glow-circle"></div>
-    <div class="floating-bg bottom-20 left-10 w-80 h-80 bg-[#51C0C0] rounded-full blur-[120px] opacity-5 glow-circle" style="animation-delay: 2s;"></div>
-
     <div class="w-full max-w-6xl my-auto py-8 z-10 relative">
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 glass-panel p-6 rounded-2xl relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-[#51C0C0] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
-
             <div class="text-center md:text-left z-10 flex flex-col md:items-start items-center">
                 <h1 class="text-4xl font-bold text-white flex flex-col md:flex-row items-center gap-2 drop-shadow-lg smooth-transition">
                     <span class="text-[#51C0C0] neon-text-glow">RADAR LINK PRO</span>
                 </h1>
-                <p class="text-[13px] tracking-widest text-[#8a9bb3] mt-2 bg-[#0d131f] border border-[#1e2738] px-3 py-1 rounded-full smooth-transition font-bold">
-                    <i class="fa-solid fa-satellite-dish text-[#51C0C0] mr-1"></i> LINKS & TRAFFIC ANALYTICS
-                </p>
             </div>
-            
             <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0 flex-wrap items-center">
-                <a href="/" title="Upload Files" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] smooth-transition glow-hover">
-                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
-                </a>
-                
-                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] smooth-transition">
-                    <i class="fa-solid fa-dumpster-fire text-xl"></i>
-                </a>
-
-                <div class="relative group">
-                    <input type="text" id="searchInput" oninput="searchLinks()" placeholder="PASTE LINK OR ID..." class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] focus:border-[#51C0C0] text-[#51C0C0] h-12 px-4 pr-10 rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] focus:shadow-[0_0_15px_rgba(81,192,192,0.3)] text-[14px] font-bold outline-none w-48 md:w-64 placeholder-[#425975]">
-                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-[#51C0C0] text-lg pointer-events-none"></i>
-                </div>
+                <a href="/" title="Back to Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] smooth-transition glow-hover"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] smooth-transition"><i class="fa-solid fa-dumpster-fire text-xl"></i></a>
             </div>
         </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[#8a9bb3] text-[13px] font-bold">TOTAL LINKS</p>
-                        <p class="text-[#51C0C0] text-3xl font-bold mt-1"><?= $totalLinks ?></p>
-                    </div>
-                    <i class="fa-solid fa-link text-[#51C0C0] text-3xl opacity-30"></i>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[#8a9bb3] text-[13px] font-bold">DOWNLOADS</p>
-                        <p class="text-[#51C0C0] text-3xl font-bold mt-1"><?= $totalDownloads ?></p>
-                    </div>
-                    <i class="fa-solid fa-download text-[#51C0C0] text-3xl opacity-30"></i>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[#8a9bb3] text-[13px] font-bold">REQUESTS</p>
-                        <p class="text-[#51C0C0] text-3xl font-bold mt-1"><?= $totalRequests ?></p>
-                    </div>
-                    <i class="fa-solid fa-radar text-[#51C0C0] text-3xl opacity-30"></i>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[#8a9bb3] text-[13px] font-bold">SUCCESS</p>
-                        <p class="text-[#22c55e] text-3xl font-bold mt-1"><?= $successfulRequests ?></p>
-                    </div>
-                    <i class="fa-solid fa-check-circle text-[#22c55e] text-3xl opacity-30"></i>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-xl p-4 smooth-transition glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[#8a9bb3] text-[13px] font-bold">BLOCKED</p>
-                        <p class="text-red-400 text-3xl font-bold mt-1"><?= $blockedRequests ?></p>
-                    </div>
-                    <i class="fa-solid fa-ban text-red-400 text-3xl opacity-30"></i>
-                </div>
-            </div>
         </div>
-
-        <div class="space-y-6" id="linksContainer">
-            <?php if(!empty($db)): ?>
-                <?php foreach(array_reverse($db, true) as $id => $d): 
-                    $isExpired = time() > $d['expires'];
-                    $isLimited = $d['limit'] > 0 && $d['downloads'] >= $d['limit'];
-                    $statusHtml = ($isExpired || $isLimited) 
-                        ? '<span class="bg-[#1a0f14] text-red-400 px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-red-900/50 shadow-[0_0_10px_rgba(220,38,38,0.1)] status-badge inline-flex items-center gap-1.5"><i class="fa-solid fa-ban"></i> EXPIRED</span>' 
-                        : '<span class="bg-[#51C0C0]/10 text-[#51C0C0] px-3 py-1.5 rounded-lg text-[12px] font-bold tracking-widest border border-[#51C0C0]/30 shadow-[0_0_10px_rgba(81,192,192,0.1)] status-badge inline-flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> ACTIVE</span>';
-                    
-                    $expiresIn = $d['expires'] - time();
-                    $expiresInHours = floor($expiresIn / 3600);
-                    $expiresInMins = floor(($expiresIn % 3600) / 60);
-                ?>
-                <div class="glass-panel rounded-[1.5rem] p-5 relative overflow-hidden group hover:border-[#51C0C0]/50 transition-colors duration-300 smooth-transition config-card" data-link-id="<?= htmlspecialchars($id) ?>" data-original-name="<?= strtolower(htmlspecialchars($d['original_name'])) ?>">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#1e2738] pb-5 mb-5">
-                        <div class="flex items-center gap-4">
-                            <div class="w-14 h-14 rounded-xl bg-[#0d131f] border border-[#1e2738] flex items-center justify-center text-[#51C0C0] glow-hover">
-                                <i class="fa-regular fa-file-code text-2xl"></i>
-                            </div>
-                            <div>
-                                <span class="text-[12px] font-bold tracking-widest text-[#425975] block mb-1">ORIGINAL: <?= htmlspecialchars($d['original_name']) ?></span>
-                                <span class="font-bold text-[#51C0C0] text-xl neon-text-glow"><?= htmlspecialchars($id) ?>.HC</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap">
-                            <div class="text-right bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
-                                <span class="text-[11px] font-bold tracking-widest text-[#425975] block mb-0.5">DOWNLOADS</span>
-                                <span class="text-white font-bold text-[16px]"><?= $d['downloads'] ?> <span class="text-[#425975] mx-1">/</span> <span class="<?= $d['limit'] > 0 ? 'text-[#51C0C0]' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
-                            </div>
-                            <div class="text-right bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
-                                <span class="text-[11px] font-bold tracking-widest text-[#425975] block mb-0.5">EXPIRES IN</span>
-                                <span class="text-white font-bold text-[16px]"><?= $expiresInHours ?>H <?= $expiresInMins ?>M</span>
-                            </div>
-                            <div><?= $statusHtml ?></div>
-                            <a href="?delete=<?= $id ?>" onclick="return confirm('DELETE THIS LINK PERMANENTLY?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 text-red-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] smooth-transition">
-                                <i class="fa-solid fa-trash text-[16px]"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="text-[13px] font-bold tracking-widest text-[#8a9bb3] mb-4 flex items-center bg-[#0d131f] inline-block px-4 py-2 rounded-lg border border-[#1e2738]">
-                            <i class="fa-solid fa-terminal mr-2 text-[#51C0C0]"></i> LIVE REQUEST FEED
-                        </h4>
-                        <div class="bg-[#05080f] rounded-xl overflow-hidden border border-[#1e2738] overflow-x-auto custom-scroll shadow-inner">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <tbody class="divide-y divide-[#1e2738]/50">
-                                    <?php if(!empty($d['logs'])): ?>
-                                        <?php foreach(array_reverse($d['logs']) as $log): 
-                                            $badge = ($log['status'] === 'Success') ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30' : 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/30';
-                                            $clientClass = (strpos($log['client'], 'HTTP Custom') !== false) ? 'text-[#51C0C0] font-bold' : 'text-slate-400';
-                                            $icon = ($log['status'] === 'Success') ? '<i class="fa-solid fa-check text-[14px]"></i>' : '<i class="fa-solid fa-xmark text-[14px]"></i>';
-                                            $statusText = ($log['status'] === 'Success') ? 'OPEN' : 'BLOCKED';
-                                        ?>
-                                        <tr class="hover:bg-[#0d131f] transition duration-200 smooth-transition">
-                                            <td class="px-5 py-4 align-middle">
-                                                <div class="flex items-center gap-2 text-[#425975] text-[13px] font-bold">
-                                                    <i class="fa-regular fa-clock opacity-50"></i>
-                                                    <span><?= date('Y-M-D H:i', $log['time']) ?></span>
-                                                </div>
-                                            </td>
-                                            <td class="px-5 py-4 align-middle">
-                                                <div class="flex items-center gap-2 text-white text-[14px] font-bold">
-                                                    <i class="fa-solid fa-location-dot text-[#425975]"></i>
-                                                    <span><?= htmlspecialchars($log['ip']) ?></span>
-                                                </div>
-                                            </td>
-                                            <td class="px-5 py-4 text-[14px] font-bold <?= $clientClass ?> align-middle">
-                                                <?= htmlspecialchars($log['client']) ?>
-                                                <span class="text-[11px] text-[#425975] block truncate max-w-xs mt-1 bg-[#0a0f1c] px-2 py-0.5 rounded font-bold w-fit"><?= htmlspecialchars($log['ua']) ?></span>
-                                            </td>
-                                            <td class="px-5 py-4 text-right align-middle">
-                                                <div class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tracking-widest border text-[12px] <?= $badge ?> w-[100px] status-badge">
-                                                    <?= $icon ?>
-                                                    <span><?= $statusText ?></span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td class="px-4 py-8 text-center text-[#425975] font-bold text-[13px] tracking-widest">
-                                                <i class="fa-solid fa-ghost text-3xl block mb-2 opacity-30"></i>
-                                                NO REQUEST ACTIVITY TRACKED YET.
-                                            </td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="text-center py-20 border-2 border-dashed border-[#1e2738] rounded-[2rem] bg-gradient-to-b from-[#0d131f]/50 to-[#05080f] smooth-transition">
-                    <div class="w-20 h-20 bg-[#0d131f] border border-[#1e2738] rounded-full flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                        <i class="fa-solid fa-satellite text-4xl text-[#1e2738]"></i>
-                    </div>
-                    <p class="text-[#425975] text-[15px] font-bold tracking-widest">NO LINKS CREATED YET. START BY UPLOADING FILES!</p>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <script>
-        function searchLinks() {
-            let input = document.getElementById('searchInput').value.trim();
-            let match = input.match(/\/([a-zA-Z0-9_-]+)\.hc/);
-            let searchTerm = match ? match[1] : input.replace('.hc', '');
-            searchTerm = searchTerm.toLowerCase();
-
-            let cards = document.querySelectorAll('.config-card');
-            cards.forEach(card => {
-                let id = card.getAttribute('data-link-id').toLowerCase();
-                let originalName = card.getAttribute('data-original-name').toLowerCase();
-                if (id.includes(searchTerm) || originalName.includes(searchTerm) || searchTerm === '') {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-        setInterval(() => {
-            let searchVal = document.getElementById('searchInput');
-            if (searchVal && searchVal.value.trim() === '') location.reload();
-        }, 30000);
-    </script>
 </body>
 </html>
