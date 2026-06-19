@@ -8,22 +8,114 @@
 session_start();
 date_default_timezone_set('Africa/Tunis');
 
-// === UNIFIED SECURITY CHECK ===
-if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
-    header("Location: index.php"); 
+// ==========================================
+// UNIFIED UI Login System
+// ==========================================
+$adminUser = 'Admin';
+$adminPass = '38sPcd6Ysr04NGVk'; 
+
+$loginError = false;
+
+if (isset($_GET['logout'])) {
+    unset($_SESSION['main_logged']);
+    header("Location: /admin"); 
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
+    if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
+        $_SESSION['main_logged'] = true;
+        header("Location: /admin"); 
+        exit;
+    } else {
+        $loginError = "INVALID LOGIN CREDENTIALS!";
+    }
+}
+
+// إذا لم يكن مسجلاً للدخول، نعرض له واجهة الدخول دون طرده لـ index
+if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SYSTEM LOGIN | CLOUD CONFIG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { -webkit-tap-highlight-color: transparent; } 
+        body { background-color: #05080f; overflow-x: hidden; font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
+        input, button { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
+        .glass-panel { background: rgba(10, 15, 28, 0.85); backdrop-filter: blur(12px); border: 1px solid #1e2738; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(81, 192, 192, 0.05); }
+        .neon-text-glow { text-shadow: 0 0 15px rgba(81, 192, 192, 0.6), 0 0 30px rgba(81, 192, 192, 0.2); }
+        .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
+        .floating-element { position: absolute; animation: float-up linear infinite; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(81,192,192,0.5)); }
+        @keyframes float-up { 0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 0.2; } 90% { opacity: 0.2; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; } }
+    </style>
+</head>
+<body class="min-h-screen text-slate-200 flex items-center justify-center p-0 sm:p-4 relative">
+    <div class="bg-animations">
+        <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s;">☁️</div>
+        <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s;">🚀</div>
+        <div class="floating-element text-5xl text-[#51C0C0]" style="left: 70%; animation-duration: 18s;"><i class="fa-solid fa-microchip"></i></div>
+        <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s;">⚡</div>
+        <div class="floating-element text-4xl text-[#51C0C0]" style="left: 50%; animation-duration: 22s;"><i class="fa-solid fa-satellite-dish"></i></div>
+        <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s;">🔒</div>
+    </div>
+
+    <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10">
+        <div class="text-center mt-6 mb-8 w-full flex flex-col items-center relative z-10">
+            <div class="w-16 h-16 rounded-full border border-[#1e2738] bg-[#0f1524] flex items-center justify-center mx-auto mb-5 relative shadow-[0_0_15px_rgba(81,192,192,0.2)]">
+                <div class="absolute inset-2 rounded-full border border-[#51C0C0]/30 bg-[#51C0C0]/5"></div>
+                <i class="fa-solid fa-user-shield text-[#51C0C0] text-2xl z-10"></i>
+            </div>
+            <h2 class="text-[32px] text-white drop-shadow-lg font-bold">SYSTEM <span class="text-[#51C0C0] neon-text-glow">LOGIN</span></h2>
+            <div class="h-[3px] w-12 bg-[#51C0C0] mt-3 mx-auto rounded-full shadow-[0_0_10px_#51C0C0]"></div>
+        </div>
+
+        <form method="POST" class="space-y-6 mt-auto mb-auto bg-[#0a0f1c]/50 p-6 sm:p-8 rounded-[2rem] border border-[#1e2738] shadow-[0_0_20px_rgba(0,0,0,0.3)]">
+            <input type="hidden" name="ui_login" value="1">
+            
+            <?php if($loginError): ?>
+                <div class="bg-[#1a0f14] border border-red-900/50 text-red-400 text-sm p-3 rounded-xl text-center font-bold tracking-wide">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <?= $loginError ?>
+                </div>
+            <?php endif; ?>
+
+            <div>
+                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">
+                    <i class="fa-solid fa-user-astronaut mr-2"></i> USERNAME
+                </label>
+                <input type="text" name="username" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="ENTER ADMIN">
+            </div>
+            
+            <div>
+                <label class="flex items-center text-[13px] text-[#51C0C0] font-bold tracking-widest mb-2 ml-1">
+                    <i class="fa-solid fa-key mr-2"></i> PASSWORD
+                </label>
+                <input type="password" name="password" required class="w-full bg-[#0d131f] border border-[#1e2738] rounded-xl px-4 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-[#51C0C0] transition placeholder-[#2e3c50]" placeholder="••••••••••••">
+            </div>
+            
+            <button type="submit" class="w-full bg-[#51C0C0] hover:bg-[#43a3a3] text-[#0a0f1c] font-bold py-4 rounded-xl transition text-[16px] flex items-center justify-center tracking-widest mt-6">
+                ACCESS SYSTEM <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
+            </button>
+        </form>
+    </div>
+</body>
+</html>
+<?php
+    // إيقاف المعالجة هنا حتى لا تظهر لوحة التحكم أسفل واجهة الدخول
+    exit;
+}
+
+// ==========================================
+// Radar Pro Dashboard (Only shown if logged in)
+// ==========================================
 $dbFile = __DIR__ . '/db.json';
 $db = json_decode(file_exists($dbFile) ? file_get_contents($dbFile) : '[]', true) ?: [];
 
-// Logout action
-if (isset($_GET['logout'])) {
-    unset($_SESSION['main_logged']);
-    header("Location: index.php"); exit;
-}
-
-// Delete SINGLE item action
 if (isset($_GET['delete'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['delete']);
     if (isset($db[$id])) { 
@@ -31,26 +123,20 @@ if (isset($_GET['delete'])) {
         unset($db[$id]); 
         file_put_contents($dbFile, json_encode($db)); 
     }
-    header("Location: admin.php"); exit;
+    header("Location: /admin"); exit;
 }
 
-// Delete ALL items action (NEW)
 if (isset($_GET['delete_all'])) {
     foreach ($db as $id => $d) {
         @unlink($d['real_path']); 
     }
     $db = []; 
     file_put_contents($dbFile, json_encode($db)); 
-    header("Location: admin.php"); exit;
+    header("Location: /admin"); exit;
 }
 
-// Calculate Statistics
 $totalLinks = count($db);
-$totalDownloads = 0;
-$totalRequests = 0;
-$successfulRequests = 0;
-$blockedRequests = 0;
-$expiredLinks = 0;
+$totalDownloads = 0; $totalRequests = 0; $successfulRequests = 0; $blockedRequests = 0; $expiredLinks = 0;
 
 foreach ($db as $d) {
     $totalDownloads += $d['downloads'];
@@ -63,7 +149,6 @@ foreach ($db as $d) {
         $expiredLinks++;
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -99,7 +184,6 @@ foreach ($db as $d) {
     <div class="floating-bg bottom-20 left-10 w-80 h-80 bg-[#51C0C0] rounded-full blur-[120px] opacity-5 glow-circle" style="animation-delay: 2s;"></div>
 
     <div class="w-full max-w-6xl my-auto py-8 z-10 relative">
-        
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 glass-panel p-6 rounded-2xl relative overflow-hidden">
             <div class="absolute top-0 right-0 w-64 h-64 bg-[#51C0C0] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
 
@@ -113,11 +197,7 @@ foreach ($db as $d) {
             </div>
             
             <div class="flex flex-row gap-4 z-10 justify-center md:justify-end mt-6 md:mt-0 flex-wrap items-center">
-                <a href="index.php" title="Back to Upload" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] smooth-transition glow-hover">
-                    <i class="fa-solid fa-arrow-left text-xl"></i>
-                </a>
-
-                <a href="index.php" title="Upload Files" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] smooth-transition glow-hover">
+                <a href="/" title="Upload Files" class="bg-[#0d131f] hover:bg-[#151e2e] border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(81,192,192,0.1)] smooth-transition glow-hover">
                     <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                 </a>
                 
@@ -233,7 +313,6 @@ foreach ($db as $d) {
                                 <tbody class="divide-y divide-[#1e2738]/50">
                                     <?php if(!empty($d['logs'])): ?>
                                         <?php foreach(array_reverse($d['logs']) as $log): 
-                                            // تغيير اللون الأخضر وتعديل الكلمة إلى OPEN
                                             $badge = ($log['status'] === 'Success') ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30' : 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/30';
                                             $clientClass = (strpos($log['client'], 'HTTP Custom') !== false) ? 'text-[#51C0C0] font-bold' : 'text-slate-400';
                                             $icon = ($log['status'] === 'Success') ? '<i class="fa-solid fa-check text-[14px]"></i>' : '<i class="fa-solid fa-xmark text-[14px]"></i>';
@@ -300,7 +379,6 @@ foreach ($db as $d) {
             cards.forEach(card => {
                 let id = card.getAttribute('data-link-id').toLowerCase();
                 let originalName = card.getAttribute('data-original-name').toLowerCase();
-                
                 if (id.includes(searchTerm) || originalName.includes(searchTerm) || searchTerm === '') {
                     card.style.display = 'block';
                 } else {
@@ -308,30 +386,10 @@ foreach ($db as $d) {
                 }
             });
         }
-
         setInterval(() => {
             let searchVal = document.getElementById('searchInput');
-            if (searchVal && searchVal.value.trim() === '') {
-                location.reload();
-            }
+            if (searchVal && searchVal.value.trim() === '') location.reload();
         }, 30000);
-
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'r') {
-                e.preventDefault();
-                location.reload();
-            }
-            if (e.ctrlKey && e.key === 'h') {
-                e.preventDefault();
-                window.location.href = 'index.php';
-            }
-            if (e.ctrlKey && e.key === 'f') {
-                e.preventDefault();
-                document.getElementById('searchInput').focus();
-            }
-        });
-
-        document.documentElement.style.scrollBehavior = 'smooth';
     </script>
 </body>
 </html>
