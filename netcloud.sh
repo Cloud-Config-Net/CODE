@@ -66,24 +66,29 @@ install_netcloud() {
     echo -e "  ${WHITE}${BOLD}INITIATING CLOUD CONFIG CORE DEPLOYMENT...${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${NC}"
     
-    echo -ne "  ${CYAN}[?]${NC} ENTER DOMAIN (DEFAULT: ${WHITE}${DEFAULT_DOMAIN}${NC}): "
+    echo -ne "  ${CYAN}ENTER DOMAIN  : ${WHITE}"
     read DOMAIN
     DOMAIN=${DOMAIN:-$DEFAULT_DOMAIN}
 
-    echo -ne "  ${CYAN}[?]${NC} ENTER PORT (DEFAULT: ${WHITE}${DEFAULT_PORT}${NC}): "
+    echo -ne "  ${CYAN}ENTER PORT  : ${WHITE}"
     read PORT_INPUT
     PORT_INPUT=${PORT_INPUT:-$DEFAULT_PORT}
     PORT=$(check_port $PORT_INPUT)
 
-    echo -ne "  ${CYAN}[?]${NC} ENTER TIMEZONE (DEFAULT: ${WHITE}${DEFAULT_TZ}${NC}): "
+    echo -ne "  ${CYAN}ENTER TIMEZONE  : ${WHITE}"
     read TZ_INPUT
     TZ_INPUT=${TZ_INPUT:-$DEFAULT_TZ}
 
-    echo -ne "  ${CYAN}[?]${NC} DO YOU WANT TO ACTIVATE SSL HTTPS CERTIFICATE? (Y/N): "
-    read SSL_CHOICE
+    # SMART LOGIC: PROMPT FOR SSL ONLY IF PORT IS 443
+    if [ "$PORT" == "443" ]; then
+        echo -ne "  ${CYAN}ACTIVATE SSL HTTPS CERTIFICATE? (Y/N)  : ${WHITE}"
+        read SSL_CHOICE
+    else
+        SSL_CHOICE="N"
+    fi
 
     echo -e "\n  ${DARK_GRAY}[1/6]${NC} ${CYAN}UPDATING PACKAGES & DEPENDENCIES...${NC}"
-    apt update && apt install nginx php8.2-fpm php8.2-curl ufw iproute2 certbot python3-certbot-nginx -y > /dev/null 2>&1
+    apt update && apt install nginx php8.2-fpm php8.2-curl ufw iproute2 certbot -y > /dev/null 2>&1
 
     echo -e "  ${DARK_GRAY}[2/6]${NC} ${CYAN}BUILDING SYSTEM DIRECTORIES...${NC}"
     mkdir -p $WEB_ROOT/uploads
@@ -101,7 +106,70 @@ install_netcloud() {
     chown www-data:www-data $WEB_ROOT/index.php $WEB_ROOT/admin.php
 
     echo -e "  ${DARK_GRAY}[5/6]${NC} ${CYAN}COMPILING NGINX SMART-FIREWALL CONFIG...${NC}"
-    cat <<EOF > $NGINX_CONF
+    
+    # ----------------------------------------------------
+    # BUILD NGINX CONFIGURATION BASED ON PORT & SSL CHOICE
+    # ----------------------------------------------------
+    if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
+        echo -e "\n  ${YELLOW}* ATTENTION: PORT 80 MUST BE FREE FOR 10 SECONDS TO VERIFY SSL *${NC}"
+        echo -e "  ${DARK_GRAY}Please pause any WebSocket or Payload service running on port 80 temporarily.${NC}"
+        echo -ne "  ${CYAN}PRESS [ENTER] WHEN PORT 80 IS READY >${NC} "
+        read
+        
+        # STOP NGINX TO PREVENT PORT CONFLICT DURING CERTIFICATE VALIDATION
+        systemctl stop nginx
+        
+        # REQUEST CERTIFICATE VIA TEMPORARY STANDALONE SERVER (PORT 80)
+        echo -e "  ${CYAN}REQUESTING SSL CERTIFICATE FROM LET'S ENCRYPT FOR $DOMAIN...${NC}"
+        certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email
+        
+        # WRITE NGINX CONFIGURATION FOR PORT 443 ONLY (HTTPS)
+        cat <<EOF > $NGINX_CONF
+server {
+    listen 443 ssl;
+    server_name $DOMAIN;
+    root $WEB_ROOT;
+    index index.php index.html;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+
+    # SECURITY HEADERS
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
+
+    # CLEAN URL FOR ADMIN PANEL
+    location = /admin {
+        rewrite ^/admin$ /admin.php last;
+    }
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    # ANTI-SCRAPING & SMART DOWNLOAD FIREWALL
+    location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
+        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot)) {
+            return 403 "ACCESS DENIED: AUTOMATED TOOLS ARE NOT ALLOWED";
+        }
+        rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
+    }
+    
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location /db.json { deny all; return 404; }
+    location /uploads/ { deny all; return 404; }
+}
+EOF
+    else
+        # IF PORT IS 80 OR ANY OTHER NON-SSL PORT
+        cat <<EOF > $NGINX_CONF
 server {
     listen $PORT;
     server_name $DOMAIN;
@@ -124,7 +192,6 @@ server {
 
     # ANTI-SCRAPING & SMART DOWNLOAD FIREWALL
     location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
-        # Block Automated Tools, Bots, and Scrapers completely
         if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot)) {
             return 403 "ACCESS DENIED: AUTOMATED TOOLS ARE NOT ALLOWED";
         }
@@ -142,23 +209,16 @@ server {
     location /uploads/ { deny all; return 404; }
 }
 EOF
+    fi
 
     echo -e "  ${DARK_GRAY}[6/6]${NC} ${CYAN}APPLYING RULES & RESTARTING SERVICES...${NC}"
     ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
     
     ufw allow $PORT/tcp > /dev/null 2>&1
-    ufw allow 443/tcp > /dev/null 2>&1
     
     systemctl restart nginx
     systemctl restart php8.2-fpm
-
-    # SSL CERTIFICATE DEPLOYMENT VIA CERTBOT
-    if [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
-        echo -e "\n  ${CYAN}REQUESTING SSL CERTIFICATE FROM LET'S ENCRYPT FOR $DOMAIN...${NC}"
-        certbot --nginx -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email
-        systemctl restart nginx
-    fi
 
     echo -e "\n${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${LIGHT_GREEN}SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
@@ -166,8 +226,9 @@ EOF
     echo -e "  TARGET DOMAIN : ${WHITE}${DOMAIN}${NC}"
     echo -e "  ACTIVE PORT   : ${WHITE}${PORT}${NC}"
     echo -e "  TIMEZONE      : ${WHITE}${TZ_INPUT}${NC}"
-    if [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
+    if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
         echo -e "  SSL STATUS    : ${GREEN}CONFIGURED AND ACTIVATED (HTTPS)${NC}"
+        echo -e "  PORT 80 STATUS: ${GREEN}FREE AND AVAILABLE FOR WEBSOCKET${NC}"
     fi
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO RETURN TO THE MENU...${NC}"
@@ -207,7 +268,7 @@ read_choice() {
     case $choice in
         1|01) install_netcloud ;;
         2|02) 
-            echo -ne "  ${CYAN}[?]${NC} ENTER NEW DOMAIN: ${WHITE}"
+            echo -ne "  ${CYAN}ENTER NEW DOMAIN  : ${WHITE}"
             read NEW_DOMAIN
             if [ -f "$NGINX_CONF" ]; then
                 sed -i "s/server_name .*/server_name $NEW_DOMAIN;/" $NGINX_CONF
@@ -219,7 +280,7 @@ read_choice() {
             echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
             ;;
         3|03) 
-            echo -ne "  ${CYAN}[?]${NC} ENTER NEW PORT: ${WHITE}"
+            echo -ne "  ${CYAN}ENTER NEW PORT  : ${WHITE}"
             read NEW_PORT_INPUT
             NEW_PORT=$(check_port $NEW_PORT_INPUT)
             if [ -f "$NGINX_CONF" ]; then
@@ -239,7 +300,7 @@ read_choice() {
             if [ -d "$WEB_ROOT" ]; then nano $WEB_ROOT/admin.php; nano $WEB_ROOT/index.php; nano $NGINX_CONF; 
             else echo -e "  ${RED}SYSTEM IS NOT INSTALLED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read; fi ;;
         8|08)
-            echo -ne "  ${CYAN}[?]${NC} ENTER TIMEZONE (E.G., AFRICA/TUNIS): ${WHITE}"
+            echo -ne "  ${CYAN}ENTER TIMEZONE  : ${WHITE}"
             read TZ_INPUT
             TZ_INPUT=${TZ_INPUT:-Africa/Tunis}
             if [ -f "$WEB_ROOT/index.php" ]; then
