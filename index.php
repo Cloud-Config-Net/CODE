@@ -207,39 +207,33 @@ if (isset($_SESSION['temp_generated_links'])) {
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* إعدادات الخلفية والخط */
+        /* إعدادات عامة ومشتركة */
         * { -webkit-tap-highlight-color: transparent; } 
         body { 
             background-color: #05080f; /* لون خلفية داكن جداً يطابق صورتك */
             font-family: 'Oswald', sans-serif; 
-            letter-spacing: 1px; 
-            overflow-x: hidden; 
+            letter-spacing: 0.5px; 
+            text-transform: uppercase; 
+            overflow-x: hidden;
+            color: #cbd5e1;
         }
-        input, button, select { font-family: 'Oswald', sans-serif; letter-spacing: 1px; }
-
-        /* التصميم الزجاجي الرئيسي */
-        .glass-panel {
-            background: #0a0f1c; /* لون الصندوق */
-            border: 1px solid #1e2738; /* إطار أزرق خافت */
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        input, button, select, textarea { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
+        
+        /* ------------------ التصميم الزجاجي الموحد ------------------ */
+        .glass-panel { 
+            background: #0a0f1c; 
+            border: 1px solid #1e2738; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
         }
-
-        /* توهج النيون للعنوان (CLOUD CONFIG) */
-        .blue-glow-text {
-            text-shadow: 0 0 15px rgba(103, 232, 249, 0.6);
-        }
-
-        /* إصلاح خلفية الإكمال التلقائي */
-        input:-webkit-autofill { 
-            -webkit-box-shadow: 0 0 0 30px #05080f inset !important; 
-            -webkit-text-fill-color: white !important; 
-        }
-        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
-
+        .blue-glow-text { text-shadow: 0 0 15px rgba(103, 232, 249, 0.6); }
+        input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px #05080f inset !important; -webkit-text-fill-color: white !important; }
+        
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #67e8f9; border-radius: 10px; }
+        
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 relative">
@@ -252,7 +246,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                 </h1>
             </div>
 
-            <form method="POST" class="glass-panel w-full rounded-[2.5rem] p-7 sm:p-8 space-y-7 transition-all duration-500 hover:border-[#67e8f9]/40">
+            <form method="POST" class="glass-panel w-full rounded-[2.5rem] p-7 sm:p-8 space-y-7 transition-all duration-500 hover:border-[#67e8f9]/40 relative">
                 <input type="hidden" name="ui_login" value="1">
                 
                 <?php if($loginError): ?>
@@ -289,7 +283,7 @@ if (isset($_SESSION['temp_generated_links'])) {
             <i class="fa-solid fa-right-from-bracket text-[16px]"></i>
         </a>
 
-        <div class="w-full max-w-[24rem] flex flex-col items-center z-10 w-full">
+        <div class="w-full max-w-[24rem] flex flex-col items-center z-10">
             
             <?php if(!empty($generatedLinks)): ?>
             <div class="text-center mb-8 w-full mt-4">
