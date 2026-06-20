@@ -207,8 +207,8 @@ if (isset($_SESSION['temp_generated_links'])) {
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* إعدادات عامة ومشتركة */
         * { -webkit-tap-highlight-color: transparent; } 
+        html { background-color: #030a14; height: 100%; } 
         body { 
             background-color: #030a14; 
             font-family: 'Oswald', sans-serif; 
@@ -219,7 +219,6 @@ if (isset($_SESSION['temp_generated_links'])) {
         }
         input, button, select, textarea { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
         
-        /* ------------------ التصميم الزجاجي الموحد (أزرق) ------------------ */
         .glass-panel { 
             background: rgba(10, 15, 30, 0.65); 
             backdrop-filter: blur(16px); 
@@ -233,18 +232,19 @@ if (isset($_SESSION['temp_generated_links'])) {
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 10px; }
         
-        /* حركات التصميم الأزرق */
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
         .animate-float { animation: float 4s ease-in-out infinite; }
         @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
         .ring-effect::before { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 2px solid #38bdf8; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; z-index: -1; }
-        .bg-orb { position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; animation: float 6s ease-in-out infinite alternate; pointer-events: none; }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; animation: float 6s ease-in-out infinite alternate; pointer-events: none; }
         
-        /* تأثيرات الطفو في الخلفية للواجهة الداخلية */
-        .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
-        .floating-element { position: absolute; animation: float-up linear infinite; opacity: 0.15; filter: drop-shadow(0 0 10px rgba(56,189,248,0.5)); }
-        @keyframes float-up { 0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; } 10% { opacity: 0.2; } 90% { opacity: 0.2; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; } }
-        
+        /* حركة النبض (Heartbeat) المخصصة للأزرار */
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .animate-heartbeat { animation: heartbeat 2s ease-in-out infinite; }
+
         input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; }
     </style>
@@ -297,26 +297,16 @@ if (isset($_SESSION['temp_generated_links'])) {
         </div>
 
     <?php else: ?>
-        <div class="bg-animations">
-            <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s; animation-delay: 0s;"></div>
-            <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s; animation-delay: 5s;"></div>
-            <div class="floating-element text-5xl text-cyan-500" style="left: 70%; animation-duration: 18s; animation-delay: 2s;"><i class="fa-solid fa-microchip"></i></div>
-            <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s; animation-delay: 8s;"></div>
-            <div class="floating-element text-4xl text-cyan-500" style="left: 50%; animation-duration: 22s; animation-delay: 12s;"><i class="fa-solid fa-satellite-dish"></i></div>
-            <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;"></div>
-        </div>
+        
+        <a href="admin.php" class="fixed top-4 left-4 sm:top-6 sm:left-6 w-12 h-12 flex items-center justify-center glass-panel hover:border-cyan-400 text-cyan-400 rounded-2xl shadow-lg transition-all animate-heartbeat z-50" title="Radar Analytics">
+            <i class="fa-solid fa-chart-line text-[16px]"></i>
+        </a>
+        <a href="?logout=1" class="fixed top-4 right-4 sm:top-6 sm:right-6 w-12 h-12 flex items-center justify-center glass-panel border-red-900/40 hover:border-red-500 hover:bg-red-900/20 text-red-500 rounded-2xl shadow-lg transition-all animate-heartbeat z-50" title="Logout">
+            <i class="fa-solid fa-right-from-bracket text-[16px]"></i>
+        </a>
 
-        <div class="w-full max-w-[28rem] flex flex-col items-center z-10 p-2 sm:p-4">
+        <div class="w-full max-w-[28rem] flex flex-col items-center z-10 p-2 sm:p-4 mt-12 sm:mt-0">
             
-            <div class="w-full flex justify-between items-center mb-6 z-20 px-2">
-                <a href="admin.php" class="w-12 h-12 flex items-center justify-center glass-panel hover:border-cyan-400 text-cyan-400 rounded-2xl shadow-lg transition-all" title="Radar Analytics">
-                    <i class="fa-solid fa-chart-line text-[16px]"></i>
-                </a>
-                <a href="?logout=1" class="w-12 h-12 flex items-center justify-center glass-panel border-red-900/40 hover:border-red-500 hover:bg-red-900/20 text-red-500 rounded-2xl shadow-lg transition-all" title="Logout">
-                    <i class="fa-solid fa-right-from-bracket text-[16px]"></i>
-                </a>
-            </div>
-
             <?php if(!empty($generatedLinks)): ?>
             <div class="text-center mb-8 w-full flex flex-col items-center relative z-10">
                 <h1 class="text-[36px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text uppercase">
@@ -359,9 +349,9 @@ if (isset($_SESSION['temp_generated_links'])) {
                             </div>
                         </div>
 
-                        <div class="bg-[#030a14] border border-blue-900/40 rounded-xl py-4 px-4 flex items-center justify-center gap-3 overflow-x-auto custom-scroll shadow-inner">
-                            <i class="fa-solid fa-link text-cyan-400 text-[13px]"></i>
-                            <span class="text-cyan-400 text-[12px] sm:text-[13px] font-bold whitespace-nowrap tracking-wider uppercase" id="link-<?= $idx ?>">
+                        <div class="bg-[#030a14] border border-blue-900/40 rounded-xl py-4 px-4 flex items-center justify-center gap-3 shadow-inner w-full">
+                            <i class="fa-solid fa-link text-cyan-400 text-[14px] shrink-0"></i>
+                            <span class="text-cyan-400 text-[12px] sm:text-[14px] font-bold tracking-wider uppercase break-all text-center leading-relaxed" id="link-<?= $idx ?>">
                                 <?= $item['link'] ?>
                             </span>
                         </div>
