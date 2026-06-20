@@ -217,6 +217,9 @@ if (isset($_SESSION['temp_generated_links'])) {
             overflow-x: hidden;
             color: #cbd5e1;
         }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            body { padding-bottom: env(safe-area-inset-bottom); }
+        }
         input, button, select, textarea { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
         
         /* ------------------ التصميم الزجاجي الموحد (أزرق) ------------------ */
@@ -249,13 +252,13 @@ if (isset($_SESSION['temp_generated_links'])) {
         input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
-<body class="min-h-[100dvh] flex items-start sm:items-center justify-center p-0 sm:p-4 relative">
+<body class="min-h-[100dvh] flex items-center justify-center p-4 relative custom-scroll overflow-y-auto">
 
     <div class="bg-orb top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-600 opacity-20"></div>
     <div class="bg-orb bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-cyan-400 opacity-20" style="animation-delay: -3s;"></div>
 
     <?php if(!$isLogged): ?>
-        <div class="w-full max-w-[26rem] flex flex-col items-center justify-center min-h-[100dvh] sm:min-h-0 z-10 p-4">
+        <div class="w-full max-w-[26rem] flex flex-col items-center z-10">
             <div class="text-center mb-10 flex flex-col items-center">
                 <div class="animate-float relative">
                     <div class="ring-effect w-20 h-20 rounded-[2rem] bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(56,189,248,0.5)]">
@@ -306,7 +309,7 @@ if (isset($_SESSION['temp_generated_links'])) {
             <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;"></div>
         </div>
 
-        <div class="glass-panel w-full min-h-[100dvh] sm:min-h-0 sm:h-auto sm:max-w-[28rem] sm:rounded-[2rem] pt-24 pb-10 px-6 sm:p-8 relative flex flex-col justify-start sm:justify-center transition-all duration-500 z-10 text-slate-200">
+        <div class="glass-panel w-full max-w-[28rem] rounded-[2.5rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10 text-slate-200">
             
             <a href="admin.php" class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center bg-[#080f1e]/80 border border-blue-900/40 hover:border-cyan-400 text-cyan-400 rounded-xl shadow-inner transition-all z-20" title="Radar Analytics">
                 <i class="fa-solid fa-chart-line text-[15px]"></i>
@@ -316,7 +319,7 @@ if (isset($_SESSION['temp_generated_links'])) {
             </a>
 
             <?php if(!empty($generatedLinks)): ?>
-            <div class="text-center mt-2 sm:mt-6 mb-8 w-full flex flex-col items-center relative z-10">
+            <div class="text-center mt-6 mb-10 w-full flex flex-col items-center relative z-10">
                 <h1 class="text-[36px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text">
                     LINK CODE
                 </h1>
@@ -369,7 +372,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                 <?php endforeach; ?>
             </div>
 
-            <div class="flex mt-auto w-full mb-6 sm:mb-0">
+            <div class="flex mt-auto w-full mb-4">
                 <button onclick="window.location.href='index.php'" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-xl transition-all text-[16px] tracking-widest flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.2)]">
                      <i class="fa-solid fa-arrow-left mr-2"></i> BACK
                 </button>
@@ -412,7 +415,7 @@ if (isset($_SESSION['temp_generated_links'])) {
             </script>
 
             <?php else: ?>
-            <div class="text-center mt-2 sm:mt-6 mb-8 w-full flex flex-col items-center relative z-10">
+            <div class="text-center mt-6 mb-8 w-full flex flex-col items-center relative z-10">
                 <h1 class="text-[40px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text">
                     CLOUD CONFIG
                 </h1>
