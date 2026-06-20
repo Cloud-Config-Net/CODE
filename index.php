@@ -298,12 +298,12 @@ if (isset($_SESSION['temp_generated_links'])) {
 
     <?php else: ?>
         <div class="bg-animations">
-            <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s; animation-delay: 0s;">☁️</div>
-            <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s; animation-delay: 5s;">🚀</div>
+            <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s; animation-delay: 0s;"></div>
+            <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s; animation-delay: 5s;"></div>
             <div class="floating-element text-5xl text-cyan-500" style="left: 70%; animation-duration: 18s; animation-delay: 2s;"><i class="fa-solid fa-microchip"></i></div>
-            <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s; animation-delay: 8s;">⚡</div>
+            <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s; animation-delay: 8s;"></div>
             <div class="floating-element text-4xl text-cyan-500" style="left: 50%; animation-duration: 22s; animation-delay: 12s;"><i class="fa-solid fa-satellite-dish"></i></div>
-            <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;">🔒</div>
+            <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;"></div>
         </div>
 
         <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10 text-slate-200">
@@ -418,7 +418,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                 </h1>
             </div>
 
-            <form method="POST" enctype="multipart/form-data" class="bg-[#080f1e]/80 border border-blue-900/40 rounded-[2.5rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 mb-20 transition-all duration-300 hover:border-cyan-500/40">
+            <form method="POST" enctype="multipart/form-data" class="bg-[#080f1e]/80 border border-blue-900/40 rounded-[2.5rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 transition-all duration-300 hover:border-cyan-500/40">
                 
                 <div class="relative border border-dashed border-blue-900/50 bg-[#030a14]/50 rounded-2xl p-8 sm:p-10 text-center hover:border-cyan-400 transition-all group cursor-pointer">
                     <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
