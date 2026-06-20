@@ -303,10 +303,10 @@ if (isset($_SESSION['temp_generated_links'])) {
 
         <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10 text-slate-200">
             
-            <a href="admin.php" class="absolute top-6 left-6 w-10 h-10 flex items-center justify-center bg-transparent border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition z-20" title="Radar Analytics">
+            <a href="admin.php" class="absolute top-3 left-3 sm:top-6 sm:left-6 w-10 h-10 flex items-center justify-center bg-transparent border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition z-20" title="Radar Analytics">
                 <i class="fa-solid fa-chart-line text-[15px]"></i>
             </a>
-            <a href="?logout=1" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-transparent border border-[#3a1a1a] hover:bg-red-900/20 text-[#ef4444] rounded-xl shadow-inner transition z-20" title="Logout">
+            <a href="?logout=1" class="absolute top-3 right-3 sm:top-6 sm:right-6 w-10 h-10 flex items-center justify-center bg-transparent border border-[#3a1a1a] hover:bg-red-900/20 text-[#ef4444] rounded-xl shadow-inner transition z-20" title="Logout">
                 <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
             </a>
 
