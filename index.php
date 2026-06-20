@@ -349,9 +349,9 @@ if (isset($_SESSION['temp_generated_links'])) {
                             </div>
                         </div>
 
-                        <div class="bg-[#030a14] border border-blue-900/40 rounded-xl py-4 px-4 flex items-center justify-center gap-3 shadow-inner w-full">
+                        <div class="bg-[#030a14] border border-blue-900/40 rounded-xl py-4 px-4 flex items-center justify-center gap-3 shadow-inner w-full overflow-x-auto custom-scroll">
                             <i class="fa-solid fa-link text-cyan-400 text-[14px] shrink-0"></i>
-                            <span class="text-cyan-400 text-[12px] sm:text-[14px] font-bold tracking-wider uppercase break-all text-center leading-relaxed" id="link-<?= $idx ?>">
+                            <span class="text-cyan-400 text-[11px] sm:text-[13px] font-bold tracking-wider uppercase whitespace-nowrap text-center" id="link-<?= $idx ?>">
                                 <?= $item['link'] ?>
                             </span>
                         </div>
