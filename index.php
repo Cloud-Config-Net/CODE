@@ -238,7 +238,7 @@ if (isset($_SESSION['temp_generated_links'])) {
         .animate-float { animation: float 4s ease-in-out infinite; }
         @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
         .ring-effect::before { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 2px solid #38bdf8; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; z-index: -1; }
-        .bg-orb { position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; animation: float 6s ease-in-out infinite alternate; }
+        .bg-orb { position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; animation: float 6s ease-in-out infinite alternate; pointer-events: none; }
         
         /* تأثيرات الطفو في الخلفية للواجهة الداخلية */
         .bg-animations { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1; overflow: hidden; }
@@ -249,13 +249,13 @@ if (isset($_SESSION['temp_generated_links'])) {
         input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-0 sm:p-4 relative">
+<body class="min-h-[100dvh] flex items-center justify-center p-4 relative bg-[#030a14]">
 
     <div class="bg-orb top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-600 opacity-20"></div>
     <div class="bg-orb bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-cyan-400 opacity-20" style="animation-delay: -3s;"></div>
 
     <?php if(!$isLogged): ?>
-        <div class="w-full max-w-[26rem] flex flex-col items-center z-10 p-4">
+        <div class="w-full max-w-[26rem] flex flex-col items-center z-10 p-2 sm:p-4">
             <div class="text-center mb-10 flex flex-col items-center">
                 <div class="animate-float relative">
                     <div class="ring-effect w-20 h-20 rounded-[2rem] bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(56,189,248,0.5)]">
@@ -306,71 +306,74 @@ if (isset($_SESSION['temp_generated_links'])) {
             <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;"></div>
         </div>
 
-        <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10 text-slate-200">
+        <div class="w-full max-w-[28rem] flex flex-col items-center z-10 p-2 sm:p-4">
             
-            <a href="admin.php" class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center bg-[#080f1e]/80 border border-blue-900/40 hover:border-cyan-400 text-cyan-400 rounded-xl shadow-inner transition-all z-20" title="Radar Analytics">
-                <i class="fa-solid fa-chart-line text-[15px]"></i>
-            </a>
-            <a href="?logout=1" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-[#080f1e]/80 border border-red-900/40 hover:border-red-500 hover:bg-red-900/20 text-red-500 rounded-xl shadow-inner transition-all z-20" title="Logout">
-                <i class="fa-solid fa-right-from-bracket text-[15px]"></i>
-            </a>
+            <div class="w-full flex justify-between items-center mb-6 z-20 px-2">
+                <a href="admin.php" class="w-12 h-12 flex items-center justify-center glass-panel hover:border-cyan-400 text-cyan-400 rounded-2xl shadow-lg transition-all" title="Radar Analytics">
+                    <i class="fa-solid fa-chart-line text-[16px]"></i>
+                </a>
+                <a href="?logout=1" class="w-12 h-12 flex items-center justify-center glass-panel border-red-900/40 hover:border-red-500 hover:bg-red-900/20 text-red-500 rounded-2xl shadow-lg transition-all" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket text-[16px]"></i>
+                </a>
+            </div>
 
             <?php if(!empty($generatedLinks)): ?>
-            <div class="text-center mt-6 mb-10 w-full flex flex-col items-center relative z-10">
-                <h1 class="text-[36px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text">
+            <div class="text-center mb-8 w-full flex flex-col items-center relative z-10">
+                <h1 class="text-[36px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text uppercase">
                     LINK CODE
                 </h1>
             </div>
 
-            <div class="bg-transparent mb-8 max-h-[55vh] sm:max-h-[26rem] overflow-y-auto custom-scroll flex flex-col gap-6 relative z-20 w-full px-1 pb-4">
-                <?php foreach($generatedLinks as $idx => $item): ?>
-                <div class="bg-[#080f1e]/80 border border-blue-900/40 rounded-[1.5rem] p-5 shadow-2xl w-full flex flex-col gap-5 shrink-0 transition-all duration-300 hover:border-cyan-500/40">
-                    
-                    <div class="flex justify-between items-center px-1">
-                        <div class="flex flex-col items-center justify-center w-1/3 border-r border-blue-900/40" title="Original File">
-                            <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
-                                <i class="fa-solid fa-file-code text-cyan-400 text-[13px]"></i>
-                            </div>
-                            <span class="text-blue-300/70 text-[13px] font-bold truncate w-[90%] text-center tracking-wide uppercase">
-                                <?= htmlspecialchars($item['original_name']) ?>
-                            </span>
-                        </div>
+            <div class="glass-panel w-full rounded-[2.5rem] p-6 sm:p-8 flex flex-col gap-6 relative z-20 transition-all duration-300">
+                
+                <div class="max-h-[50vh] overflow-y-auto custom-scroll flex flex-col gap-6 w-full pr-1">
+                    <?php foreach($generatedLinks as $idx => $item): ?>
+                    <div class="bg-[#080f1e]/80 border border-blue-900/40 rounded-[1.5rem] p-5 shadow-inner w-full flex flex-col gap-5 shrink-0 transition-all duration-300 hover:border-cyan-500/40">
                         
-                        <div class="flex flex-col items-center justify-center w-1/3 border-r border-blue-900/40" title="Limit">
-                            <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
-                                <i class="fa-solid fa-download text-cyan-400 text-[13px]"></i>
+                        <div class="flex justify-between items-center px-1">
+                            <div class="flex flex-col items-center justify-center w-1/3 border-r border-blue-900/40" title="Original File">
+                                <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
+                                    <i class="fa-solid fa-file-code text-cyan-400 text-[13px]"></i>
+                                </div>
+                                <span class="text-blue-300/70 text-[13px] font-bold truncate w-[90%] text-center tracking-wide uppercase">
+                                    <?= htmlspecialchars($item['original_name']) ?>
+                                </span>
                             </div>
-                            <span class="text-blue-300/70 text-[14px] font-bold tracking-wide">
-                                <?= $item['limit'] > 0 ? $item['limit'] : '∞' ?>
+                            
+                            <div class="flex flex-col items-center justify-center w-1/3 border-r border-blue-900/40" title="Limit">
+                                <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
+                                    <i class="fa-solid fa-download text-cyan-400 text-[13px]"></i>
+                                </div>
+                                <span class="text-blue-300/70 text-[14px] font-bold tracking-wide">
+                                    <?= $item['limit'] > 0 ? $item['limit'] : '∞' ?>
+                                </span>
+                            </div>
+                            
+                            <div class="flex flex-col items-center justify-center w-1/3" title="Validity Time">
+                                <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
+                                    <i class="fa-regular fa-clock text-cyan-400 text-[13px]"></i>
+                                </div>
+                                <span class="text-blue-300/70 text-[13px] font-bold tracking-wide uppercase">
+                                    <?= $item['duration'] ?> <?= strtoupper($item['time_unit'] === 'minutes' ? 'MINUTES' : 'HOURS') ?>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#030a14] border border-blue-900/40 rounded-xl py-4 px-4 flex items-center justify-center gap-3 overflow-x-auto custom-scroll shadow-inner">
+                            <i class="fa-solid fa-link text-cyan-400 text-[13px]"></i>
+                            <span class="text-cyan-400 text-[12px] sm:text-[13px] font-bold whitespace-nowrap tracking-wider uppercase" id="link-<?= $idx ?>">
+                                <?= $item['link'] ?>
                             </span>
                         </div>
-                        
-                        <div class="flex flex-col items-center justify-center w-1/3" title="Validity Time">
-                            <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
-                                <i class="fa-regular fa-clock text-cyan-400 text-[13px]"></i>
-                            </div>
-                            <span class="text-blue-300/70 text-[13px] font-bold tracking-wide uppercase">
-                                <?= $item['duration'] ?> <?= strtoupper($item['time_unit'] === 'minutes' ? 'MINUTES' : 'HOURS') ?>
-                            </span>
-                        </div>
-                    </div>
 
-                    <div class="bg-[#030a14] border border-blue-900/40 rounded-xl py-4 px-4 flex items-center justify-center gap-3 overflow-x-auto custom-scroll shadow-inner">
-                        <i class="fa-solid fa-link text-cyan-400 text-[13px]"></i>
-                        <span class="text-cyan-400 text-[12px] sm:text-[13px] font-bold whitespace-nowrap tracking-wider uppercase" id="link-<?= $idx ?>">
-                            <?= $item['link'] ?>
-                        </span>
+                        <button onclick="copySingle('link-<?= $idx ?>', this)" class="w-full bg-transparent hover:bg-cyan-500/10 text-cyan-400 border border-blue-900/50 hover:border-cyan-500/50 py-4 rounded-xl text-[15px] font-bold tracking-widest transition-all flex items-center justify-center gap-2.5">
+                            <i class="fa-regular fa-copy text-[16px]"></i> COPY
+                        </button>
                     </div>
-
-                    <button onclick="copySingle('link-<?= $idx ?>', this)" class="w-full bg-transparent hover:bg-cyan-500/10 text-cyan-400 border border-blue-900/50 hover:border-cyan-500/50 py-4 rounded-xl text-[15px] font-bold tracking-widest transition-all flex items-center justify-center gap-2.5">
-                        <i class="fa-regular fa-copy text-[16px]"></i> COPY
-                    </button>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
-            </div>
 
-            <div class="flex mt-auto w-full mb-16">
-                <button onclick="window.location.href='index.php'" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-xl transition-all text-[16px] tracking-widest flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.2)]">
+                <button onclick="window.location.href='index.php'" class="w-full mt-2 bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-full transition-all text-[16px] tracking-widest flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.2)] uppercase">
                      <i class="fa-solid fa-arrow-left mr-2"></i> BACK
                 </button>
             </div>
@@ -412,13 +415,13 @@ if (isset($_SESSION['temp_generated_links'])) {
             </script>
 
             <?php else: ?>
-            <div class="text-center mt-6 mb-8 w-full flex flex-col items-center relative z-10">
-                <h1 class="text-[40px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text">
+            <div class="text-center mb-8 w-full flex flex-col items-center relative z-10">
+                <h1 class="text-[38px] sm:text-[40px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text uppercase">
                     CLOUD CONFIG
                 </h1>
             </div>
 
-            <form method="POST" enctype="multipart/form-data" class="bg-[#080f1e]/80 border border-blue-900/40 rounded-[2.5rem] p-6 sm:p-8 w-full shadow-2xl flex flex-col gap-7 relative z-20 transition-all duration-300 hover:border-cyan-500/40">
+            <form method="POST" enctype="multipart/form-data" class="glass-panel w-full rounded-[2.5rem] p-6 sm:p-8 flex flex-col gap-7 relative z-20 transition-all duration-300 hover:border-cyan-500/40">
                 
                 <div class="relative border border-dashed border-blue-900/50 bg-[#030a14]/50 rounded-2xl p-8 sm:p-10 text-center hover:border-cyan-400 transition-all group cursor-pointer">
                     <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
