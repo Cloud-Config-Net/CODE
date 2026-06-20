@@ -133,7 +133,7 @@ foreach ($db as $d) {
                     <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
                 </a>
                 
-                <a href="?delete_all=1" title="Delete All" onclick="return confirm('⚠️ WARNING: Are you sure you want to delete ALL configurations and logs? This cannot be undone.')" class="bg-[#1a0f14]/80 hover:bg-red-900/40 border border-red-900/40 hover:border-red-500/80 text-red-500 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.1)] smooth-transition">
+                <a href="?delete_all=1" title="Delete All" onclick="return confirm('Delete')" class="bg-[#1a0f14]/80 hover:bg-red-900/40 border border-red-900/40 hover:border-red-500/80 text-red-500 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.1)] smooth-transition">
                     <i class="fa-solid fa-dumpster-fire text-xl"></i>
                 </a>
 
@@ -294,7 +294,7 @@ foreach ($db as $d) {
                     <div class="w-20 h-20 bg-[#080f1e] border border-blue-900/40 rounded-full flex items-center justify-center mx-auto mb-5 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                         <i class="fa-solid fa-satellite text-4xl text-cyan-400"></i>
                     </div>
-                    <p class="text-blue-300/70 text-[15px] font-bold tracking-widest">NO LINKS CREATED YET. START BY UPLOADING FILES!</p>
+                    <p class="text-blue-300/70 text-[15px] font-bold tracking-widest"></p>
                 </div>
             <?php endif; ?>
         </div>
