@@ -298,15 +298,15 @@ if (isset($_SESSION['temp_generated_links'])) {
 
     <?php else: ?>
         <div class="bg-animations">
-            <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s; animation-delay: 0s;"></div>
-            <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s; animation-delay: 5s;"></div>
+            <div class="floating-element text-4xl" style="left: 10%; animation-duration: 15s; animation-delay: 0s;">☁️</div>
+            <div class="floating-element text-3xl" style="left: 30%; animation-duration: 20s; animation-delay: 5s;">🚀</div>
             <div class="floating-element text-5xl text-cyan-500" style="left: 70%; animation-duration: 18s; animation-delay: 2s;"><i class="fa-solid fa-microchip"></i></div>
-            <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s; animation-delay: 8s;"></div>
+            <div class="floating-element text-3xl" style="left: 85%; animation-duration: 25s; animation-delay: 8s;">⚡</div>
             <div class="floating-element text-4xl text-cyan-500" style="left: 50%; animation-duration: 22s; animation-delay: 12s;"><i class="fa-solid fa-satellite-dish"></i></div>
-            <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;"></div>
+            <div class="floating-element text-2xl" style="left: 20%; animation-duration: 19s; animation-delay: 15s;">🔒</div>
         </div>
 
-        <div class="glass-panel w-full h-full min-h-screen sm:min-h-0 sm:max-w-[28rem] sm:rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10 text-slate-200">
+        <div class="glass-panel w-full max-w-[28rem] rounded-[2rem] p-6 sm:p-8 relative flex flex-col justify-center transition-all duration-500 z-10 text-slate-200">
             
             <a href="admin.php" class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center bg-[#080f1e]/80 border border-blue-900/40 hover:border-cyan-400 text-cyan-400 rounded-xl shadow-inner transition-all z-20" title="Radar Analytics">
                 <i class="fa-solid fa-chart-line text-[15px]"></i>
@@ -369,7 +369,7 @@ if (isset($_SESSION['temp_generated_links'])) {
                 <?php endforeach; ?>
             </div>
 
-            <div class="flex mt-auto w-full mb-16">
+            <div class="flex mt-auto w-full">
                 <button onclick="window.location.href='index.php'" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-xl transition-all text-[16px] tracking-widest flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.2)]">
                      <i class="fa-solid fa-arrow-left mr-2"></i> BACK
                 </button>
