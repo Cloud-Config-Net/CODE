@@ -305,13 +305,14 @@ if (isset($_SESSION['temp_generated_links'])) {
         </div>
 
     <?php else: ?>
+    <?php else: ?>
         <div class="bg-animations">
-            <div class="floating-element text-4xl text-[#51C0C0]" style="left: 10%; animation-duration: 15s; animation-delay: 0s;"><i class="fa-solid fa-cloud"></i></div>
-            <div class="floating-element text-3xl text-[#51C0C0]" style="left: 30%; animation-duration: 20s; animation-delay: 5s;"><i class="fa-solid fa-network-wired"></i></div>
-            <div class="floating-element text-5xl text-[#51C0C0]" style="left: 70%; animation-duration: 18s; animation-delay: 2s;"><i class="fa-solid fa-microchip"></i></div>
-            <div class="floating-element text-3xl text-[#51C0C0]" style="left: 85%; animation-duration: 25s; animation-delay: 8s;"><i class="fa-solid fa-server"></i></div>
-            <div class="floating-element text-4xl text-[#51C0C0]" style="left: 50%; animation-duration: 22s; animation-delay: 12s;"><i class="fa-solid fa-satellite-dish"></i></div>
-            <div class="floating-element text-2xl text-[#51C0C0]" style="left: 20%; animation-duration: 19s; animation-delay: 15s;"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="floating-element text-4xl text-[#51C0C0]" style="left: 10%; animation-duration: 15s; animation-delay: 0s;"></div>
+            <div class="floating-element text-3xl text-[#51C0C0]" style="left: 30%; animation-duration: 20s; animation-delay: 5s;"></div>
+            <div class="floating-element text-5xl text-[#51C0C0]" style="left: 70%; animation-duration: 18s; animation-delay: 2s;"></div>
+            <div class="floating-element text-3xl text-[#51C0C0]" style="left: 85%; animation-duration: 25s; animation-delay: 8s;"></div>
+            <div class="floating-element text-4xl text-[#51C0C0]" style="left: 50%; animation-duration: 22s; animation-delay: 12s;"></div>
+            <div class="floating-element text-2xl text-[#51C0C0]" style="left: 20%; animation-duration: 19s; animation-delay: 15s;"></div>
         </div>
 
         <a href="admin.php" class="absolute top-6 left-6 w-11 h-11 flex items-center justify-center bg-transparent border border-[#1e2738] hover:border-[#51C0C0] text-[#51C0C0] rounded-xl shadow-inner transition-all z-20" title="Radar Analytics">
