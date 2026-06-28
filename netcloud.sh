@@ -38,7 +38,7 @@ log_action() {
 }
 
 # ==========================================
-# 1. OS DETECTION ENGINE
+# 1. OS DETECTION ENGINE (دعم جميع الأنظمة)
 # ==========================================
 if [ -f /etc/os-release ]; then
     source /etc/os-release
@@ -147,12 +147,12 @@ install_netcloud() {
     
     if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
         echo -e "\n  ${YELLOW}* ATTENTION: PORT 80 MUST BE FREE FOR 10 SECONDS TO VERIFY SSL *${NC}"
-        echo -e "  ${DARK_GRAY}Please pause any WebSocket or Payload service running on port 80 temporarily.${NC}"
         echo -ne "  ${CYAN}PRESS [ENTER] WHEN PORT 80 IS READY >${NC} "
         read
         
         systemctl stop nginx
-        certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email
+        # تم إضافة الإخفاء هنا ليتم بصمت تام
+        certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email > /dev/null 2>&1
         
         cat <<EOF > $NGINX_CONF
 server {
@@ -227,28 +227,29 @@ EOF
     systemctl restart nginx
     systemctl restart $PHP_SVC
 
-    log_action "System installed on OS_FAMILY: $OS_FAMILY | Domain: $DOMAIN | Port: $PORT"
+    log_action "System installed on OS_FAMILY: $OS_FAMILY | Domain: $DOMAIN | Port: $PORT | PHP: $PHP_SVC"
 
-    # ----------------------------------------------------
-    # GET SSL EXPIRY DATE IF ACTIVATED
-    # ----------------------------------------------------
     SSL_EXPIRY="NOT ACTIVATED"
     if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
         CERT_FILE="/etc/letsencrypt/live/$DOMAIN/cert.pem"
         if [ -f "$CERT_FILE" ]; then
-            # استخراج تاريخ الانتهاء من الشهادة مباشرة
             SSL_EXPIRY=$(openssl x509 -enddate -noout -in "$CERT_FILE" | cut -d= -f2)
         fi
     fi
 
+    # --- تحويل النصوص إلى حروف كبيرة للمحاذاة ---
+    UPPER_DOMAIN=$(echo "$DOMAIN" | tr '[:lower:]' '[:upper:]')
+    UPPER_TZ=$(echo "$TZ_INPUT" | tr '[:lower:]' '[:upper:]')
+    UPPER_SSL=$(echo "$SSL_EXPIRY" | tr '[:lower:]' '[:upper:]')
+
     echo -e "\n${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${LIGHT_GREEN}SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  DOMAIN NAME : ${WHITE}${DOMAIN}${NC}"
-    echo -e "  ACTIVE PORT : ${WHITE}${PORT}${NC}"
-    echo -e "  TIMEZONE    : ${WHITE}${TZ_INPUT}${NC}"
+    echo -e "  DOMAIN NAME   : ${WHITE}${UPPER_DOMAIN}${NC}"
+    echo -e "  ACTIVE PORT   : ${WHITE}${PORT}${NC}"
+    echo -e "  TIMEZONE      : ${WHITE}${UPPER_TZ}${NC}"
     if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
-        echo -e "  SSL EXPIRY  : ${GREEN}${SSL_EXPIRY}${NC}"
+        echo -e "  SSL EXPIRY    : ${GREEN}${UPPER_SSL}${NC}"
     fi
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO RETURN TO THE MENU...${NC}"
@@ -272,7 +273,7 @@ show_menu() {
     echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${RED}WIPE AND DESTROY SYSTEM${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}10${DARK_GRAY}]${NC} ${CYAN}SYSTEM MONITOR${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}11${DARK_GRAY}]${NC} ${CYAN}BACKUP DATABASE${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}EXIT MANAGER\n${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}EXIT\n${NC}"
     
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
