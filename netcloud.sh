@@ -2,7 +2,7 @@
 
 # ========================================================
 #   CLOUD CONFIG MANAGER PRO - ULTIMATE MASTER EDITION
-#   [UNIVERSAL OS + SMART PHP + HEALTH MONITOR + BACKUP]
+#   [UNIVERSAL OS + SMART PHP + SYSTEM MONITOR + BACKUP]
 # ========================================================
 
 CYAN='\033[0;36m'
@@ -17,7 +17,7 @@ NC='\033[0m'
 BOLD='\033[1m'
 
 WEB_ROOT="/var/www/netcloud"
-DEFAULT_DOMAIN="cloud.maxssh.site"
+DEFAULT_DOMAIN="domain.com"
 DEFAULT_PORT=80
 DEFAULT_TZ="Africa/Tunis"
 LOG_FILE="/var/log/netcloud_manager.log"
@@ -38,7 +38,7 @@ log_action() {
 }
 
 # ==========================================
-# 1. OS DETECTION ENGINE (دعم جميع الأنظمة)
+# 1. OS DETECTION ENGINE
 # ==========================================
 if [ -f /etc/os-release ]; then
     source /etc/os-release
@@ -105,7 +105,6 @@ install_netcloud() {
 
     echo -e "\n  ${DARK_GRAY}[1/6]${NC} ${CYAN}UPDATING PACKAGES & INSTALLING CORE SERVICES...${NC}"
     
-    # تثبيت الحزم المناسبة للنظام بذكاء
     if [ "$OS_FAMILY" == "debian" ]; then
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -yq > /dev/null 2>&1
@@ -121,7 +120,6 @@ install_netcloud() {
         systemctl enable firewalld --now > /dev/null 2>&1
     fi
 
-    # اكتشاف مسار PHP الذكي لتجنب أخطاء النسخ
     if [ "$OS_FAMILY" == "debian" ]; then
         PHP_SOCK_PATH=$(find /run/php/ -name "*.sock" | head -n 1)
         PHP_SVC=$(systemctl list-units --type=service | grep -o 'php[0-9.]*-fpm.service' | head -n 1)
@@ -229,10 +227,29 @@ EOF
     systemctl restart nginx
     systemctl restart $PHP_SVC
 
-    log_action "System installed on OS_FAMILY: $OS_FAMILY | Domain: $DOMAIN | Port: $PORT | PHP: $PHP_SVC"
+    log_action "System installed on OS_FAMILY: $OS_FAMILY | Domain: $DOMAIN | Port: $PORT"
+
+    # ----------------------------------------------------
+    # GET SSL EXPIRY DATE IF ACTIVATED
+    # ----------------------------------------------------
+    SSL_EXPIRY="NOT ACTIVATED"
+    if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
+        CERT_FILE="/etc/letsencrypt/live/$DOMAIN/cert.pem"
+        if [ -f "$CERT_FILE" ]; then
+            # استخراج تاريخ الانتهاء من الشهادة مباشرة
+            SSL_EXPIRY=$(openssl x509 -enddate -noout -in "$CERT_FILE" | cut -d= -f2)
+        fi
+    fi
 
     echo -e "\n${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${LIGHT_GREEN}SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
+    echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "  DOMAIN NAME : ${WHITE}${DOMAIN}${NC}"
+    echo -e "  ACTIVE PORT : ${WHITE}${PORT}${NC}"
+    echo -e "  TIMEZONE    : ${WHITE}${TZ_INPUT}${NC}"
+    if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
+        echo -e "  SSL EXPIRY  : ${GREEN}${SSL_EXPIRY}${NC}"
+    fi
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO RETURN TO THE MENU...${NC}"
     read
@@ -253,8 +270,8 @@ show_menu() {
     echo -e "  ${DARK_GRAY}[${WHITE}07${DARK_GRAY}]${NC} ${CYAN}EDIT CONFIGURATION FILES${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}08${DARK_GRAY}]${NC} ${CYAN}UPDATE SYSTEM TIMEZONE${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${RED}WIPE AND DESTROY SYSTEM${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}10${DARK_GRAY}]${NC} ${LIGHT_GREEN}SYSTEM HEALTH MONITOR${NC} ${YELLOW}[NEW]${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}11${DARK_GRAY}]${NC} ${LIGHT_GREEN}BACKUP DATABASE (db.json)${NC} ${YELLOW}[NEW]${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}10${DARK_GRAY}]${NC} ${CYAN}SYSTEM MONITOR${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}11${DARK_GRAY}]${NC} ${CYAN}BACKUP DATABASE${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}EXIT MANAGER\n${NC}"
     
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -336,7 +353,7 @@ read_choice() {
             fi
             echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
         10)
-            echo -e "  ${LIGHT_CYAN}--- SYSTEM HEALTH MONITOR ---${NC}"
+            echo -e "  ${LIGHT_CYAN}--- SYSTEM MONITOR ---${NC}"
             echo -ne "  ${CYAN}CPU USAGE: ${WHITE}"
             top -bn1 | grep load | awk '{printf "%.2f%%\n", $(NF-2)}'
             echo -ne "  ${CYAN}RAM USAGE: ${WHITE}"
