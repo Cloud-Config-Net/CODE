@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ========================================================
-#   CLOUD CONFIG MANAGER PRO - ULTIMATE MASTER EDITION
-#   [ UNIVERSAL OS + SMART PHP + SYSTEM MONITOR + BACKUP ]
+#   CLOUD CONFIG MANAGER PRO - ULTIMATE SECURE EDITION
+#   [ ARMORED OS + SMART PHP + SYSTEM MONITOR + BACKUP ]
 # ========================================================
 
 CYAN='\033[0;36m'
@@ -22,6 +22,7 @@ DEFAULT_PORT=80
 DEFAULT_TZ="Africa/Tunis"
 LOG_FILE="/var/log/netcloud_manager.log"
 
+# GitHub Link
 LINK_INDEX="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/index.php"
 LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.php"
 
@@ -30,15 +31,17 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Securing the log file [ Root Only ]
 touch "$LOG_FILE" 2>/dev/null
-chmod 666 "$LOG_FILE" 2>/dev/null
+chmod 600 "$LOG_FILE" 2>/dev/null
+chown root:root "$LOG_FILE" 2>/dev/null
 
 log_action() {
     echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] - $1" >> "$LOG_FILE"
 }
 
 # ==========================================
-# 1. OS DETECTION ENGINE (دعم جميع الأنظمة)
+# 1. OS DETECTION ENGINE
 # ==========================================
 if [ -f /etc/os-release ]; then
     source /etc/os-release
@@ -80,7 +83,7 @@ check_port() {
 install_netcloud() {
     clear
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  ${WHITE}${BOLD}INITIATING CLOUD CONFIG SECURE DEPLOYMENT (MASTER EDITION)...${NC}"
+    echo -e "  ${WHITE}${BOLD}INITIATING ARMORED CLOUD CONFIG DEPLOYMENT...${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${NC}"
     
     echo -ne "  ${CYAN}ENTER DOMAIN  : ${WHITE}"
@@ -103,7 +106,7 @@ install_netcloud() {
         SSL_CHOICE="N"
     fi
 
-    echo -e "\n  ${DARK_GRAY}[1/6]${NC} ${CYAN}UPDATING PACKAGES & INSTALLING CORE SERVICES...${NC}"
+    echo -e "\n  ${DARK_GRAY}[1/7]${NC} ${CYAN}UPDATING PACKAGES & INSTALLING CORE SERVICES...${NC}"
     
     if [ "$OS_FAMILY" == "debian" ]; then
         export DEBIAN_FRONTEND=noninteractive
@@ -120,6 +123,14 @@ install_netcloud() {
         systemctl enable firewalld --now > /dev/null 2>&1
     fi
 
+    echo -e "  ${DARK_GRAY}[2/7]${NC} ${CYAN}SECURING PHP CORE (HARDENING)...${NC}"
+    PHP_INI=$(find /etc/php/ -name php.ini 2>/dev/null | grep fpm | head -n 1)
+    if [ -z "$PHP_INI" ]; then PHP_INI="/etc/php.ini"; fi
+    if [ -f "$PHP_INI" ]; then
+        sed -i 's/^disable_functions.*/disable_functions = exec,passthru,shell_exec,system,proc_open,popen,parse_ini_file,show_source/' "$PHP_INI"
+        sed -i 's/^expose_php.*/expose_php = Off/' "$PHP_INI"
+    fi
+
     if [ "$OS_FAMILY" == "debian" ]; then
         PHP_SOCK_PATH=$(find /run/php/ -name "*.sock" | head -n 1)
         PHP_SVC=$(systemctl list-units --type=service | grep -o 'php[0-9.]*-fpm.service' | head -n 1)
@@ -128,22 +139,22 @@ install_netcloud() {
         PHP_SVC="php-fpm.service"
     fi
 
-    echo -e "  ${DARK_GRAY}[2/6]${NC} ${CYAN}BUILDING SYSTEM DIRECTORIES...${NC}"
+    echo -e "  ${DARK_GRAY}[3/7]${NC} ${CYAN}BUILDING SYSTEM DIRECTORIES...${NC}"
     mkdir -p $WEB_ROOT/uploads
     chown -R $WEB_USER:$WEB_USER $WEB_ROOT
 
-    echo -e "  ${DARK_GRAY}[3/6]${NC} ${CYAN}FETCHING CORE ENGINE FROM REPOSITORY...${NC}"
+    echo -e "  ${DARK_GRAY}[4/7]${NC} ${CYAN}FETCHING CORE ENGINE FROM REPOSITORY...${NC}"
     wget -q --show-progress $LINK_INDEX -O $WEB_ROOT/index.php
     wget -q --show-progress $LINK_ADMIN -O $WEB_ROOT/admin.php
 
-    echo -e "  ${DARK_GRAY}[4/6]${NC} ${CYAN}INJECTING TIMEZONE (${WHITE}$TZ_INPUT${CYAN}) INTO CORE...${NC}"
+    echo -e "  ${DARK_GRAY}[5/7]${NC} ${CYAN}INJECTING TIMEZONE (${WHITE}$TZ_INPUT${CYAN}) INTO CORE...${NC}"
     sed -i "/date_default_timezone_set/d" $WEB_ROOT/index.php
     sed -i "/date_default_timezone_set/d" $WEB_ROOT/admin.php
     sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/index.php
     sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/admin.php
     chown $WEB_USER:$WEB_USER $WEB_ROOT/index.php $WEB_ROOT/admin.php
 
-    echo -e "  ${DARK_GRAY}[5/6]${NC} ${CYAN}COMPILING NGINX SMART-FIREWALL CONFIG...${NC}"
+    echo -e "  ${DARK_GRAY}[6/7]${NC} ${CYAN}COMPILING ARMORED NGINX FIREWALL...${NC}"
     
     if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
         echo -e "\n  ${YELLOW}* ATTENTION: PORT 80 MUST BE FREE FOR 10 SECONDS TO VERIFY SSL *${NC}"
@@ -151,7 +162,6 @@ install_netcloud() {
         read
         
         systemctl stop nginx
-        # تم إضافة الإخفاء هنا ليتم بصمت تام
         certbot certonly --standalone -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email > /dev/null 2>&1
         
         cat <<EOF > $NGINX_CONF
@@ -164,6 +174,10 @@ server {
     ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
 
+    server_tokens off;
+    client_max_body_size 10M;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
@@ -192,6 +206,9 @@ server {
     root $WEB_ROOT;
     index index.php index.html;
 
+    server_tokens off;
+    client_max_body_size 10M;
+
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
@@ -214,7 +231,7 @@ server {
 EOF
     fi
 
-    echo -e "  ${DARK_GRAY}[6/6]${NC} ${CYAN}APPLYING RULES & RESTARTING SERVICES...${NC}"
+    echo -e "  ${DARK_GRAY}[7/7]${NC} ${CYAN}APPLYING RULES & RESTARTING SERVICES...${NC}"
     if [ "$OS_FAMILY" == "debian" ]; then
         ln -sf $NGINX_CONF /etc/nginx/sites-enabled/ 2>/dev/null
         rm -f /etc/nginx/sites-enabled/default 2>/dev/null
@@ -227,7 +244,7 @@ EOF
     systemctl restart nginx
     systemctl restart $PHP_SVC
 
-    log_action "System installed on OS_FAMILY: $OS_FAMILY | Domain: $DOMAIN | Port: $PORT | PHP: $PHP_SVC"
+    log_action "Secure System Installed | Domain: $DOMAIN | Port: $PORT | PHP: $PHP_SVC"
 
     SSL_EXPIRY="NOT ACTIVATED"
     if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
@@ -237,7 +254,6 @@ EOF
         fi
     fi
 
-    # --- تحويل النصوص إلى حروف كبيرة للمحاذاة ---
     UPPER_DOMAIN=$(echo "$DOMAIN" | tr '[:lower:]' '[:upper:]')
     UPPER_TZ=$(echo "$TZ_INPUT" | tr '[:lower:]' '[:upper:]')
     UPPER_SSL=$(echo "$SSL_EXPIRY" | tr '[:lower:]' '[:upper:]')
@@ -259,10 +275,10 @@ EOF
 show_menu() {
     clear
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "                      ${WHITE}${BOLD}CLOUD CONFIG MANAGER PRO${NC}"
+    echo -e "                  ${WHITE}${BOLD}CLOUD CONFIG MANAGER PRO (ARMORED)${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     
-    echo -e "  ${DARK_GRAY}[${WHITE}01${DARK_GRAY}]${NC} ${CYAN}INSTALL SYSTEM CORE & SSL${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}01${DARK_GRAY}]${NC} ${CYAN}INSTALL SECURE SYSTEM CORE & SSL${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}02${DARK_GRAY}]${NC} ${CYAN}RECONFIGURE DOMAIN NAME${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}03${DARK_GRAY}]${NC} ${CYAN}RECONFIGURE PORT (AUTO-CHECK)${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}04${DARK_GRAY}]${NC} ${CYAN}START WEB SERVICE${NC}"
@@ -270,9 +286,9 @@ show_menu() {
     echo -e "  ${DARK_GRAY}[${WHITE}06${DARK_GRAY}]${NC} ${CYAN}RESTART ALL SERVICES${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}07${DARK_GRAY}]${NC} ${CYAN}EDIT CONFIGURATION FILES${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}08${DARK_GRAY}]${NC} ${CYAN}UPDATE SYSTEM TIMEZONE${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${RED}WIPE AND DESTROY SYSTEM${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${CYAN}BACKUP DATABASE${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}10${DARK_GRAY}]${NC} ${CYAN}SYSTEM MONITOR${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}11${DARK_GRAY}]${NC} ${CYAN}BACKUP DATABASE${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}11${DARK_GRAY}]${NC} ${RED}WIPE AND DESTROY SYSTEM${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}EXIT\n${NC}"
     
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -344,15 +360,18 @@ read_choice() {
             fi
             echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
             ;;
-        9|09) 
-            echo -ne "  ${RED}WIPE ENTIRE SYSTEM? (Y/N): ${WHITE}"
-            read confirm
-            if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-                rm -rf $WEB_ROOT; rm -f $NGINX_CONF; rm -f /etc/nginx/sites-enabled/netcloud 2>/dev/null; systemctl restart nginx
-                log_action "System wiped completely."
-                echo -e "  ${GREEN}SYSTEM COMPLETELY REMOVED.${NC}"
+        9|09)
+            if [ -f "$WEB_ROOT/db.json" ]; then
+                BACKUP_NAME="/root/db_backup_$(date '+%Y%m%d_%H%M%S').json"
+                cp "$WEB_ROOT/db.json" "$BACKUP_NAME"
+                log_action "Database backup created: $BACKUP_NAME"
+                echo -e "  ${GREEN}BACKUP SUCCESSFUL!${NC}"
+                echo -e "  ${CYAN}SAVED TO: ${WHITE}$BACKUP_NAME${NC}"
+            else
+                echo -e "  ${RED}DATABASE (db.json) NOT FOUND!${NC}"
             fi
-            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
+            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
+            ;;
         10)
             echo -e "  ${LIGHT_CYAN}--- SYSTEM MONITOR ---${NC}"
             echo -ne "  ${CYAN}CPU USAGE: ${WHITE}"
@@ -367,17 +386,15 @@ read_choice() {
             if systemctl is-active --quiet $SVC; then echo -e "    - PHP ($SVC): ${GREEN}RUNNING${NC}"; else echo -e "    - PHP: ${RED}STOPPED${NC}"; fi
             echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
             ;;
-        11)
-            if [ -f "$WEB_ROOT/db.json" ]; then
-                BACKUP_NAME="/root/db_backup_$(date '+%Y%m%d_%H%M%S').json"
-                cp "$WEB_ROOT/db.json" "$BACKUP_NAME"
-                log_action "Database backup created: $BACKUP_NAME"
-                echo -e "  ${GREEN}BACKUP SUCCESSFUL!${NC}"
-                echo -e "  ${CYAN}SAVED TO: ${WHITE}$BACKUP_NAME${NC}"
-            else
-                echo -e "  ${RED}DATABASE (db.json) NOT FOUND!${NC}"
+        11) 
+            echo -ne "  ${RED}WIPE ENTIRE SYSTEM? (Y/N): ${WHITE}"
+            read confirm
+            if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+                rm -rf $WEB_ROOT; rm -f $NGINX_CONF; rm -f /etc/nginx/sites-enabled/netcloud 2>/dev/null; systemctl restart nginx
+                log_action "System wiped completely."
+                echo -e "  ${GREEN}SYSTEM COMPLETELY REMOVED.${NC}"
             fi
-            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO CONTINUE...${NC}"; read
+            echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read 
             ;;
         0|00) echo -e "  ${CYAN}TERMINATING SESSION. GOODBYE!${NC}\n"; exit 0 ;;
         *) echo -e "  ${RED}INVALID SELECTION!${NC}"; sleep 1 ;;
