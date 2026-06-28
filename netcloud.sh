@@ -2,6 +2,7 @@
 
 # ========================================================
 #   CLOUD CONFIG MANAGER PRO - SYSTEM INSTALLER (ULTIMATE)
+#   [UNIVERSAL EDITION - SUPPORTS DEBIAN/UBUNTU & RHEL/CENTOS]
 # ========================================================
 
 # --- MODERN COLORS & STYLING ---
@@ -18,14 +19,39 @@ BOLD='\033[1m'
 
 # --- DEFAULT PATHS & SETTINGS ---
 WEB_ROOT="/var/www/netcloud"
-NGINX_CONF="/etc/nginx/sites-available/netcloud"
-DEFAULT_DOMAIN="cloud.maxssh.site"
+DEFAULT_DOMAIN="Domain"
 DEFAULT_PORT=80
 DEFAULT_TZ="Africa/Tunis"
 
 # GITHUB RAW FILE LINKS:
 LINK_INDEX="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/index.php"
 LINK_ADMIN="https://raw.githubusercontent.com/Cloud-Config-Net/CODE/main/admin.php"
+
+# ==========================================
+# --- OS DETECTION & VARIABLE ENGINE ---
+# ==========================================
+if [ -f /etc/os-release ]; then
+    source /etc/os-release
+    OS_ID=$ID
+    OS_LIKE=$ID_LIKE
+fi
+
+if [[ "$OS_ID" == "ubuntu" || "$OS_ID" == "debian" || "$OS_LIKE" == *"ubuntu"* || "$OS_LIKE" == *"debian"* ]]; then
+    OS_FAMILY="debian"
+    WEB_USER="www-data"
+    PHP_SVC="php8.2-fpm"
+    PHP_SOCK="unix:/var/run/php/php8.2-fpm.sock"
+    NGINX_CONF="/etc/nginx/sites-available/netcloud"
+elif [[ "$OS_ID" == "centos" || "$OS_ID" == "almalinux" || "$OS_ID" == "rocky" || "$OS_ID" == "fedora" || "$OS_LIKE" == *"rhel"* || "$OS_LIKE" == *"fedora"* ]]; then
+    OS_FAMILY="rhel"
+    WEB_USER="nginx"
+    PHP_SVC="php-fpm"
+    PHP_SOCK="unix:/run/php-fpm/www.sock"
+    NGINX_CONF="/etc/nginx/conf.d/netcloud.conf"
+else
+    echo -e "${RED}UNSUPPORTED OS! SYSTEM ABORTED.${NC}"
+    exit 1
+fi
 
 # ==========================================
 # HELPER: CHECK & AUTO-SELECT PORT
@@ -88,11 +114,29 @@ install_netcloud() {
     fi
 
     echo -e "\n  ${DARK_GRAY}[1/6]${NC} ${CYAN}UPDATING PACKAGES & DEPENDENCIES...${NC}"
-    apt update && apt install nginx php8.2-fpm php8.2-curl ufw iproute2 certbot -y > /dev/null 2>&1
+    
+    if [ "$OS_FAMILY" == "debian" ]; then
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -yq > /dev/null 2>&1
+        apt-get install software-properties-common -yq > /dev/null 2>&1
+        LC_ALL=C.UTF-8 add-apt-repository ppa:ondrej/php -y > /dev/null 2>&1 || true
+        apt-get update -yq > /dev/null 2>&1
+        apt-get install nginx php8.2-fpm php8.2-curl ufw iproute2 certbot python3-certbot-nginx -yq > /dev/null 2>&1
+        
+        if [ ! -d "/etc/nginx/sites-available" ]; then
+            mkdir -p /etc/nginx/sites-available
+            mkdir -p /etc/nginx/sites-enabled
+        fi
+    elif [ "$OS_FAMILY" == "rhel" ]; then
+        if command -v dnf >/dev/null 2>&1; then PKGMGR="dnf"; else PKGMGR="yum"; fi
+        $PKGMGR install epel-release -yq > /dev/null 2>&1
+        $PKGMGR install nginx php-fpm php-cli php-curl firewalld iproute certbot python3-certbot-nginx wget nano net-tools procps-ng -yq > /dev/null 2>&1
+        systemctl enable firewalld --now > /dev/null 2>&1
+    fi
 
     echo -e "  ${DARK_GRAY}[2/6]${NC} ${CYAN}BUILDING SYSTEM DIRECTORIES...${NC}"
     mkdir -p $WEB_ROOT/uploads
-    chown -R www-data:www-data $WEB_ROOT
+    chown -R $WEB_USER:$WEB_USER $WEB_ROOT
 
     echo -e "  ${DARK_GRAY}[3/6]${NC} ${CYAN}FETCHING CORE ENGINE FROM REPOSITORY...${NC}"
     wget -q --show-progress $LINK_INDEX -O $WEB_ROOT/index.php
@@ -103,7 +147,7 @@ install_netcloud() {
     sed -i "/date_default_timezone_set/d" $WEB_ROOT/admin.php
     sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/index.php
     sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/admin.php
-    chown www-data:www-data $WEB_ROOT/index.php $WEB_ROOT/admin.php
+    chown $WEB_USER:$WEB_USER $WEB_ROOT/index.php $WEB_ROOT/admin.php
 
     echo -e "  ${DARK_GRAY}[5/6]${NC} ${CYAN}COMPILING NGINX SMART-FIREWALL CONFIG...${NC}"
     
@@ -150,8 +194,8 @@ server {
     }
     
     location ~ \.php\$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_pass $PHP_SOCK;
+        fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -187,8 +231,8 @@ server {
     }
     
     location ~ \.php\$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_pass $PHP_SOCK;
+        fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -200,13 +244,18 @@ EOF
     fi
 
     echo -e "  ${DARK_GRAY}[6/6]${NC} ${CYAN}APPLYING RULES & RESTARTING SERVICES...${NC}"
-    ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
-    rm -f /etc/nginx/sites-enabled/default
     
-    ufw allow $PORT/tcp > /dev/null 2>&1
+    if [ "$OS_FAMILY" == "debian" ]; then
+        ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
+        rm -f /etc/nginx/sites-enabled/default
+        ufw allow $PORT/tcp > /dev/null 2>&1
+    elif [ "$OS_FAMILY" == "rhel" ]; then
+        firewall-cmd --add-port=$PORT/tcp --permanent > /dev/null 2>&1
+        firewall-cmd --reload > /dev/null 2>&1
+    fi
     
     systemctl restart nginx
-    systemctl restart php8.2-fpm
+    systemctl restart $PHP_SVC
 
     echo -e "\n${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${LIGHT_GREEN}SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
@@ -273,7 +322,14 @@ read_choice() {
             NEW_PORT=$(check_port $NEW_PORT_INPUT)
             if [ -f "$NGINX_CONF" ]; then
                 sed -i -E "s/listen [0-9]+;/listen $NEW_PORT;/" $NGINX_CONF
-                ufw allow $NEW_PORT/tcp > /dev/null 2>&1
+                
+                if [ "$OS_FAMILY" == "debian" ]; then
+                    ufw allow $NEW_PORT/tcp > /dev/null 2>&1
+                elif [ "$OS_FAMILY" == "rhel" ]; then
+                    firewall-cmd --add-port=$NEW_PORT/tcp --permanent > /dev/null 2>&1
+                    firewall-cmd --reload > /dev/null 2>&1
+                fi
+                
                 systemctl restart nginx
                 echo -e "  ${GREEN}PORT UPDATED TO: ${WHITE}${NEW_PORT}${NC}"
             else
@@ -283,7 +339,7 @@ read_choice() {
             ;;
         4|04) systemctl start nginx; echo -e "  ${GREEN}NGINX STARTED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
         5|05) systemctl stop nginx; echo -e "  ${YELLOW}NGINX STOPPED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
-        6|06) systemctl restart nginx; systemctl restart php8.2-fpm; echo -e "  ${CYAN}SERVICES RESTARTED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
+        6|06) systemctl restart nginx; systemctl restart $PHP_SVC; echo -e "  ${CYAN}SERVICES RESTARTED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
         7|07) 
             if [ -d "$WEB_ROOT" ]; then nano $WEB_ROOT/admin.php; nano $WEB_ROOT/index.php; nano $NGINX_CONF; 
             else echo -e "  ${RED}SYSTEM IS NOT INSTALLED.${NC}"; echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read; fi ;;
@@ -296,7 +352,7 @@ read_choice() {
                 sed -i "/date_default_timezone_set/d" $WEB_ROOT/admin.php
                 sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/index.php
                 sed -i "s|session_start();|session_start();\ndate_default_timezone_set('$TZ_INPUT');|" $WEB_ROOT/admin.php
-                systemctl restart php8.2-fpm
+                systemctl restart $PHP_SVC
                 echo -e "  ${GREEN}TIMEZONE UPDATED TO ${WHITE}${TZ_INPUT}${NC}"
             else
                 echo -e "  ${RED}SYSTEM IS NOT INSTALLED.${NC}"
@@ -307,7 +363,7 @@ read_choice() {
             echo -ne "  ${RED}WIPE ENTIRE SYSTEM? (Y/N): ${WHITE}"
             read confirm
             if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-                rm -rf $WEB_ROOT; rm -f $NGINX_CONF; rm -f /etc/nginx/sites-enabled/netcloud; systemctl restart nginx
+                rm -rf $WEB_ROOT; rm -f $NGINX_CONF; rm -f /etc/nginx/sites-enabled/netcloud 2>/dev/null; systemctl restart nginx
                 echo -e "  ${GREEN}SYSTEM COMPLETELY REMOVED.${NC}"
             fi
             echo -ne "\n  ${DARK_GRAY}PRESS [ENTER]...${NC}"; read ;;
