@@ -2,7 +2,7 @@
 
 # ========================================================
 #   CLOUD CONFIG MANAGER PRO - ULTIMATE MASTER EDITION
-#   [UNIVERSAL OS + SMART PHP + SYSTEM MONITOR + BACKUP]
+#   [ UNIVERSAL OS + SMART PHP + SYSTEM MONITOR + BACKUP ]
 # ========================================================
 
 CYAN='\033[0;36m'
