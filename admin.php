@@ -220,6 +220,7 @@ foreach ($db as $d) {
                                 <span class="font-bold text-cyan-400 text-xl blue-glow-text"><?= htmlspecialchars($id) ?>.HC</span>
                             </div>
                         </div>
+                        <!-- Original UI:
                         <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end flex-wrap">
                             <div class="text-right bg-[#080f1e]/80 px-4 py-2.5 rounded-xl border border-blue-900/40 smooth-transition glow-hover">
                                 <span class="text-[11px] font-bold tracking-widest text-blue-300/70 block mb-0.5">DOWNLOADS</span>
@@ -233,6 +234,30 @@ foreach ($db as $d) {
                             <a href="?delete=<?= $id ?>" onclick="return confirm('DELETE THIS LINK PERMANENTLY?')" class="bg-[#1a0f14]/80 hover:bg-red-900/40 border border-red-900/40 text-red-500 w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(239,68,68,0.1)] smooth-transition hover:border-red-500/80">
                                 <i class="fa-solid fa-trash text-[16px]"></i>
                             </a>
+                        </div>
+                        -->
+                        <!-- UI Fix: Updated Flexbox layout for responsiveness -->
+                        <div class="flex items-center gap-3 md:gap-4 w-full md:w-auto justify-center md:justify-end flex-wrap mt-3 md:mt-0">
+                            <div class="flex flex-wrap gap-3 items-center justify-center">
+                                <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
+                                    <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Downloads</span>
+                                    <span class="text-white font-bold text-sm"><?= $d['downloads'] ?> <span class="text-[#425975] mx-1">/</span> <span class="<?= $d['limit'] > 0 ? 'text-[#51C0C0]' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
+                                </div>
+                                <div class="text-right font-mono bg-[#0d131f] px-4 py-2.5 rounded-xl border border-[#1e2738] smooth-transition glow-hover">
+                                    <span class="text-[9px] uppercase tracking-widest text-[#425975] block mb-0.5">Expires In</span>
+                                    <span class="text-white font-bold text-sm"><?= $expiresInHours ?>h <?= $expiresInMins ?>m</span>
+                                </div>
+                                <div><?= $statusHtml ?></div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <!-- Search Button Implementation -->
+                                <button type="button" onclick="searchLinkInfo('<?= $id ?>')" title="Search Link Info" class="bg-[#0a1929] hover:bg-blue-900/40 border border-blue-900/50 hover:border-blue-500/50 text-blue-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(59,130,246,0.1)] hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] ripple smooth-transition">
+                                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                                </button>
+                                <a href="?delete=<?= $id ?>" onclick="return confirm('Delete this link permanently?')" class="bg-[#1a0f14] hover:bg-red-900/40 border border-red-900/50 hover:border-red-500/50 text-red-400 w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)] hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] ripple smooth-transition">
+                                    <i class="fa-solid fa-trash text-sm"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -343,6 +368,12 @@ foreach ($db as $d) {
         });
 
         document.documentElement.style.scrollBehavior = 'smooth';
+
+        // Search Functionality Added
+        function searchLinkInfo(id) {
+            console.log("Searching details for link ID: " + id);
+            alert("Search details for link ID: " + id + "\n(Logic to be implemented)");
+        }
     </script>
 </body>
 </html>
