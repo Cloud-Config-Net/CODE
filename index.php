@@ -16,7 +16,7 @@ if (!file_exists($dbFile)) { file_put_contents($dbFile, json_encode([])); }
 if (!file_exists($bruteFile)) { file_put_contents($bruteFile, json_encode([])); }
 
 // ==========================================
-// Helper Functions: Real IP & Device Parser
+// Helper Functions: Real IP & Online Device Parser
 // ==========================================
 function getRealClientIP() {
     if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
@@ -30,12 +30,73 @@ function getRealClientIP() {
 }
 
 function extractDeviceModel($ua) {
+    if (preg_match('/;\s*([A-Za-z0-9_-]+)\s+Build\//i', $ua, $matches)) {
+        $deviceCode = strtoupper(trim($matches[1]));
+        
+        $cacheFile = __DIR__ . '/devices_cache.json';
+        $cache = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : [];
+        
+        // 1. إذا كان اسم الهاتف مخزناً مسبقاً في الكاش، يظهر فوراً وبسرعة فائقة
+        if (isset($cache[$deviceCode])) {
+            return $cache[$deviceCode];
+        }
+        
+        // 2. قاموس أساسي سريع للأجهزة المعروفة
+        $defaultMap = [
+            'SM-S938B' => 'SAMSUNG GALAXY S25 ULTRA',
+            'SM-S928B' => 'SAMSUNG GALAXY S24 ULTRA'
+        ];
+        
+        if (isset($defaultMap[$deviceCode])) {
+            $cache[$deviceCode] = $defaultMap[$deviceCode];
+            @file_put_contents($cacheFile, json_encode($cache), LOCK_EX);
+            return $defaultMap[$deviceCode];
+        }
+        
+        // 3. البحث الآلي الفوري عبر الإنترنت (Online Lookup) إذا كان الكود جديداً
+        $resolvedName = '';
+        $url = "https://raw.githubusercontent.com/androidtrackers/certified-android-devices/master/by_device.json";
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3); // حد أقصى 3 ثواني لضمان سرعة التحميل للعميل
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($response) {
+            $devicesData = json_decode($response, true);
+            if (is_array($devicesData)) {
+                foreach ($devicesData as $item) {
+                    if (isset($item['device']) && strtoupper($item['device']) === $deviceCode) {
+                        $resolvedName = strtoupper($item['name'] ?? $item['model'] ?? '');
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // إذا لم يتم العثور عليه في القائمة العالمية، نجعله يعرض الموديل مرتباً
+        if (empty($resolvedName)) {
+            $resolvedName = 'DEVICE ' . $deviceCode;
+        }
+        
+        // 4. حفظ النتيجة التي تم جلبها في الكاش حتى لا يضطر للبحث عنها مرة أخرى
+        $cache[$deviceCode] = $resolvedName;
+        @file_put_contents($cacheFile, json_encode($cache), LOCK_EX);
+        
+        return $resolvedName;
+    }
+    
     if (preg_match('/Android\s+([0-9.]+);\s*([^;)]+)/i', $ua, $matches)) {
-        return 'ANDROID ' . $matches[1] . ' (' . trim($matches[2]) . ')';
+        return strtoupper(trim($matches[2]));
     }
+    
     if (stripos($ua, 'okhttp') !== false) {
-        return 'ANDROID (OKHTTP ENGINE)';
+        return 'HTTP CUSTOM DEVICE';
     }
+    
     return 'UNKNOWN DEVICE';
 }
 
