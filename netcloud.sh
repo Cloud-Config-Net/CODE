@@ -31,7 +31,6 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Securing the log file [ Root Only ]
 touch "$LOG_FILE" 2>/dev/null
 chmod 600 "$LOG_FILE" 2>/dev/null
 chown root:root "$LOG_FILE" 2>/dev/null
@@ -195,7 +194,7 @@ server {
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
-    location ~ ^/(uploads|db\.json) { deny all; return 404; }
+    location ~ ^/(uploads|db\.json|brute\.json) { deny all; return 404; }
 }
 EOF
     else
@@ -226,7 +225,7 @@ server {
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
-    location ~ ^/(uploads|db\.json) { deny all; return 404; }
+    location ~ ^/(uploads|db\.json|brute\.json) { deny all; return 404; }
 }
 EOF
     fi
@@ -246,27 +245,11 @@ EOF
 
     log_action "Secure System Installed | Domain: $DOMAIN | Port: $PORT | PHP: $PHP_SVC"
 
-    SSL_EXPIRY="NOT ACTIVATED"
-    if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
-        CERT_FILE="/etc/letsencrypt/live/$DOMAIN/cert.pem"
-        if [ -f "$CERT_FILE" ]; then
-            SSL_EXPIRY=$(openssl x509 -enddate -noout -in "$CERT_FILE" | cut -d= -f2)
-        fi
-    fi
-
-    UPPER_DOMAIN=$(echo "$DOMAIN" | tr '[:lower:]' '[:upper:]')
-    UPPER_TZ=$(echo "$TZ_INPUT" | tr '[:lower:]' '[:upper:]')
-    UPPER_SSL=$(echo "$SSL_EXPIRY" | tr '[:lower:]' '[:upper:]')
-
     echo -e "\n${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${LIGHT_GREEN}SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "  DOMAIN NAME   : ${WHITE}${UPPER_DOMAIN}${NC}"
+    echo -e "  DOMAIN NAME   : ${WHITE}${DOMAIN^^}${NC}"
     echo -e "  ACTIVE PORT   : ${WHITE}${PORT}${NC}"
-    echo -e "  TIMEZONE      : ${WHITE}${UPPER_TZ}${NC}"
-    if [ "$PORT" == "443" ] && [[ "$SSL_CHOICE" == "y" || "$SSL_CHOICE" == "Y" ]]; then
-        echo -e "  SSL EXPIRY    : ${GREEN}${UPPER_SSL}${NC}"
-    fi
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO RETURN TO THE MENU...${NC}"
     read
