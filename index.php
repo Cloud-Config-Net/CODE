@@ -1,6 +1,6 @@
 <?php
 /**
- * NET-CLOUD-CONFIG - Main Upload & Client Sniffer 
+ * NET-CLOUD-CONFIG - Main Upload & Smart Client Radar (PRO EDITION)
  * File Name: index.php
  */
 
@@ -9,92 +9,221 @@ date_default_timezone_set('Africa/Tunis');
 
 $uploadDir = __DIR__ . '/uploads/';
 $dbFile = __DIR__ . '/db.json';
-$bruteFile = __DIR__ . '/brute.json'; // ملف تسجيل محاولات الاختراق
+$bruteFile = __DIR__ . '/brute.json';
 
 if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true); }
 if (!file_exists($dbFile)) { file_put_contents($dbFile, json_encode([])); }
 if (!file_exists($bruteFile)) { file_put_contents($bruteFile, json_encode([])); }
 
+// ==========================================
+// Helper Functions: Real IP & Device Parser
+// ==========================================
+function getRealClientIP() {
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        return $_SERVER['HTTP_CF_CONNECTING_IP'];
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ips[0]);
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+}
+
+function extractDeviceModel($ua) {
+    if (preg_match('/Android\s+([0-9.]+);\s*([^;)]+)/i', $ua, $matches)) {
+        return 'ANDROID ' . $matches[1] . ' (' . trim($matches[2]) . ')';
+    }
+    if (stripos($ua, 'okhttp') !== false) {
+        return 'ANDROID (OKHTTP ENGINE)';
+    }
+    return 'UNKNOWN DEVICE';
+}
+
 $db = json_decode(file_get_contents($dbFile), true) ?: [];
 
 // ==========================================
-// Smart Download & Client Sniffer Radar
+// Smart Download, Device Lock & Delivery Radar
 // ==========================================
 if (isset($_GET['c'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['c']);
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
-    
+    $ip = getRealClientIP();
+    $deviceModel = extractDeviceModel($ua);
+
+    // 1. Ignore Telegram / WhatsApp / Bot Previews without burning the link
+    if (preg_match('/(TelegramBot|WhatsApp|facebookexternalhit|Twitterbot|Slackbot|Discordbot|bot|spider|crawl)/i', $ua)) {
+        header("HTTP/1.1 200 OK");
+        die("CLOUD CONFIG LINK ACTIVE");
+    }
+
     $isBrowser = preg_match('/(Mozilla|Chrome|Safari|Edge|Opera|Brave|SamsungBrowser)/i', $ua);
-    $isHttpCustom = preg_match('/okhttp/i', $ua);
-    
-    if ($isHttpCustom) {
-        $clientLabel = 'HTTP Custom App (Direct Secure Connection)';
-        $isBrowser = false; 
+    $isVpnApp = preg_match('/(okhttp|Dalvik|HttpCustom|ePro|NPV|NetMod)/i', $ua);
+
+    if ($isVpnApp) {
+        $clientLabel = 'HTTP Custom / VPN (' . $deviceModel . ')';
+        $isBrowser = false; // Force allow Android Dalvik/OkHttp even if Mozilla is in prefix
     } elseif ($isBrowser) {
-        $clientLabel = 'Standard Web Browser (Sniffing Attempt)';
+        $clientLabel = 'Web Browser (' . $deviceModel . ')';
     } else {
-        $clientLabel = 'VPN App / Unknown Android Tool';
+        $clientLabel = 'Android Tool (' . $deviceModel . ')';
     }
 
     if (isset($db[$id])) {
-        $entry = $db[$id];
-        
-        if (time() > $entry['expires'] || ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit'])) {
-            $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel . ' (Expired)', 'time' => time(), 'status' => 'Failed'];
-            file_put_contents($dbFile, json_encode($db));
-            @unlink($entry['real_path']);
-            header("HTTP/1.1 410 Gone"); die("This link has expired or reached its download limit.");
-        }
-        
-        if ($isBrowser) {
-            $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Blocked'];
-            file_put_contents($dbFile, json_encode($db));
-            header("HTTP/1.1 403 Forbidden"); 
-            die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Access Denied</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box; -webkit-tap-highlight-color:transparent; text-transform:uppercase;}img{max-width:100%;height:auto;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.5);margin-bottom:20px;max-height:60vh;border:1px solid #1e2738;}h1{margin:0 0 10px 0;font-size:28px;letter-spacing:1px;font-weight:700;}p{margin:0;color:#8a9bb3;font-size:16px;line-height:1.6;max-width:400px;}</style></head><body><img src="https://i.postimg.cc/rF68cX0x/IMG-20260619-033656.jpg" alt="Tutorial"></body></html>');
+        $entry = &$db[$id];
+
+        // Ensure Real File Exists
+        if (!file_exists($entry['real_path'])) {
+            header("HTTP/1.1 404 Not Found");
+            die("Config file missing on server.");
         }
 
-        $db[$id]['downloads']++;
-        $db[$id]['logs'][] = ['ip' => $ip, 'ua' => $ua, 'client' => $clientLabel, 'time' => time(), 'status' => 'Success'];
-        file_put_contents($dbFile, json_encode($db));
-        
-        if (ob_get_length()) { ob_end_clean(); } 
+        // 2. Block Standard Browsers immediately without burning download limit
+        if ($isBrowser) {
+            $entry['logs'][] = [
+                'ip' => $ip,
+                'ua' => $ua,
+                'device' => $deviceModel,
+                'client' => $clientLabel,
+                'time' => time(),
+                'status' => 'Blocked',
+                'reason' => 'BROWSER SNIFF'
+            ];
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+            header("HTTP/1.1 403 Forbidden");
+            die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Access Denied</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box;text-transform:uppercase;}img{max-width:100%;height:auto;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.5);margin-bottom:20px;max-height:60vh;border:1px solid #1e2738;}</style></head><body><img src="https://i.postimg.cc/rF68cX0x/IMG-20260619-033656.jpg" alt="Tutorial"></body></html>');
+        }
+
+        $isTimeExpired = (time() > $entry['expires']);
+        $isLimitReached = ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit']);
+        $lockedUa = $entry['locked_ua'] ?? null;
+        $firstSuccessTime = $entry['first_success_time'] ?? 0;
+
+        // 3. Check if another device is trying to steal/share the link
+        if ($lockedUa !== null && $lockedUa !== $ua) {
+            $entry['logs'][] = [
+                'ip' => $ip,
+                'ua' => $ua,
+                'device' => $deviceModel,
+                'client' => $clientLabel,
+                'time' => time(),
+                'status' => 'Blocked',
+                'reason' => 'DIFF DEVICE'
+            ];
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+            header("HTTP/1.1 403 Forbidden");
+            die("Link locked to another customer device.");
+        }
+
+        // 4. Smart Grace Period: Allow SAME device to retry within 120 seconds if weak network or accidental retry
+        $isGraceRetry = false;
+        if ($isLimitReached && !$isTimeExpired && $lockedUa === $ua && (time() - $firstSuccessTime <= 120)) {
+            $isGraceRetry = true;
+        }
+
+        // 5. Check Expiration or Limit
+        if ($isTimeExpired || ($isLimitReached && !$isGraceRetry)) {
+            $reason = $isTimeExpired ? 'TIME EXPIRED' : 'LIMIT REACHED';
+            $entry['logs'][] = [
+                'ip' => $ip,
+                'ua' => $ua,
+                'device' => $deviceModel,
+                'client' => $clientLabel,
+                'time' => time(),
+                'status' => 'Failed',
+                'reason' => $reason
+            ];
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+            header("HTTP/1.1 410 Gone");
+            die("This link has expired or reached its download limit.");
+        }
+
+        // 6. Stream File & Verify 100% Byte Delivery
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        $fileSize = filesize($entry['real_path']);
+        if (ob_get_length()) { ob_end_clean(); }
+
         header('Content-Description: File Transfer');
-        header('Content-Type: application/octet-stream'); 
+        header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . basename($entry['original_name']) . '"');
-        header('Content-Transfer-Encoding: binary'); 
+        header('Content-Transfer-Encoding: binary');
         header('Expires: 0');
-        header('Cache-Control: must-revalidate'); 
+        header('Cache-Control: must-revalidate');
         header('Pragma: public');
-        header('Content-Length: ' . filesize($entry['real_path']));
-        
-        readfile($entry['real_path']); 
+        header('Content-Length: ' . $fileSize);
+
+        $bytesSent = readfile($entry['real_path']);
+        flush();
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+
+        // Verify if connection dropped mid-transfer
+        $aborted = (connection_status() !== CONNECTION_NORMAL || connection_aborted() || $bytesSent === false || $bytesSent < $fileSize);
+
+        // Reload DB to avoid race conditions
+        $db = json_decode(file_get_contents($dbFile), true) ?: [];
+        if (isset($db[$id])) {
+            if ($aborted) {
+                // Network dropped! Do NOT increment downloads, log as NET DROP
+                $db[$id]['logs'][] = [
+                    'ip' => $ip,
+                    'ua' => $ua,
+                    'device' => $deviceModel,
+                    'client' => $clientLabel,
+                    'time' => time(),
+                    'status' => 'Dropped',
+                    'reason' => 'NET DROP'
+                ];
+            } else {
+                // 100% Delivered to Customer Phone!
+                if (!$isGraceRetry) {
+                    $db[$id]['downloads']++;
+                }
+                if (empty($db[$id]['locked_ua'])) {
+                    $db[$id]['locked_ua'] = $ua;
+                    $db[$id]['locked_device'] = $deviceModel;
+                    $db[$id]['locked_ip'] = $ip;
+                    $db[$id]['first_success_time'] = time();
+                }
+                $db[$id]['logs'][] = [
+                    'ip' => $ip,
+                    'ua' => $ua,
+                    'device' => $deviceModel,
+                    'client' => $clientLabel,
+                    'time' => time(),
+                    'status' => 'Success',
+                    'reason' => $isGraceRetry ? 'RETRY (OK)' : 'DELIVERED 100%'
+                ];
+            }
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+        }
         exit;
     }
-    header("HTTP/1.1 404 Not Found"); die("File Not Found.");
+    header("HTTP/1.1 404 Not Found");
+    die("File Not Found.");
 }
 
 // ==========================================
 // UNIFIED UI Login System & Anti Brute-Force
 // ==========================================
 $adminUser = 'Admin';
-$adminPass = '38sPcd6Ysr04NGVk'; 
+$adminPass = '38sPcd6Ysr04NGVk';
 
 $loginError = false;
-$clientIP = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+$clientIP = getRealClientIP();
 
-// فحص وتنظيف الحظر القديم (بعد 15 دقيقة)
 $bruteData = json_decode(file_get_contents($bruteFile), true) ?: [];
 $saveBrute = false;
 foreach ($bruteData as $bIp => $data) {
-    if (time() - $data['last_attempt'] > 900) { 
-        unset($bruteData[$bIp]); 
-        $saveBrute = true; 
+    if (time() - $data['last_attempt'] > 900) {
+        unset($bruteData[$bIp]);
+        $saveBrute = true;
     }
 }
-if ($saveBrute) { file_put_contents($bruteFile, json_encode($bruteData)); }
+if ($saveBrute) { file_put_contents($bruteFile, json_encode($bruteData), LOCK_EX); }
 
-// إيقاف التنفيذ إذا كان الـ IP محظوراً
 if (isset($bruteData[$clientIP]) && $bruteData[$clientIP]['attempts'] >= 3) {
     header('HTTP/1.1 403 Forbidden');
     die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Blocked</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;padding:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}</style></head><body><h1 style="font-size:50px;margin-bottom:10px;">🛑 IP BLOCKED</h1><p style="color:#8a9bb3;font-size:20px;">TOO MANY FAILED LOGIN ATTEMPTS.<br>PLEASE TRY AGAIN AFTER 15 MINUTES.</p></body></html>');
@@ -102,27 +231,28 @@ if (isset($bruteData[$clientIP]) && $bruteData[$clientIP]['attempts'] >= 3) {
 
 if (isset($_GET['logout'])) {
     unset($_SESSION['main_logged']);
-    header("Location: index.php"); exit;
+    header("Location: index.php");
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
     if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
         $_SESSION['main_logged'] = true;
-        // تصفير المحاولات عند تسجيل الدخول بنجاح
         if (isset($bruteData[$clientIP])) {
             unset($bruteData[$clientIP]);
-            file_put_contents($bruteFile, json_encode($bruteData));
+            file_put_contents($bruteFile, json_encode($bruteData), LOCK_EX);
         }
-        header("Location: index.php"); exit;
+        header("Location: index.php");
+        exit;
     } else {
-        // تسجيل محاولة فاشلة
         $bruteData[$clientIP]['attempts'] = ($bruteData[$clientIP]['attempts'] ?? 0) + 1;
         $bruteData[$clientIP]['last_attempt'] = time();
-        file_put_contents($bruteFile, json_encode($bruteData));
-        
+        file_put_contents($bruteFile, json_encode($bruteData), LOCK_EX);
+
         $attemptsLeft = 3 - $bruteData[$clientIP]['attempts'];
         if ($attemptsLeft <= 0) {
-            header("Refresh:0"); exit;
+            header("Refresh:0");
+            exit;
         } else {
             $loginError = "INVALID CREDENTIALS! " . $attemptsLeft . " ATTEMPTS LEFT";
         }
@@ -137,38 +267,45 @@ $isLogged = isset($_SESSION['main_logged']) && $_SESSION['main_logged'] === true
 $generatedLinks = [];
 
 if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
-    $limit = (int)$_POST['limit']; 
+    $limit = (int)$_POST['limit'];
     $duration = (int)$_POST['duration'];
-    $timeUnit = $_POST['time_unit'] ?? 'hours';
-    
+    $timeUnit = $_POST['time_unit'] ?? 'minutes';
+
     $seconds = ($timeUnit === 'minutes') ? ($duration * 60) : ($duration * 3600);
     $fileCount = count($_FILES['files']['name']);
-    
+
     for ($i = 0; $i < $fileCount; $i++) {
         if ($_FILES['files']['error'][$i] === UPLOAD_ERR_OK) {
             $tmpName = $_FILES['files']['tmp_name'][$i];
             $originalName = basename($_FILES['files']['name'][$i]);
             $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
-            
+
             if (move_uploaded_file($tmpName, $targetPath)) {
-                $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
-                
+                do {
+                    $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                } while (isset($db[$shortId]));
+
                 $host = $_SERVER['HTTP_HOST'];
-                $host = preg_replace('/:\d+$/', '', $host); 
-                
+                $host = preg_replace('/:\d+$/', '', $host);
+
                 $link = "https://" . $host . '/' . $shortId . '.hc';
-                
+
                 $db[$shortId] = [
                     'original_name' => $originalName,
                     'real_path' => $targetPath,
                     'limit' => $limit,
                     'downloads' => 0,
+                    'duration_sec' => $seconds,
                     'expires' => time() + $seconds,
                     'upload_date' => time(),
+                    'locked_ua' => null,
+                    'locked_device' => null,
+                    'locked_ip' => null,
+                    'first_success_time' => 0,
                     'logs' => []
                 ];
                 $generatedLinks[] = [
-                    'original_name' => $originalName, 
+                    'original_name' => $originalName,
                     'link' => $link,
                     'limit' => $limit,
                     'duration' => $duration,
@@ -177,20 +314,19 @@ if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files']
             }
         }
     }
-    
-    if (!empty($generatedLinks)) { 
-        file_put_contents($dbFile, json_encode($db)); 
-        $_SESSION['temp_generated_links'] = $generatedLinks; 
-        header("Location: index.php"); 
+
+    if (!empty($generatedLinks)) {
+        file_put_contents($dbFile, json_encode($db), LOCK_EX);
+        $_SESSION['temp_generated_links'] = $generatedLinks;
+        header("Location: index.php");
         exit;
     }
 }
 
 if (isset($_SESSION['temp_generated_links'])) {
     $generatedLinks = $_SESSION['temp_generated_links'];
-    unset($_SESSION['temp_generated_links']); 
+    unset($_SESSION['temp_generated_links']);
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -238,7 +374,6 @@ if (isset($_SESSION['temp_generated_links'])) {
         .ring-effect::before { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 2px solid #38bdf8; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; z-index: -1; }
         .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; animation: float 6s ease-in-out infinite alternate; pointer-events: none; }
         
-        /* حركة النبض (Heartbeat) المخصصة للأزرار */
         @keyframes heartbeat {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -280,14 +415,14 @@ if (isset($_SESSION['temp_generated_links'])) {
                     <label class="flex items-center text-[12px] text-cyan-400 font-bold tracking-widest mb-2 ml-4 uppercase">
                         <i class="fa-solid fa-user mr-2 text-[14px]"></i> USERNAME
                     </label>
-                    <input type="text" name="username" required placeholder="" class="w-full bg-[#080f1e]/80 border border-blue-900/40 rounded-full px-6 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all placeholder-blue-800/60 uppercase tracking-wide text-center">
+                    <input type="text" name="username" required class="w-full bg-[#080f1e]/80 border border-blue-900/40 rounded-full px-6 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all uppercase tracking-wide text-center">
                 </div>
 
                 <div>
                     <label class="flex items-center text-[12px] text-cyan-400 font-bold tracking-widest mb-2 ml-4 uppercase">
                         <i class="fa-solid fa-lock mr-2 text-[14px]"></i> PASSWORD
                     </label>
-                    <input type="password" name="password" required placeholder="" class="w-full bg-[#080f1e]/80 border border-blue-900/40 rounded-full px-6 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all placeholder-blue-800/60 tracking-widest text-center">
+                    <input type="password" name="password" required class="w-full bg-[#080f1e]/80 border border-blue-900/40 rounded-full px-6 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all tracking-widest text-center">
                 </div>
 
                 <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-full transition-all duration-300 text-[18px] flex items-center justify-center tracking-widest mt-6 shadow-[0_10px_20px_rgba(56,189,248,0.3)] hover:shadow-[0_15px_30px_rgba(56,189,248,0.5)] uppercase transform hover:-translate-y-1">
@@ -414,7 +549,7 @@ if (isset($_SESSION['temp_generated_links'])) {
             <form method="POST" enctype="multipart/form-data" class="glass-panel w-full rounded-[2.5rem] p-6 sm:p-8 flex flex-col gap-7 relative z-20 transition-all duration-300 hover:border-cyan-500/40">
                 
                 <div class="relative border border-dashed border-blue-900/50 bg-[#030a14]/50 rounded-2xl p-8 sm:p-10 text-center hover:border-cyan-400 transition-all group cursor-pointer">
-                    <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm">
+                    <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm,.npv4,.dark">
                     
                     <div class="flex flex-col items-center justify-center pointer-events-none">
                         <div class="w-14 h-14 rounded-full border border-blue-900/50 flex items-center justify-center mb-4 bg-[#080f1e] group-hover:border-cyan-500/50 transition-all">
