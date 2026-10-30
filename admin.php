@@ -1,90 +1,324 @@
 <?php
 /**
- * NETCLOUD - Secure Admin Panel & Smart Truth Radar (PRO EDITION)
- * File Name: admin.php
+ * NET-CLOUD-CONFIG - Main Upload & Smart Client Radar (PRO EDITION)
+ * File Name: index.php
  */
 
 session_start();
 date_default_timezone_set('Africa/Tunis');
 
-// === UNIFIED SECURITY CHECK ===
-if (!isset($_SESSION['main_logged']) || $_SESSION['main_logged'] !== true) {
-    header("Location: index.php"); 
+$uploadDir = __DIR__ . '/uploads/';
+$dbFile = __DIR__ . '/db.json';
+$bruteFile = __DIR__ . '/brute.json';
+
+if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true); }
+if (!file_exists($dbFile)) { file_put_contents($dbFile, json_encode([])); }
+if (!file_exists($bruteFile)) { file_put_contents($bruteFile, json_encode([])); }
+
+// ==========================================
+// Helper Functions: Real IP & Device Parser
+// ==========================================
+function getRealClientIP() {
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        return $_SERVER['HTTP_CF_CONNECTING_IP'];
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ips[0]);
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+}
+
+function extractDeviceModel($ua) {
+    // استخراج اسم الموديل الصريح بأحرف كبيرة
+    if (preg_match('/;\s*([A-Za-z0-9\s_-]+)\s+Build\//i', $ua, $matches)) {
+        return strtoupper(trim($matches[1]));
+    }
+    if (preg_match('/Android\s+([0-9.]+);\s*([^;)]+)/i', $ua, $matches)) {
+        return strtoupper(trim($matches[2]));
+    }
+    if (stripos($ua, 'okhttp') !== false) {
+        return 'HTTP CUSTOM DEVICE';
+    }
+    return 'UNKNOWN DEVICE';
+}
+
+$db = json_decode(file_get_contents($dbFile), true) ?: [];
+
+// ==========================================
+// Smart Download, Device Lock & Delivery Radar
+// ==========================================
+if (isset($_GET['c'])) {
+    $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['c']);
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    $ip = getRealClientIP();
+    $deviceModel = extractDeviceModel($ua);
+
+    if (preg_match('/(TelegramBot|WhatsApp|facebookexternalhit|Twitterbot|Slackbot|Discordbot|bot|spider|crawl)/i', $ua)) {
+        header("HTTP/1.1 200 OK");
+        die("CLOUD CONFIG LINK ACTIVE");
+    }
+
+    $isBrowser = preg_match('/(Mozilla|Chrome|Safari|Edge|Opera|Brave|SamsungBrowser)/i', $ua);
+    $isVpnApp = preg_match('/(okhttp|Dalvik|HttpCustom|ePro|NPV|NetMod)/i', $ua);
+
+    if ($isVpnApp) {
+        $clientLabel = 'HTTP Custom / VPN (' . $deviceModel . ')';
+        $isBrowser = false;
+    } elseif ($isBrowser) {
+        $clientLabel = 'Web Browser (' . $deviceModel . ')';
+    } else {
+        $clientLabel = 'Android Tool (' . $deviceModel . ')';
+    }
+
+    if (isset($db[$id])) {
+        $entry = &$db[$id];
+
+        if (!file_exists($entry['real_path'])) {
+            header("HTTP/1.1 404 Not Found");
+            die("Config file missing on server.");
+        }
+
+        if ($isBrowser) {
+            $entry['logs'][] = [
+                'ip' => $ip,
+                'ua' => $ua,
+                'device' => $deviceModel,
+                'client' => $clientLabel,
+                'time' => time(),
+                'status' => 'Blocked',
+                'reason' => 'BROWSER SNIFF'
+            ];
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+            header("HTTP/1.1 403 Forbidden");
+            die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Access Denied</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box;text-transform:uppercase;}img{max-width:100%;height:auto;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.5);margin-bottom:20px;max-height:60vh;border:1px solid #1e2738;}</style></head><body><img src="https://i.postimg.cc/rF68cX0x/IMG-20260619-033656.jpg" alt="Tutorial"></body></html>');
+        }
+
+        $isTimeExpired = (time() > $entry['expires']);
+        $isLimitReached = ($entry['limit'] > 0 && $entry['downloads'] >= $entry['limit']);
+        $lockedUa = $entry['locked_ua'] ?? null;
+        $firstSuccessTime = $entry['first_success_time'] ?? 0;
+
+        if ($lockedUa !== null && $lockedUa !== $ua) {
+            $entry['logs'][] = [
+                'ip' => $ip,
+                'ua' => $ua,
+                'device' => $deviceModel,
+                'client' => $clientLabel,
+                'time' => time(),
+                'status' => 'Blocked',
+                'reason' => 'DIFF DEVICE'
+            ];
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+            header("HTTP/1.1 403 Forbidden");
+            die("Link locked to another customer device.");
+        }
+
+        $isGraceRetry = false;
+        if ($isLimitReached && !$isTimeExpired && $lockedUa === $ua && (time() - $firstSuccessTime <= 120)) {
+            $isGraceRetry = true;
+        }
+
+        if ($isTimeExpired || ($isLimitReached && !$isGraceRetry)) {
+            $reason = $isTimeExpired ? 'TIME EXPIRED' : 'LIMIT REACHED';
+            $entry['logs'][] = [
+                'ip' => $ip,
+                'ua' => $ua,
+                'device' => $deviceModel,
+                'client' => $clientLabel,
+                'time' => time(),
+                'status' => 'Failed',
+                'reason' => $reason
+            ];
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+            header("HTTP/1.1 410 Gone");
+            die("This link has expired or reached its download limit.");
+        }
+
+        ignore_user_abort(true);
+        set_time_limit(0);
+
+        $fileSize = filesize($entry['real_path']);
+        if (ob_get_length()) { ob_end_clean(); }
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($entry['original_name']) . '"');
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . $fileSize);
+
+        $bytesSent = readfile($entry['real_path']);
+        flush();
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+
+        $aborted = (connection_status() !== CONNECTION_NORMAL || connection_aborted() || $bytesSent === false || $bytesSent < $fileSize);
+
+        $db = json_decode(file_get_contents($dbFile), true) ?: [];
+        if (isset($db[$id])) {
+            if ($aborted) {
+                $db[$id]['logs'][] = [
+                    'ip' => $ip,
+                    'ua' => $ua,
+                    'device' => $deviceModel,
+                    'client' => $clientLabel,
+                    'time' => time(),
+                    'status' => 'Dropped',
+                    'reason' => 'NET DROP'
+                ];
+            } else {
+                if (!$isGraceRetry) {
+                    $db[$id]['downloads']++;
+                }
+                if (empty($db[$id]['locked_ua'])) {
+                    $db[$id]['locked_ua'] = $ua;
+                    $db[$id]['locked_device'] = $deviceModel;
+                    $db[$id]['locked_ip'] = $ip;
+                    $db[$id]['first_success_time'] = time();
+                }
+                $db[$id]['logs'][] = [
+                    'ip' => $ip,
+                    'ua' => $ua,
+                    'device' => $deviceModel,
+                    'client' => $clientLabel,
+                    'time' => time(),
+                    'status' => 'Success',
+                    'reason' => $isGraceRetry ? 'RETRY (OK)' : 'DELIVERED 100%'
+                ];
+            }
+            file_put_contents($dbFile, json_encode($db), LOCK_EX);
+        }
+        exit;
+    }
+    header("HTTP/1.1 404 Not Found");
+    die("File Not Found.");
+}
+
+// ==========================================
+// UNIFIED UI Login System & Anti Brute-Force
+// ==========================================
+$adminUser = 'Admin';
+$adminPass = '38sPcd6Ysr04NGVk';
+
+$loginError = false;
+$clientIP = getRealClientIP();
+
+$bruteData = json_decode(file_get_contents($bruteFile), true) ?: [];
+$saveBrute = false;
+foreach ($bruteData as $bIp => $data) {
+    if (time() - $data['last_attempt'] > 900) {
+        unset($bruteData[$bIp]);
+        $saveBrute = true;
+    }
+}
+if ($saveBrute) { file_put_contents($bruteFile, json_encode($bruteData), LOCK_EX); }
+
+if (isset($bruteData[$clientIP]) && $bruteData[$clientIP]['attempts'] >= 3) {
+    header('HTTP/1.1 403 Forbidden');
+    die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Blocked</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;padding:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;}</style></head><body><h1 style="font-size:50px;margin-bottom:10px;">🛑 IP BLOCKED</h1><p style="color:#8a9bb3;font-size:20px;">TOO MANY FAILED LOGIN ATTEMPTS.<br>PLEASE TRY AGAIN AFTER 15 MINUTES.</p></body></html>');
+}
+
+if (isset($_GET['logout'])) {
+    unset($_SESSION['main_logged']);
+    header("Location: index.php");
     exit;
 }
 
-$dbFile = __DIR__ . '/db.json';
-$db = json_decode(file_exists($dbFile) ? file_get_contents($dbFile) : '[]', true) ?: [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ui_login'])) {
+    if ($_POST['username'] === $adminUser && $_POST['password'] === $adminPass) {
+        $_SESSION['main_logged'] = true;
+        if (isset($bruteData[$clientIP])) {
+            unset($bruteData[$clientIP]);
+            file_put_contents($bruteFile, json_encode($bruteData), LOCK_EX);
+        }
+        header("Location: index.php");
+        exit;
+    } else {
+        $bruteData[$clientIP]['attempts'] = ($bruteData[$clientIP]['attempts'] ?? 0) + 1;
+        $bruteData[$clientIP]['last_attempt'] = time();
+        file_put_contents($bruteFile, json_encode($bruteData), LOCK_EX);
 
-// Logout action
-if (isset($_GET['logout'])) {
-    unset($_SESSION['main_logged']);
-    header("Location: index.php"); exit;
-}
-
-// Delete SINGLE item action
-if (isset($_GET['delete'])) {
-    $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['delete']);
-    if (isset($db[$id])) { 
-        @unlink($db[$id]['real_path']); 
-        unset($db[$id]); 
-        file_put_contents($dbFile, json_encode($db), LOCK_EX); 
+        $attemptsLeft = 3 - $bruteData[$clientIP]['attempts'];
+        if ($attemptsLeft <= 0) {
+            header("Refresh:0");
+            exit;
+        } else {
+            $loginError = "INVALID CREDENTIALS! " . $attemptsLeft . " ATTEMPTS LEFT";
+        }
     }
-    header("Location: admin.php"); exit;
 }
 
-// Re-Open / Reset Link Action
-if (isset($_GET['reopen'])) {
-    $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['reopen']);
-    if (isset($db[$id])) {
-        $db[$id]['downloads'] = 0;
-        $db[$id]['expires'] = time() + 300; // Extend 5 minutes
-        $db[$id]['locked_ua'] = null;
-        $db[$id]['locked_device'] = null;
-        $db[$id]['locked_ip'] = null;
-        $db[$id]['first_success_time'] = 0;
-        $db[$id]['logs'][] = [
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Admin',
-            'ua' => 'Admin Panel',
-            'device' => 'ADMINISTRATOR',
-            'client' => 'Admin Action',
-            'time' => time(),
-            'status' => 'Success',
-            'reason' => 'MANUAL RE-OPEN'
-        ];
+$isLogged = isset($_SESSION['main_logged']) && $_SESSION['main_logged'] === true;
+
+// ==========================================
+// Multi-Upload Handling Logic
+// ==========================================
+$generatedLinks = [];
+
+if ($isLogged && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['files'])) {
+    $limit = (int)$_POST['limit'];
+    $duration = (int)$_POST['duration'];
+    $timeUnit = $_POST['time_unit'] ?? 'minutes';
+
+    $seconds = ($timeUnit === 'minutes') ? ($duration * 60) : ($duration * 3600);
+    $fileCount = count($_FILES['files']['name']);
+
+    for ($i = 0; $i < $fileCount; $i++) {
+        if ($_FILES['files']['error'][$i] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['files']['tmp_name'][$i];
+            $originalName = basename($_FILES['files']['name'][$i]);
+            $targetPath = $uploadDir . bin2hex(random_bytes(16)) . '.dat';
+
+            if (move_uploaded_file($tmpName, $targetPath)) {
+                do {
+                    $shortId = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
+                } while (isset($db[$shortId]));
+
+                $host = $_SERVER['HTTP_HOST'];
+                $host = preg_replace('/:\d+$/', '', $host);
+
+                $link = "https://" . $host . '/' . $shortId . '.hc';
+
+                $db[$shortId] = [
+                    'original_name' => $originalName,
+                    'real_path' => $targetPath,
+                    'limit' => $limit,
+                    'downloads' => 0,
+                    'duration_sec' => $seconds,
+                    'expires' => time() + $seconds,
+                    'upload_date' => time(),
+                    'locked_ua' => null,
+                    'locked_device' => null,
+                    'locked_ip' => null,
+                    'first_success_time' => 0,
+                    'logs' => []
+                ];
+                $generatedLinks[] = [
+                    'original_name' => $originalName,
+                    'link' => $link,
+                    'limit' => $limit,
+                    'duration' => $duration,
+                    'time_unit' => $timeUnit
+                ];
+            }
+        }
+    }
+
+    if (!empty($generatedLinks)) {
         file_put_contents($dbFile, json_encode($db), LOCK_EX);
+        $_SESSION['temp_generated_links'] = $generatedLinks;
+        header("Location: index.php");
+        exit;
     }
-    header("Location: admin.php"); exit;
 }
 
-// Delete ALL items action
-if (isset($_GET['delete_all'])) {
-    foreach ($db as $id => $d) {
-        @unlink($d['real_path']); 
-    }
-    $db = []; 
-    file_put_contents($dbFile, json_encode($db), LOCK_EX); 
-    header("Location: admin.php"); exit;
-}
-
-// Calculate Statistics
-$totalLinks = count($db);
-$totalDownloads = 0;
-$totalRequests = 0;
-$successfulRequests = 0;
-$blockedRequests = 0;
-$expiredLinks = 0;
-
-foreach ($db as $d) {
-    $totalDownloads += $d['downloads'];
-    $totalRequests += count($d['logs']);
-    foreach ($d['logs'] as $log) {
-        if ($log['status'] === 'Success') $successfulRequests++;
-        else $blockedRequests++;
-    }
-    if (time() > $d['expires'] || ($d['limit'] > 0 && $d['downloads'] >= $d['limit'])) {
-        $expiredLinks++;
-    }
+if (isset($_SESSION['temp_generated_links'])) {
+    $generatedLinks = $_SESSION['temp_generated_links'];
+    unset($_SESSION['temp_generated_links']);
 }
 ?>
 <!DOCTYPE html>
@@ -95,335 +329,281 @@ foreach ($db as $d) {
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NETCLOUD | RADAR SPACE PRO</title>
+    <title>NETCLOUD | SYSTEM</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         * { -webkit-tap-highlight-color: transparent; } 
-        body { background-color: #030a14; overflow-x: hidden; font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; color: #cbd5e1; }
+        html { background-color: #030a14; height: 100%; } 
+        body { 
+            background-color: #030a14; 
+            font-family: 'Oswald', sans-serif; 
+            letter-spacing: 0.5px; 
+            text-transform: uppercase; 
+            overflow-x: hidden;
+            color: #cbd5e1;
+        }
         input, button, select, textarea { font-family: 'Oswald', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
         
         .glass-panel { 
-            background: rgba(10, 15, 30, 0.75); 
+            background: rgba(10, 15, 30, 0.65); 
             backdrop-filter: blur(16px); 
             border: 1px solid rgba(56, 189, 248, 0.2); 
             box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 20px rgba(56, 189, 248, 0.05); 
         }
         .blue-glow-text { text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.3); }
-
+        input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px #080f1e inset !important; -webkit-text-fill-color: white !important; }
+        
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 10px; }
-        .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .glow-hover:hover { filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4)); }
-        tbody tr { transition: all 0.2s ease; }
-        tbody tr:hover { background-color: rgba(56, 189, 248, 0.05); }
-
+        
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
-        .bg-orb { position: fixed; border-radius: 50%; filter: blur(150px); z-index: -1; animation: float 6s ease-in-out infinite alternate; pointer-events: none; }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+        .ring-effect::before { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 2px solid #38bdf8; animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; z-index: -1; }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; animation: float 6s ease-in-out infinite alternate; pointer-events: none; }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .animate-heartbeat { animation: heartbeat 2s ease-in-out infinite; }
+
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-3 sm:p-6 relative">
+<body class="min-h-[100dvh] flex items-center justify-center p-4 relative bg-[#030a14]">
 
-    <div class="bg-orb top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600 opacity-20"></div>
-    <div class="bg-orb bottom-[-10%] right-[-10%] w-[450px] h-[450px] bg-cyan-400 opacity-20" style="animation-delay: -3s;"></div>
+    <div class="bg-orb top-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-600 opacity-20"></div>
+    <div class="bg-orb bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-cyan-400 opacity-20" style="animation-delay: -3s;"></div>
 
-    <div class="w-full max-w-6xl my-auto py-6 z-10 relative">
-        
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-6 glass-panel p-6 rounded-2xl relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500 rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
-
-            <div class="text-center md:text-left z-10 flex flex-col md:items-start items-center">
-                <h1 class="text-3xl sm:text-4xl font-bold flex flex-col md:flex-row items-center gap-2 drop-shadow-lg smooth-transition">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 blue-glow-text">RADAR LINK PRO</span>
+    <?php if(!$isLogged): ?>
+        <div class="w-full max-w-[26rem] flex flex-col items-center z-10 p-2 sm:p-4">
+            <div class="text-center mb-10 flex flex-col items-center">
+                <div class="animate-float relative">
+                    <div class="ring-effect w-20 h-20 rounded-[2rem] bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(56,189,248,0.5)]">
+                        <i class="fa-solid fa-fingerprint text-white text-4xl"></i>
+                    </div>
+                </div>
+                <h1 class="text-[34px] font-bold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg mt-6 blue-glow-text">
+                   P A N E L
                 </h1>
-                <p class="text-[12px] sm:text-[13px] tracking-widest text-blue-300/75 mt-2 bg-[#080f1e]/90 border border-blue-900/40 px-3.5 py-1.5 rounded-full font-bold">
-                    <i class="fa-solid fa-satellite-dish text-cyan-400 mr-1.5"></i> SMART TRUTH & TRAFFIC ANALYTICS
-                </p>
             </div>
-            
-            <div class="flex flex-row gap-3 z-10 justify-center md:justify-end flex-wrap items-center">
-                <a href="index.php" title="Upload Files" class="bg-[#080f1e]/80 hover:bg-[#0a1428] border border-blue-900/40 hover:border-cyan-400 text-cyan-400 w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-lg glow-hover">
-                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
-                </a>
+
+            <form method="POST" class="glass-panel w-full rounded-[2.5rem] p-8 space-y-7 transition-all duration-500 hover:border-cyan-500/40 relative">
+                <input type="hidden" name="ui_login" value="1">
                 
-                <a href="?delete_all=1" title="Delete All Links" onclick="return confirm('WARNING: DELETE ALL LINKS AND LOGS?')" class="bg-[#1a0f14]/80 hover:bg-red-900/40 border border-red-900/40 hover:border-red-500 text-red-500 w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-lg">
-                    <i class="fa-solid fa-dumpster-fire text-xl"></i>
-                </a>
+                <?php if($loginError): ?>
+                    <div class="bg-[#1a0f14]/80 border border-red-900/50 text-red-400 text-[13px] p-3 rounded-xl text-center font-bold tracking-widest shadow-lg">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> <?= $loginError ?>
+                    </div>
+                <?php endif; ?>
 
-                <div class="relative group">
-                    <input type="text" id="searchInput" oninput="searchLinks()" placeholder="SEARCH LINK OR FILE..." class="bg-[#080f1e]/90 border border-blue-900/40 focus:border-cyan-400 text-cyan-400 h-12 px-4 pr-10 rounded-xl shadow-lg text-[13px] font-bold outline-none w-44 sm:w-60 placeholder-blue-800/60">
-                    <i class="fa-solid fa-magnifying-glass absolute right-4 top-1/2 -translate-y-1/2 text-cyan-400 text-base pointer-events-none"></i>
+                <div>
+                    <label class="flex items-center text-[12px] text-cyan-400 font-bold tracking-widest mb-2 ml-4 uppercase">
+                        <i class="fa-solid fa-user mr-2 text-[14px]"></i> USERNAME
+                    </label>
+                    <input type="text" name="username" required class="w-full bg-[#080f1e]/80 border border-blue-900/40 rounded-full px-6 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all uppercase tracking-wide text-center">
                 </div>
-            </div>
+
+                <div>
+                    <label class="flex items-center text-[12px] text-cyan-400 font-bold tracking-widest mb-2 ml-4 uppercase">
+                        <i class="fa-solid fa-lock mr-2 text-[14px]"></i> PASSWORD
+                    </label>
+                    <input type="password" name="password" required class="w-full bg-[#080f1e]/80 border border-blue-900/40 rounded-full px-6 py-4 text-[16px] text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all tracking-widest text-center">
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-full transition-all duration-300 text-[18px] flex items-center justify-center tracking-widest mt-6 shadow-[0_10px_20px_rgba(56,189,248,0.3)] hover:shadow-[0_15px_30px_rgba(56,189,248,0.5)] uppercase transform hover:-translate-y-1">
+                    LOGIN
+                </button>
+            </form>
         </div>
 
-        <!-- Statistics Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-8">
-            <div class="glass-panel rounded-xl p-4 glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-300/70 text-[12px] font-bold">TOTAL LINKS</p>
-                        <p class="text-cyan-400 text-2xl sm:text-3xl font-bold mt-1"><?= $totalLinks ?></p>
-                    </div>
-                    <i class="fa-solid fa-link text-cyan-400 text-2xl sm:text-3xl opacity-30"></i>
-                </div>
+    <?php else: ?>
+        
+        <a href="admin.php" class="fixed top-4 left-4 sm:top-6 sm:left-6 w-12 h-12 flex items-center justify-center glass-panel hover:border-cyan-400 text-cyan-400 rounded-2xl shadow-lg transition-all animate-heartbeat z-50" title="Radar Analytics">
+            <i class="fa-solid fa-chart-line text-[16px]"></i>
+        </a>
+        <a href="?logout=1" class="fixed top-4 right-4 sm:top-6 sm:right-6 w-12 h-12 flex items-center justify-center glass-panel border-red-900/40 hover:border-red-500 hover:bg-red-900/20 text-red-500 rounded-2xl shadow-lg transition-all animate-heartbeat z-50" title="Logout">
+            <i class="fa-solid fa-right-from-bracket text-[16px]"></i>
+        </a>
+
+        <div class="w-full max-w-[28rem] flex flex-col items-center z-10 p-2 sm:p-4 mt-12 sm:mt-0">
+            
+            <?php if(!empty($generatedLinks)): ?>
+            <div class="text-center mb-8 w-full flex flex-col items-center relative z-10">
+                <h1 class="text-[36px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text uppercase">
+                    LINK CODE
+                </h1>
             </div>
 
-            <div class="glass-panel rounded-xl p-4 glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-300/70 text-[12px] font-bold">DOWNLOADS</p>
-                        <p class="text-cyan-400 text-2xl sm:text-3xl font-bold mt-1"><?= $totalDownloads ?></p>
-                    </div>
-                    <i class="fa-solid fa-download text-cyan-400 text-2xl sm:text-3xl opacity-30"></i>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-xl p-4 glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-300/70 text-[12px] font-bold">REQUESTS</p>
-                        <p class="text-cyan-400 text-2xl sm:text-3xl font-bold mt-1"><?= $totalRequests ?></p>
-                    </div>
-                    <i class="fa-solid fa-radar text-cyan-400 text-2xl sm:text-3xl opacity-30"></i>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-xl p-4 glow-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-300/70 text-[12px] font-bold">SUCCESS</p>
-                        <p class="text-[#22c55e] text-2xl sm:text-3xl font-bold mt-1"><?= $successfulRequests ?></p>
-                    </div>
-                    <i class="fa-solid fa-check-circle text-[#22c55e] text-2xl sm:text-3xl opacity-30"></i>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-xl p-4 glow-hover col-span-2 md:col-span-1">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-300/70 text-[12px] font-bold">BLOCKED</p>
-                        <p class="text-red-500 text-2xl sm:text-3xl font-bold mt-1"><?= $blockedRequests ?></p>
-                    </div>
-                    <i class="fa-solid fa-ban text-red-500 text-2xl sm:text-3xl opacity-30"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Links Feed Container -->
-        <div class="space-y-6" id="linksContainer">
-            <?php if(!empty($db)): ?>
-                <?php foreach(array_reverse($db, true) as $id => $d): 
-                    $isExpired = time() > $d['expires'];
-                    $isLimited = $d['limit'] > 0 && $d['downloads'] >= $d['limit'];
-                    $statusHtml = ($isExpired || $isLimited) 
-                        ? '<span class="bg-[#1a0f14]/80 text-red-500 px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-bold tracking-widest border border-red-900/50 inline-flex items-center gap-1.5"><i class="fa-solid fa-ban"></i> EXPIRED</span>' 
-                        : '<span class="bg-cyan-500/10 text-cyan-400 px-3 py-1.5 rounded-lg text-[11px] sm:text-[12px] font-bold tracking-widest border border-cyan-400/30 inline-flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> ACTIVE</span>';
-                    
-                    $expiresIn = $d['expires'] - time();
-                    $expiresInHours = floor($expiresIn / 3600);
-                    $expiresInMins = floor(($expiresIn % 3600) / 60);
-
-                    $host = $_SERVER['HTTP_HOST'];
-                    $host = preg_replace('/:\d+$/', '', $host);
-                    $fullLink = "https://" . $host . '/' . $id . '.hc';
-
-                    // Truth Verdict Calculation
-                    $verdictText = "NO ACTIVITY YET";
-                    $verdictClass = "text-slate-400 bg-slate-800/40 border-slate-700/40";
-                    if (!empty($d['logs'])) {
-                        $lastLog = end($d['logs']);
-                        $successCount = 0;
-                        $diffDeviceAttempt = false;
-                        foreach($d['logs'] as $lg) {
-                            if ($lg['status'] === 'Success') $successCount++;
-                            if (isset($lg['reason']) && $lg['reason'] === 'DIFF DEVICE') $diffDeviceAttempt = true;
-                        }
-                        if ($diffDeviceAttempt) {
-                            $verdictText = "⚠ LIAR: SHARED WITH ANOTHER DEVICE";
-                            $verdictClass = "text-red-400 bg-red-950/40 border-red-900/60 animate-pulse";
-                        } elseif ($successCount > 0 && $lastLog['status'] === 'Failed') {
-                            $verdictText = "ℹ CUSTOMER TELLS TRUTH: RETRY AFTER SUCCESS";
-                            $verdictClass = "text-amber-400 bg-amber-950/40 border-amber-900/60";
-                        } elseif ($successCount > 0) {
-                            $verdictText = "✔ DELIVERED & DOWNLOADED SUCCESSFULLY";
-                            $verdictClass = "text-emerald-400 bg-emerald-950/40 border-emerald-900/60";
-                        } elseif ($lastLog['status'] === 'Blocked') {
-                            $verdictText = "⛔ BLOCKED (BROWSER OR BOT ATTEMPT)";
-                            $verdictClass = "text-rose-400 bg-rose-950/40 border-rose-900/60";
-                        }
-                    }
-                ?>
-                <div class="glass-panel rounded-[1.5rem] p-4 sm:p-6 relative overflow-hidden group hover:border-cyan-500/40 transition-colors config-card shadow-xl" data-link-id="<?= htmlspecialchars($id) ?>" data-original-name="<?= strtolower(htmlspecialchars($d['original_name'])) ?>">
-                    
-                    <!-- Top Info Card Header -->
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-blue-900/40 pb-5 mb-5">
-                        <div class="flex items-center gap-4 w-full lg:w-auto">
-                            <div class="w-14 h-14 rounded-xl bg-[#080f1e]/90 border border-blue-900/40 flex items-center justify-center text-cyan-400 shrink-0 glow-hover">
-                                <i class="fa-regular fa-file-code text-2xl"></i>
-                            </div>
-                            <div class="overflow-hidden">
-                                <!-- Original Name & Locked Device Badge (Uppercase) -->
-                                <div class="flex items-center gap-2 flex-wrap mb-1">
-                                    <span class="text-[11px] sm:text-[12px] font-bold tracking-widest text-blue-300/70 truncate">ORIGINAL: <?= htmlspecialchars($d['original_name']) ?></span>
-                                    <?php if(!empty($d['locked_device'])): ?>
-                                        <span class="bg-cyan-500/10 text-cyan-300 border border-cyan-400/30 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">
-                                            <i class="fa-solid fa-mobile-screen mr-1"></i> <?= htmlspecialchars($d['locked_device']) ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="bg-slate-800/60 text-slate-400 border border-slate-700/40 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">
-                                            <i class="fa-solid fa-hourglass-start mr-1"></i> WAITING FOR DEVICE...
-                                        </span>
-                                    <?php endif; ?>
+            <div class="glass-panel w-full rounded-[2.5rem] p-6 sm:p-8 flex flex-col gap-6 relative z-20 transition-all duration-300">
+                
+                <div class="max-h-[50vh] overflow-y-auto custom-scroll flex flex-col gap-6 w-full pr-1">
+                    <?php foreach($generatedLinks as $idx => $item): ?>
+                    <div class="bg-[#080f1e]/80 border border-blue-900/40 rounded-[1.5rem] p-5 shadow-inner w-full flex flex-col gap-5 shrink-0 transition-all duration-300 hover:border-cyan-500/40">
+                        
+                        <div class="flex justify-between items-center px-1">
+                            <div class="flex flex-col items-center justify-center w-1/3 border-r border-blue-900/40" title="Original File">
+                                <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
+                                    <i class="fa-solid fa-file-code text-cyan-400 text-[13px]"></i>
                                 </div>
-                                <span class="font-bold text-cyan-400 text-lg sm:text-xl blue-glow-text cursor-pointer select-all" onclick="copyText('<?= $fullLink ?>', this)"><?= htmlspecialchars($id) ?>.HC <i class="fa-regular fa-copy text-xs ml-1 text-cyan-400/70"></i></span>
-                            </div>
-                        </div>
-
-                        <!-- Metrics & Action Buttons -->
-                        <div class="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end flex-wrap">
-                            <div class="text-right bg-[#080f1e]/80 px-3.5 py-2 rounded-xl border border-blue-900/40 glow-hover">
-                                <span class="text-[10px] font-bold tracking-widest text-blue-300/70 block mb-0.5">DOWNLOADS</span>
-                                <span class="text-white font-bold text-[14px] sm:text-[15px]"><?= $d['downloads'] ?> / <span class="<?= $d['limit'] > 0 ? 'text-cyan-400' : 'text-slate-500' ?>"><?= $d['limit'] > 0 ? $d['limit'] : '∞' ?></span></span>
+                                <span class="text-blue-300/70 text-[13px] font-bold truncate w-[90%] text-center tracking-wide uppercase">
+                                    <?= htmlspecialchars($item['original_name']) ?>
+                                </span>
                             </div>
                             
-                            <div class="text-right bg-[#080f1e]/80 px-3.5 py-2 rounded-xl border border-blue-900/40 glow-hover">
-                                <span class="text-[10px] font-bold tracking-widest text-blue-300/70 block mb-0.5">EXPIRES</span>
-                                <span class="text-white font-bold text-[14px] sm:text-[15px]"><?= $expiresInHours ?>H <?= $expiresInMins ?>M</span>
+                            <div class="flex flex-col items-center justify-center w-1/3 border-r border-blue-900/40" title="Limit">
+                                <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
+                                    <i class="fa-solid fa-download text-cyan-400 text-[13px]"></i>
+                                </div>
+                                <span class="text-blue-300/70 text-[14px] font-bold tracking-wide">
+                                    <?= $item['limit'] > 0 ? $item['limit'] : '∞' ?>
+                                </span>
                             </div>
-
-                            <div><?= $statusHtml ?></div>
-
-                            <div class="flex items-center gap-2">
-                                <a href="?reopen=<?= $id ?>" title="Re-Open / Reset Link" onclick="return confirm('RESET DOWNLOAD LIMIT AND EXTEND 5 MINUTES FOR THIS LINK?')" class="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/40 text-cyan-400 w-11 h-11 flex items-center justify-center rounded-xl transition-all shadow-md">
-                                    <i class="fa-solid fa-rotate-right text-sm"></i>
-                                </a>
-                                <a href="?delete=<?= $id ?>" title="Delete Link" onclick="return confirm('DELETE THIS LINK PERMANENTLY?')" class="bg-[#1a0f14]/80 hover:bg-red-900/40 border border-red-900/40 text-red-500 w-11 h-11 flex items-center justify-center rounded-xl transition-all shadow-md">
-                                    <i class="fa-solid fa-trash text-sm"></i>
-                                </a>
+                            
+                            <div class="flex flex-col items-center justify-center w-1/3" title="Validity Time">
+                                <div class="w-8 h-8 rounded border border-blue-900/40 flex items-center justify-center mb-2.5 bg-transparent">
+                                    <i class="fa-regular fa-clock text-cyan-400 text-[13px]"></i>
+                                </div>
+                                <span class="text-blue-300/70 text-[13px] font-bold tracking-wide uppercase">
+                                    <?= $item['duration'] ?> <?= strtoupper($item['time_unit'] === 'minutes' ? 'MINUTES' : 'HOURS') ?>
+                                </span>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Truth Verdict Banner -->
-                    <div class="mb-5 p-3 rounded-xl border flex items-center gap-2.5 text-[12px] sm:text-[13px] font-bold tracking-widest <?= $verdictClass ?>">
-                        <i class="fa-solid fa-shield-halved text-base"></i>
-                        <span>TRUTH RADAR VERDICT: <?= $verdictText ?></span>
-                    </div>
-
-                    <!-- Live Request Feed Table -->
-                    <div>
-                        <h4 class="text-[12px] sm:text-[13px] font-bold tracking-widest text-blue-300/75 mb-3 flex items-center bg-[#080f1e]/80 px-3.5 py-2 rounded-lg border border-blue-900/40 w-fit">
-                            <i class="fa-solid fa-terminal mr-2 text-cyan-400"></i> LIVE REQUEST FEED (RADAR)
-                        </h4>
-                        <div class="bg-[#030a14] rounded-xl overflow-hidden border border-blue-900/40 overflow-x-auto custom-scroll shadow-inner">
-                            <table class="w-full text-left whitespace-nowrap">
-                                <tbody class="divide-y divide-blue-900/30">
-                                    <?php if(!empty($d['logs'])): ?>
-                                        <?php foreach(array_reverse($d['logs']) as $log): 
-                                            $statusVal = $log['status'];
-                                            $reasonStr = $log['reason'] ?? '';
-                                            
-                                            if ($statusVal === 'Success') {
-                                                $badge = 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/30';
-                                                $icon = '<i class="fa-solid fa-check text-xs"></i>';
-                                                $statusText = 'OPEN';
-                                            } elseif ($statusVal === 'Dropped') {
-                                                $badge = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-                                                $icon = '<i class="fa-solid fa-triangle-exclamation text-xs"></i>';
-                                                $statusText = 'NET DROP';
-                                            } else {
-                                                $badge = 'bg-red-500/10 text-red-500 border-red-500/30';
-                                                $icon = '<i class="fa-solid fa-xmark text-xs"></i>';
-                                                $statusText = 'BLOCKED';
-                                            }
-                                        ?>
-                                        <tr class="hover:bg-[#080f1e]/70 transition duration-200">
-                                            <td class="px-4 py-3.5 align-middle">
-                                                <div class="flex items-center gap-2 text-blue-300/70 text-[12px] font-bold">
-                                                    <i class="fa-regular fa-clock opacity-50"></i>
-                                                    <span><?= date('Y-m-d H:i:s', $log['time']) ?></span>
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3.5 align-middle">
-                                                <div class="flex items-center gap-2 text-white text-[13px] font-bold">
-                                                    <i class="fa-solid fa-location-dot text-blue-300/50"></i>
-                                                    <span><?= htmlspecialchars($log['ip']) ?></span>
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3.5 text-[13px] font-bold text-cyan-300 align-middle">
-                                                <?= htmlspecialchars($log['client']) ?>
-                                                <?php if(!empty($reasonStr)): ?>
-                                                    <span class="text-[10px] text-amber-300 ml-1 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40 font-bold"><?= $reasonStr ?></span>
-                                                <?php endif; ?>
-                                                <span class="text-[10px] text-blue-300/60 block truncate max-w-xs mt-1 bg-[#080f1e] px-2 py-0.5 rounded border border-blue-900/30 font-mono font-normal w-fit"><?= htmlspecialchars($log['ua']) ?></span>
-                                            </td>
-                                            <td class="px-4 py-3.5 text-right align-middle">
-                                                <div class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg font-bold tracking-widest border text-[11px] <?= $badge ?> w-[110px]">
-                                                    <?= $icon ?>
-                                                    <span><?= $statusText ?></span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td class="px-4 py-8 text-center text-blue-300/50 font-bold text-[12px] tracking-widest">
-                                                <i class="fa-solid fa-ghost text-3xl block mb-2 opacity-30"></i>
-                                                NO REQUEST ACTIVITY TRACKED YET.
-                                            </td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
+                        <div class="bg-[#030a14] border border-blue-900/40 rounded-xl py-4 px-4 flex items-center justify-center gap-3 shadow-inner w-full overflow-x-auto custom-scroll">
+                            <i class="fa-solid fa-link text-cyan-400 text-[14px] shrink-0"></i>
+                            <span class="text-cyan-400 text-[11px] sm:text-[13px] font-bold tracking-wider uppercase whitespace-nowrap text-center" id="link-<?= $idx ?>">
+                                <?= $item['link'] ?>
+                            </span>
                         </div>
+
+                        <button onclick="copySingle('link-<?= $idx ?>', this)" class="w-full bg-transparent hover:bg-cyan-500/10 text-cyan-400 border border-blue-900/50 hover:border-cyan-500/50 py-4 rounded-xl text-[15px] font-bold tracking-widest transition-all flex items-center justify-center gap-2.5">
+                            <i class="fa-regular fa-copy text-[16px]"></i> COPY
+                        </button>
                     </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
+
+                <button onclick="window.location.href='index.php'" class="w-full mt-2 bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-full transition-all text-[16px] tracking-widest flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.2)] uppercase">
+                     <i class="fa-solid fa-arrow-left mr-2"></i> BACK
+                </button>
+            </div>
+
+            <script>
+                function fallbackCopyText(text) {
+                    var textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.top = "0";
+                    textArea.style.left = "0";
+                    textArea.style.position = "fixed";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try { document.execCommand('copy'); } catch (err) {}
+                    document.body.removeChild(textArea);
+                }
+
+                function copyData(text, btnElement) {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
+                    } else {
+                        fallbackCopyText(text);
+                    }
+                    
+                    if (btnElement) {
+                        const icon = btnElement.querySelector('i');
+                        if(icon) {
+                            icon.className = 'fa-solid fa-check text-cyan-400 text-[16px]';
+                            setTimeout(() => icon.className = 'fa-regular fa-copy text-[16px]', 1500);
+                        }
+                    }
+                }
+
+                function copySingle(id, btn) {
+                    const linkText = document.getElementById(id).textContent.trim();
+                    copyData(linkText, btn);
+                }
+            </script>
+
             <?php else: ?>
-                <div class="text-center py-20 border-2 border-dashed border-blue-900/50 rounded-[2rem] bg-gradient-to-b from-[#080f1e]/80 to-[#030a14]">
-                    <div class="w-20 h-20 bg-[#080f1e] border border-blue-900/40 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg">
-                        <i class="fa-solid fa-satellite text-4xl text-cyan-400"></i>
+            <div class="text-center mb-8 w-full flex flex-col items-center relative z-10">
+                <h1 class="text-[38px] sm:text-[40px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 drop-shadow-lg blue-glow-text uppercase">
+                    CLOUD CONFIG
+                </h1>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="glass-panel w-full rounded-[2.5rem] p-6 sm:p-8 flex flex-col gap-7 relative z-20 transition-all duration-300 hover:border-cyan-500/40">
+                
+                <div class="relative border border-dashed border-blue-900/50 bg-[#030a14]/50 rounded-2xl p-8 sm:p-10 text-center hover:border-cyan-400 transition-all group cursor-pointer">
+                    <input type="file" name="files[]" multiple required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" id="fileInput" accept=".hc,.ovpn,.ehi,.nm,.npv4,.dark">
+                    
+                    <div class="flex flex-col items-center justify-center pointer-events-none">
+                        <div class="w-14 h-14 rounded-full border border-blue-900/50 flex items-center justify-center mb-4 bg-[#080f1e] group-hover:border-cyan-500/50 transition-all">
+                            <div class="w-10 h-10 rounded-full bg-blue-900/30 flex items-center justify-center group-hover:bg-cyan-500/20 transition-all">
+                                <i class="fa-solid fa-cloud-arrow-up text-cyan-400 text-[18px]"></i>
+                            </div>
+                        </div>
+                        <p class="text-[14px] text-blue-300/70 tracking-widest font-bold uppercase" id="fileName">SELECT OR DROP FILES HERE</p>
                     </div>
-                    <p class="text-blue-300/70 text-[14px] font-bold tracking-widest">NO CLOUD CONFIG LINKS CREATED YET.</p>
                 </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="flex items-center text-[12px] text-cyan-400 tracking-widest mb-2.5 font-bold ml-4 uppercase">
+                            <i class="fa-solid fa-download mr-2 text-[14px]"></i> LIMIT
+                        </label>
+                        <input type="number" name="limit" placeholder="1" value="1" class="w-full bg-[#030a14] border border-blue-900/40 rounded-full px-6 py-4 text-[15px] text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all placeholder-blue-800/60 text-center">
+                    </div>
+
+                    <div>
+                        <label class="flex items-center text-[12px] text-cyan-400 tracking-widest mb-2.5 font-bold ml-4 uppercase">
+                            <i class="fa-regular fa-clock mr-2 text-[14px]"></i> VALIDITY TIME
+                        </label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" name="duration" placeholder="5" value="5" min="1" required class="w-full bg-[#030a14] border border-blue-900/40 rounded-full px-6 py-4 text-[15px] text-center text-white font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all placeholder-blue-800/60">
+                            
+                            <div class="relative w-full">
+                                <select name="time_unit" class="w-full h-full bg-[#030a14] border border-blue-900/40 rounded-full px-6 py-4 text-[15px] text-cyan-400 font-bold focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all appearance-none cursor-pointer text-center uppercase">
+                                    <option value="minutes" selected>MINUTES</option>
+                                    <option value="hours">HOURS</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 pr-6 text-cyan-600">
+                                    <i class="fa-solid fa-chevron-down text-[12px]"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-cyan-400 hover:from-blue-500 hover:to-cyan-300 text-white font-bold py-4 rounded-full transition-all duration-300 text-[16px] flex items-center justify-center tracking-widest mt-2 shadow-[0_10px_20px_rgba(56,189,248,0.2)] hover:shadow-[0_15px_30px_rgba(56,189,248,0.4)] uppercase">
+                    GENERATE LINK
+                </button>
+            </form>
+
+            <script>
+                document.getElementById('fileInput').addEventListener('change', function(e) {
+                    const count = e.target.files.length;
+                    const fileNameElem = document.getElementById('fileName');
+                    if(count === 1) { 
+                        fileNameElem.innerHTML = '<span class="text-cyan-400 font-bold">' + e.target.files[0].name.toUpperCase() + '</span>'; 
+                    }
+                    else if(count > 1) { 
+                        fileNameElem.innerHTML = '<span class="text-cyan-400 font-bold">' + count + ' FILES SELECTED</span>'; 
+                    } else {
+                        fileNameElem.innerHTML = 'SELECT OR DROP FILES HERE';
+                    }
+                });
+            </script>
             <?php endif; ?>
         </div>
-    </div>
+    <?php endif; ?>
 
-    <!-- JavaScript Tools -->
-    <script>
-        function searchLinks() {
-            let input = document.getElementById('searchInput').value.trim().toLowerCase();
-            let cards = document.querySelectorAll('.config-card');
-            cards.forEach(card => {
-                let id = card.getAttribute('data-link-id').toLowerCase();
-                let originalName = card.getAttribute('data-original-name').toLowerCase();
-                if (id.includes(input) || originalName.includes(input) || input === '') {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        function copyText(text, elem) {
-            navigator.clipboard.writeText(text).then(() => {
-                let originalHTML = elem.innerHTML;
-                elem.innerHTML = '<span class="text-emerald-400"><i class="fa-solid fa-check"></i> COPIED!</span>';
-                setTimeout(() => { elem.innerHTML = originalHTML; }, 1500);
-            });
-        }
-
-        setInterval(() => {
-            let searchVal = document.getElementById('searchInput');
-            if (searchVal && searchVal.value.trim() === '') {
-                location.reload();
-            }
-        }, 30000);
-    </script>
 </body>
 </html>
