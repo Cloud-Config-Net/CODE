@@ -33,7 +33,7 @@ if (isset($_GET['delete'])) {
     header("Location: admin.php"); exit;
 }
 
-// Re-Open / Reset Link Action (NEW: Fixes client issues instantly without re-uploading)
+// Re-Open / Reset Link Action
 if (isset($_GET['reopen'])) {
     $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['reopen']);
     if (isset($db[$id])) {
@@ -227,12 +227,11 @@ foreach ($db as $d) {
                     $expiresInHours = floor($expiresIn / 3600);
                     $expiresInMins = floor(($expiresIn % 3600) / 60);
 
-                    // Host extraction for copy button
                     $host = $_SERVER['HTTP_HOST'];
                     $host = preg_replace('/:\d+$/', '', $host);
                     $fullLink = "https://" . $host . '/' . $id . '.hc';
 
-                    // Truth Verdict Calculation for Customer Claims
+                    // Truth Verdict Calculation
                     $verdictText = "NO ACTIVITY YET";
                     $verdictClass = "text-slate-400 bg-slate-800/40 border-slate-700/40";
                     if (!empty($d['logs'])) {
@@ -267,7 +266,19 @@ foreach ($db as $d) {
                                 <i class="fa-regular fa-file-code text-2xl"></i>
                             </div>
                             <div class="overflow-hidden">
-                                <span class="text-[11px] sm:text-[12px] font-bold tracking-widest text-blue-300/70 block mb-1 truncate">ORIGINAL: <?= htmlspecialchars($d['original_name']) ?></span>
+                                <!-- Original Name & Locked Device Badge (Uppercase) -->
+                                <div class="flex items-center gap-2 flex-wrap mb-1">
+                                    <span class="text-[11px] sm:text-[12px] font-bold tracking-widest text-blue-300/70 truncate">ORIGINAL: <?= htmlspecialchars($d['original_name']) ?></span>
+                                    <?php if(!empty($d['locked_device'])): ?>
+                                        <span class="bg-cyan-500/10 text-cyan-300 border border-cyan-400/30 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">
+                                            <i class="fa-solid fa-mobile-screen mr-1"></i> <?= htmlspecialchars($d['locked_device']) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="bg-slate-800/60 text-slate-400 border border-slate-700/40 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">
+                                            <i class="fa-solid fa-hourglass-start mr-1"></i> WAITING FOR DEVICE...
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
                                 <span class="font-bold text-cyan-400 text-lg sm:text-xl blue-glow-text cursor-pointer select-all" onclick="copyText('<?= $fullLink ?>', this)"><?= htmlspecialchars($id) ?>.HC <i class="fa-regular fa-copy text-xs ml-1 text-cyan-400/70"></i></span>
                             </div>
                         </div>
@@ -287,11 +298,9 @@ foreach ($db as $d) {
                             <div><?= $statusHtml ?></div>
 
                             <div class="flex items-center gap-2">
-                                <!-- Re-Open / Reset Link Button -->
                                 <a href="?reopen=<?= $id ?>" title="Re-Open / Reset Link" onclick="return confirm('RESET DOWNLOAD LIMIT AND EXTEND 5 MINUTES FOR THIS LINK?')" class="bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/40 text-cyan-400 w-11 h-11 flex items-center justify-center rounded-xl transition-all shadow-md">
                                     <i class="fa-solid fa-rotate-right text-sm"></i>
                                 </a>
-                                <!-- Delete Single Link -->
                                 <a href="?delete=<?= $id ?>" title="Delete Link" onclick="return confirm('DELETE THIS LINK PERMANENTLY?')" class="bg-[#1a0f14]/80 hover:bg-red-900/40 border border-red-900/40 text-red-500 w-11 h-11 flex items-center justify-center rounded-xl transition-all shadow-md">
                                     <i class="fa-solid fa-trash text-sm"></i>
                                 </a>
@@ -409,7 +418,6 @@ foreach ($db as $d) {
             });
         }
 
-        // Auto refresh feed every 30 seconds if search is empty
         setInterval(() => {
             let searchVal = document.getElementById('searchInput');
             if (searchVal && searchVal.value.trim() === '') {
