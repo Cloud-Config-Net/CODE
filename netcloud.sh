@@ -184,7 +184,7 @@ server {
     location / { try_files \$uri \$uri/ \$uri.php?\$query_string; }
 
     location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
-        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot|postman)) { return 403 "ACCESS DENIED"; }
+        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot|postman)) { return 403 "ACCESS DENIED"; }
         rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
     }
     
@@ -215,7 +215,7 @@ server {
     location / { try_files \$uri \$uri/ \$uri.php?\$query_string; }
 
     location ~* ^/([a-zA-Z0-9_-]+)\.hc\$ {
-        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|HttpClient|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot|postman)) { return 403 "ACCESS DENIED"; }
+        if (\$http_user_agent ~* (curl|wget|python|Scrapy|libwww|Termux|WhatsApp|TelegramBot|facebookexternalhit|Slackbot|postman)) { return 403 "ACCESS DENIED"; }
         rewrite ^/([a-zA-Z0-9_-]+)\.hc\$ /index.php?c=\$1 last;
     }
     
