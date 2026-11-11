@@ -93,7 +93,7 @@ function extractDeviceModel($ua) {
         return strtoupper(trim($matches[2]));
     }
     
-    if (stripos($ua, 'okhttp') !== false) {
+    if (stripos($ua, 'okhttp') !== false || stripos($ua, 'Dart') !== false || stripos($ua, 'HttpCustom') !== false) {
         return 'HTTP CUSTOM DEVICE';
     }
     
@@ -117,16 +117,27 @@ if (isset($_GET['c'])) {
         die("CLOUD CONFIG LINK ACTIVE");
     }
 
-    $isBrowser = preg_match('/(Mozilla|Chrome|Safari|Edge|Opera|Brave|SamsungBrowser)/i', $ua);
-    $isVpnApp = preg_match('/(okhttp|Dalvik|HttpCustom|ePro|NPV|NetMod)/i', $ua);
+    // فحص ترويسات المتصفح الحقيقية للتفريق بين المتصفح وتطبيق HTTP Custom v8.0.22+
+    $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? '';
+    $secFetchDest = $_SERVER['HTTP_SEC_FETCH_DEST'] ?? '';
+    $secFetchMode = $_SERVER['HTTP_SEC_FETCH_MODE'] ?? '';
+    $secFetchUser = $_SERVER['HTTP_SEC_FETCH_USER'] ?? '';
 
-    if ($isVpnApp) {
+    $isRealBrowserNavigation = (
+        stripos($acceptHeader, 'text/html') !== false ||
+        strtolower($secFetchDest) === 'document' ||
+        strtolower($secFetchMode) === 'navigate' ||
+        $secFetchUser === '?1'
+    );
+
+    $isVpnApp = preg_match('/(okhttp|Dalvik|HttpCustom|ePro|NPV|NetMod|Dart|Java|HttpClient)/i', $ua);
+
+    if ($isVpnApp || !$isRealBrowserNavigation) {
         $clientLabel = 'HTTP Custom / VPN (' . $deviceModel . ')';
-        $isBrowser = false; // Force allow Android Dalvik/OkHttp even if Mozilla is in prefix
-    } elseif ($isBrowser) {
-        $clientLabel = 'Web Browser (' . $deviceModel . ')';
+        $isBrowser = false; // السماح للتطبيق حتى لو أرسل Mozilla في التحديث الجديد
     } else {
-        $clientLabel = 'Android Tool (' . $deviceModel . ')';
+        $clientLabel = 'Web Browser (' . $deviceModel . ')';
+        $isBrowser = true;
     }
 
     if (isset($db[$id])) {
@@ -152,6 +163,16 @@ if (isset($_GET['c'])) {
             file_put_contents($dbFile, json_encode($db), LOCK_EX);
             header("HTTP/1.1 403 Forbidden");
             die('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Access Denied</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet"><style>body{background:#05080f;color:#ef4444;text-align:center;font-family:"Oswald",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box;text-transform:uppercase;}img{max-width:100%;height:auto;border-radius:15px;box-shadow:0 0 20px rgba(0,0,0,0.5);margin-bottom:20px;max-height:60vh;border:1px solid #1e2738;}</style></head><body><img src="https://i.postimg.cc/pXn6QLTr/bdcc76fc-bd61-40bd-abbd-a4f65776f9f9.jpg" alt="Tutorial"></body></html>');
+        }
+
+        // الرد على طلبات الفحص المسبق (HEAD) في التحديث الجديد دون حرق عدد التحميلات
+        if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
+            $fileSize = filesize($entry['real_path']);
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . basename($entry['original_name']) . '"');
+            header('Content-Length: ' . $fileSize);
+            exit;
         }
 
         $isTimeExpired = (time() > $entry['expires']);
