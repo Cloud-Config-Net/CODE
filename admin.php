@@ -1,6 +1,6 @@
 <?php
 /**
- * NETCLOUD - Secure Admin Panel & Smart Truth Radar (PRO EDITION)
+ * NETCLOUD - Secure Admin Panel & Smart Truth Radar [ PRO EDITION ]
  * File Name: admin.php
  */
 
