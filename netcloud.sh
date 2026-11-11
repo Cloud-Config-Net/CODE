@@ -61,6 +61,37 @@ else
     exit 1
 fi
 
+# ==========================================
+# SSL EXPIRY CHECKER FUNCTION
+# ==========================================
+get_ssl_status() {
+    local dom=$1
+    if [ -z "$dom" ] && [ -f "$NGINX_CONF" ]; then
+        dom=$(grep -m 1 "server_name" "$NGINX_CONF" | awk '{print $2}' | tr -d ';')
+    fi
+    local cert_file="/etc/letsencrypt/live/$dom/fullchain.pem"
+    if [ -n "$dom" ] && [ -f "$cert_file" ]; then
+        local exp_date=$(openssl x509 -enddate -noout -in "$cert_file" 2>/dev/null | cut -d= -f2)
+        if [ -n "$exp_date" ]; then
+            local exp_epoch=$(date -d "$exp_date" +%s 2>/dev/null)
+            local now_epoch=$(date +%s)
+            local days_left=$(( (exp_epoch - now_epoch) / 86400 ))
+            local formatted_date=$(date -d "$exp_date" '+%Y-%m-%d' 2>/dev/null)
+            if [ "$days_left" -gt 15 ]; then
+                echo -e "${LIGHT_GREEN}ACTIVE (${days_left} DAYS LEFT - EXP: ${formatted_date})${NC}"
+            elif [ "$days_left" -gt 0 ]; then
+                echo -e "${YELLOW}EXPIRING SOON (${days_left} DAYS LEFT - EXP: ${formatted_date})${NC}"
+            else
+                echo -e "${RED}EXPIRED (${formatted_date})${NC}"
+            fi
+        else
+            echo -e "${RED}INVALID CERTIFICATE${NC}"
+        fi
+    else
+        echo -e "${YELLOW}NOT ACTIVATED (HTTP ONLY)${NC}"
+    fi
+}
+
 check_port() {
     local port=$1
     local port_busy=false
@@ -110,7 +141,7 @@ install_netcloud() {
     if [ "$OS_FAMILY" == "debian" ]; then
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -yq > /dev/null 2>&1
-        apt-get install nginx php-fpm php-curl ufw iproute2 certbot python3-certbot-nginx -yq > /dev/null 2>&1
+        apt-get install nginx php-fpm php-curl ufw iproute2 certbot python3-certbot-nginx openssl -yq > /dev/null 2>&1
         if [ ! -d "/etc/nginx/sites-available" ]; then
             mkdir -p /etc/nginx/sites-available
             mkdir -p /etc/nginx/sites-enabled
@@ -118,7 +149,7 @@ install_netcloud() {
     elif [ "$OS_FAMILY" == "rhel" ]; then
         if command -v dnf >/dev/null 2>&1; then PKGMGR="dnf"; else PKGMGR="yum"; fi
         $PKGMGR install epel-release -yq > /dev/null 2>&1
-        $PKGMGR install nginx php-fpm php-cli php-curl firewalld iproute certbot python3-certbot-nginx wget nano net-tools procps-ng -yq > /dev/null 2>&1
+        $PKGMGR install nginx php-fpm php-cli php-curl firewalld iproute certbot python3-certbot-nginx wget nano net-tools procps-ng openssl -yq > /dev/null 2>&1
         systemctl enable firewalld --now > /dev/null 2>&1
     fi
 
@@ -245,11 +276,14 @@ EOF
 
     log_action "Secure System Installed | Domain: $DOMAIN | Port: $PORT | PHP: $PHP_SVC"
 
+    SSL_INFO=$(get_ssl_status "$DOMAIN")
+
     echo -e "\n${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  ${LIGHT_GREEN}SYSTEM DEPLOYMENT COMPLETED SUCCESSFULLY!${NC}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "  DOMAIN NAME   : ${WHITE}${DOMAIN^^}${NC}"
     echo -e "  ACTIVE PORT   : ${WHITE}${PORT}${NC}"
+    echo -e "  SSL VALIDITY  : ${SSL_INFO}"
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -ne "\n  ${DARK_GRAY}PRESS [ENTER] TO RETURN TO THE MENU...${NC}"
     read
@@ -259,7 +293,14 @@ show_menu() {
     clear
     echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "                  ${WHITE}${BOLD}CLOUD CONFIG MANAGER PRO (ARMORED)${NC}"
-    echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+    echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    if [ -f "$NGINX_CONF" ]; then
+        CURR_DOM=$(grep -m 1 "server_name" "$NGINX_CONF" | awk '{print $2}' | tr -d ';')
+        echo -e "  ${CYAN}DOMAIN :${NC} ${WHITE}${CURR_DOM^^}${NC}   |   ${CYAN}SSL :${NC} $(get_ssl_status "$CURR_DOM")"
+        echo -e "${LIGHT_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+    else
+        echo -e ""
+    fi
     
     echo -e "  ${DARK_GRAY}[${WHITE}01${DARK_GRAY}]${NC} ${CYAN}INSTALL SECURE SYSTEM CORE & SSL${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}02${DARK_GRAY}]${NC} ${CYAN}RECONFIGURE DOMAIN NAME${NC}"
@@ -270,7 +311,7 @@ show_menu() {
     echo -e "  ${DARK_GRAY}[${WHITE}07${DARK_GRAY}]${NC} ${CYAN}EDIT CONFIGURATION FILES${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}08${DARK_GRAY}]${NC} ${CYAN}UPDATE SYSTEM TIMEZONE${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}09${DARK_GRAY}]${NC} ${CYAN}BACKUP DATABASE${NC}"
-    echo -e "  ${DARK_GRAY}[${WHITE}10${DARK_GRAY}]${NC} ${CYAN}SYSTEM MONITOR${NC}"
+    echo -e "  ${DARK_GRAY}[${WHITE}10${DARK_GRAY}]${NC} ${CYAN}SYSTEM MONITOR & SSL STATUS${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}11${DARK_GRAY}]${NC} ${RED}WIPE AND DESTROY SYSTEM${NC}"
     echo -e "  ${DARK_GRAY}[${WHITE}00${DARK_GRAY}]${NC} ${CYAN}EXIT\n${NC}"
     
@@ -357,13 +398,14 @@ read_choice() {
             ;;
         10)
             echo -e "  ${LIGHT_CYAN}--- SYSTEM MONITOR ---${NC}"
-            echo -ne "  ${CYAN}CPU USAGE: ${WHITE}"
+            echo -ne "  ${CYAN}CPU USAGE  : ${WHITE}"
             top -bn1 | grep load | awk '{printf "%.2f%%\n", $(NF-2)}'
-            echo -ne "  ${CYAN}RAM USAGE: ${WHITE}"
+            echo -ne "  ${CYAN}RAM USAGE  : ${WHITE}"
             free -m | awk 'NR==2{printf "%sMB / %sMB (%.2f%%)\n", $3,$2,$3*100/$2 }'
-            echo -ne "  ${CYAN}DISK USAGE:${WHITE} "
+            echo -ne "  ${CYAN}DISK USAGE : ${WHITE}"
             df -h | awk '$NF=="/"{printf "%s / %s (%s)\n", $3,$2,$5}'
-            echo -e "  ${CYAN}SERVICES:${NC}"
+            echo -e "  ${CYAN}SSL STATUS : $(get_ssl_status)${NC}"
+            echo -e "  ${CYAN}SERVICES   :${NC}"
             if systemctl is-active --quiet nginx; then echo -e "    - NGINX: ${GREEN}RUNNING${NC}"; else echo -e "    - NGINX: ${RED}STOPPED${NC}"; fi
             if [ "$OS_FAMILY" == "rhel" ]; then SVC="php-fpm.service"; else SVC=$(systemctl list-units --type=service | grep -o 'php[0-9.]*-fpm.service' | head -n 1); fi
             if systemctl is-active --quiet $SVC; then echo -e "    - PHP ($SVC): ${GREEN}RUNNING${NC}"; else echo -e "    - PHP: ${RED}STOPPED${NC}"; fi
